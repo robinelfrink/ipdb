@@ -1,11 +1,9 @@
 # $Id$
 
-<FilesMatch "(\.ini|\.dist|\.php)$">
-  Order allow,deny
-  Deny from all
-</FilesMatch>
+Order allow,deny
+Deny from all
 
-<FilesMatch "^index.php$">
+<FilesMatch "^(index\.php|ipdb\.js)?$">
   Order allow,deny
   Allow from all
 </FilesMatch>
