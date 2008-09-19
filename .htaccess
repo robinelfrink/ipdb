@@ -8,3 +8,7 @@ Deny from all
   Allow from all
 </FilesMatch>
 
+<FilesMatch "\.(gif|jpg|png|css)">
+  Order allow,deny
+  Allow from all
+</FilesMatch>
