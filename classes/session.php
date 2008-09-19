@@ -24,7 +24,6 @@ class Session {
 
 
 	public $error = null;
-	public $username = '';
 
 
 	public function authenticate() {
@@ -45,8 +44,8 @@ class Session {
 			$username = $_SESSION['username'];
 		}
 
-		if ((request('action')=='logout') ||			/* User requests logout */
-			($username=='')) {				/* Session broken...? */
+		if ((request('action')=='logout') ||	/* User requests logout */
+			($username=='')) {					/* Session broken...? */
 			unset($_SESSION);
 			session_destroy();
 			return false;
@@ -83,6 +82,9 @@ class Session {
 			session_destroy();
 			return false;
 		}
+		$_SESSION['username'] = $username;
+		$_SESSION['key'] = $key;
+		$_SESSION['expire'] = time()+(10*60);
 
 		return true;
 
