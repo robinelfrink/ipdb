@@ -20,7 +20,7 @@ $Id$
 */
 
 
-/* Include necessary files. */
+/* Include necessary files */
 require_once 'functions.php';
 require_once 'classes/config.php';
 require_once 'classes/database.php';
@@ -28,13 +28,35 @@ require_once 'classes/session.php';
 require_once 'classes/skin.php';
 
 
+/* Set default page to fetch */
+$page = 'main';
+
+
+/* Read configuration file */
 $config = new Config();
 if ($config->error)
 	exit('Error: '.$config->error);
 
+
+/* Initialize the database */
 $database = new Database($config->database);
 if ($database->error)
-	exit('Error: '.$config->error);
+	exit('Error: '.$database->error);
+if (!$database->hasDatabase())
+	$page = 'initdb';
+else if ($database->hasUpgrade())
+	$page = 'upgradedb';
+
+
+/* Initialize the skin */
+$skin = new Skin($config->skin);
+if ($skin->error)
+	exit('Error: '.$skin->error);
+
+
+
+/* Close the database */
+$database->close();
 
 
 ?>

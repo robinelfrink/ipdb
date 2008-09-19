@@ -20,4 +20,26 @@ $Id$
 */
 
 
+class Skin {
+
+
+	public $error = null;
+	private $skin = null;
+
+
+	public function __construct($config) {
+
+		$this->skin = $config['skin'];
+		$ds = DIRECTORY_SEPARATOR;
+		if (!is_dir(dirname(__FILE__).$ds.'..'.$ds.'skins'.$ds.$this->skin))
+			$this->error = 'Skin '.$this->skin.' does not exist';
+		else if (!file_exists(dirname(__FILE__).$ds.'..'.$ds.'skins'.$ds.$this->skin.$ds.'index.html'))
+			$this->error = 'Skin '.$this->skin.' file not found';
+
+	}
+
+
+}
+
+
 ?>
