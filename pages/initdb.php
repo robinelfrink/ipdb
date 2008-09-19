@@ -27,9 +27,36 @@ class initdb {
 
 
 	public function get() {
+		if (request('action')=='create') {
+			$content = '
+<p>A default database has been created. You can now log in with username \'admin\'
+and password \'secret\'.</p>';
+		} else {
+			$content = '
+<p>You do not yet have a database. Please click the \'create\'-button below
+to create an initial database.</p>
+<form method="post">
+	<input type="hidden" name="page" value="initdb" />
+	<input type="hidden" name="action" value="create" />
+	<input type="submit" value="create" />
+</form>';
+		}
 		return array('title'=>'IPDB :: Initialize database',
-					 'content'=>'Need to initialize the database');
+					 'content'=>$content);
 	}
+
+
+	public function action() {
+
+		if (request('action')=='create') {
+			global $database, $page;
+			$database->initialize();
+			$this->error = $database->error;
+		} else
+			$page = 'main';
+
+	}
+
 
 
 }

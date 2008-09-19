@@ -29,7 +29,7 @@ require_once 'classes/skin.php';
 
 
 /* Set default page to fetch */
-$page = 'main';
+$page = request('page', 'main');
 
 
 /* It's good to know where we are */
@@ -52,6 +52,8 @@ if ($database->error)
 	exit('Error: '.$database->error);
 if (!$database->hasDatabase())
 	$page = 'initdb';
+else if (!$session->authenticated())
+	$page = 'login';
 else if ($database->hasUpgrade())
 	$page = 'upgradedb';
 
@@ -61,9 +63,17 @@ if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARAT
 	exit('Error: No code defined for page '.$page);
 require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php';
 $pageobj = new $page();
+if (request('action', null)) {
+	$pageobj->action();
+	if ($pageobj->error)
+		exit('Error: '.$pageobj->error);
+}
+if (get_class($pageobj)!=$page)
+	$pageobj = new $page();
 $pagedata = $pageobj->get();
 if ($pageobj->error)
 	exit('Error: '.$pageobj->error);
+
 
 
 /* Send back the requested content */

@@ -100,6 +100,60 @@ class Database {
 	}
 
 
+	public function hasUpgrade() {
+
+		$this->error = null;
+		$version = $this->query('SELECT version FROM version');
+		return ($version[0]['version']<1);
+
+	}
+
+
+	public function initialize() {
+
+		$this->error = null;
+		if (in_array($this->provider, array('mysql', 'mysqli'))) {
+			/* Drop old tables, even though we're pretty sure they don't exists. */
+			$this->query("DROP TABLE ip");
+			if (!$this->query("CREATE TABLE `ip` (".
+							  "`address` varchar(32) NOT NULL,".
+							  "`bitmask` varchar(32) NOT NULL,".
+							  "`parent` varchar(32) NOT NULL default '00000000000000000000000000000000',".
+							  "PRIMARY KEY  (`address`),".
+							  "KEY `bitmask` (`bitmask`),".
+							  "KEY `parent` (`parent`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+			if (!$this->query("INSERT INTO `ip` (`address`, `bitmask`) VALUES(".
+							  "'FC030000000000000000000000000000', ".
+							  "'0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF')"))
+				return false;
+			if (!$this->query("INSERT INTO `ip` (`address`, `bitmask`) VALUES(".
+							  "'000000000000000000000000C0A80300', ".
+							  "'000000000000000000000000000000FF')"))
+				return false;
+			$this->query("DROP TABLE admin");
+			if (!$this->query("CREATE TABLE `admin` (".
+							  "`username` varchar(15) NOT NULL,".
+							  "`password` varchar(30) NOT NULL,".
+							  "PRIMARY KEY  (`username`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+			if (!$this->query("INSERT INTO `admin` (`username`, `password`) VALUES('admin', '".
+							  md5('secret')."')"))
+				return false;
+			$this->query("DROP TABLE version");
+			if (!$this->query("CREATE TABLE `version` (".
+							  "`version` INT NOT NULL".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+			if (!$this->query("INSERT INTO `version` (`version`) VALUES(1)"))
+				return false;
+		}
+
+	}
+
+
 }
 
 
