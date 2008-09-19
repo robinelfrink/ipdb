@@ -1,0 +1,26 @@
+;
+; IP Database configuration
+;
+; $Id$
+;
+
+; Database settings
+[database]
+
+; mysql example
+provider = mysql
+host = localhost
+database = ipdb
+username = ipuser
+password = secret
+
+; sqlite example
+; provider = sqlite
+; file = ipdb.db
+
+prefix = ipdb_
+
+
+; Skin
+[skin]
+skin = default
