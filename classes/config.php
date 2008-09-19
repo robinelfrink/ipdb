@@ -35,11 +35,11 @@ class Config {
 
 	public function __construct() {
 
-		$ds = DIRECTORY_SEPARATOR;
-		$files = array(dirname(__FILE__).$ds.'..'.$ds.'ipdb.ini.dist',
-					   dirname(__FILE__).$ds.'..'.$ds.'..'.$ds.'ipdb.ini.dist',
-					   dirname(__FILE__).$ds.'..'.$ds.'ipdb.ini',
-					   dirname(__FILE__).$ds.'..'.$ds.'..'.$ds.'ipdb.ini');
+		global $root;
+		$files = array($root.DIRECTORY_SEPARATOR.'ipdb.ini.dist',
+					   $root.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'ipdb.ini.dist',
+					   $root.DIRECTORY_SEPARATOR.'ipdb.ini',
+					   $root.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'ipdb.ini');
 		foreach ($files as $file)
 			if (file_exists($file))
 				if ($ini = @parse_ini_file($file, true)) {

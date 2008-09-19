@@ -32,6 +32,14 @@ require_once 'classes/skin.php';
 $page = 'main';
 
 
+/* It's good to know where we are */
+$root = dirname(__FILE__);
+
+
+/* Version */
+$version = 0.1;
+
+
 /* Read configuration file */
 $config = new Config();
 if ($config->error)
@@ -48,10 +56,25 @@ else if ($database->hasUpgrade())
 	$page = 'upgradedb';
 
 
-/* Initialize the skin */
+/* Fetch the selected page */
+if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php'))
+	exit('Error: No code defined for page '.$page);
+require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php';
+$pageobj = new $page();
+$pagedata = $pageobj->get();
+if ($pageobj->error)
+	exit('Error: '.$pageobj->error);
+
+
+/* Send back the requested content */
 $skin = new Skin($config->skin);
 if ($skin->error)
 	exit('Error: '.$skin->error);
+$skin->setFile('index.html');
+$skin->setVar('title', $pagedata['title']);
+$skin->setVar('version', $version);
+$skin->setVar('content', $pagedata['content']);
+echo $skin->get();
 
 
 

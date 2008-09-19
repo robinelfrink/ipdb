@@ -25,19 +25,54 @@ class Skin {
 
 	public $error = null;
 	private $skin = null;
+	private $file = null;
+	private $vars = array();
 
 
 	public function __construct($config) {
 
+		global $root;
 		$this->skin = $config['skin'];
-		$ds = DIRECTORY_SEPARATOR;
-		if (!is_dir(dirname(__FILE__).$ds.'..'.$ds.'skins'.$ds.$this->skin))
+		if (!is_dir($root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin))
 			$this->error = 'Skin '.$this->skin.' does not exist';
-		else if (!file_exists(dirname(__FILE__).$ds.'..'.$ds.'skins'.$ds.$this->skin.$ds.'index.html'))
+		else if (!file_exists($root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.'index.html'))
 			$this->error = 'Skin '.$this->skin.' file not found';
+
+		$this->vars['skindir'] = 'skins/'.$this->skin;
 
 	}
 
+
+	public function setFile($filename) {
+
+		global $root;
+		$this->error = null;
+		if (file_exists($this->file = $root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename))
+			return true;
+		$this->error = 'Cannot read skin file skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename;
+		return false;
+
+	}
+
+
+	public function setVar($var, $value) {
+
+		$this->vars[$var] = $value;
+
+	}
+
+
+	public function get($cleanunused = true) {
+
+		$data = file_get_contents($this->file);
+		$vars = array();
+		foreach ($this->vars as $var=>$value)
+			$vars['/\{'.preg_quote($var).'\}/'] = $value;
+		if ($cleanunused)
+			$vars['/\{[a-zA-Z0-9_]+\}/'] = '';
+		return preg_replace(array_keys($vars), $vars, $data);
+
+	}
 
 }
 
