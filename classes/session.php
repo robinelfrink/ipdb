@@ -48,6 +48,7 @@ class Session {
 			($username=='')) {					/* Session broken...? */
 			unset($_SESSION);
 			session_destroy();
+			$this->error = 'Logged out';
 			return false;
 		}
 
