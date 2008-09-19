@@ -20,4 +20,76 @@ $Id$
 */
 
 
+class Session {
+
+
+	public $error = null;
+	public $username = '';
+
+
+	public function authenticate() {
+
+		$this->error = null;
+		ini_set('session.use_cookies', '1');
+		ini_set('session.save_handler', 'files');
+		session_start();
+
+		if (request('action')=='login') {
+			/* User wants to logon, extract username/password */
+			$username = trim(htmlentities(request('username'), ENT_QUOTES));
+		} else if (!isset($_SESSION['username'])) {
+			unset($_SESSION);
+			session_destroy();
+			return false;
+		} else {
+			$username = $_SESSION['username'];
+		}
+
+		if ((request('action')=='logout') ||			/* User requests logout */
+			($username=='')) {				/* Session broken...? */
+			unset($_SESSION);
+			session_destroy();
+			return false;
+		}
+
+		if (isset($_SESSION['expire']) && ($_SESSION['expire']<time())) {
+			unset($_SESSION);
+			session_destroy();
+			$this->error = 'Session expired';
+			return false;
+		}
+
+		if (request('action')=='login') {
+			global $database;
+			$result = $database->query("SELECT `password` FROM `admin` WHERE `username` = '".
+									   $database->escape($username)."'");
+			if ($result===false) {
+				$this->error = 'Login failed';
+				return false;
+			}
+
+			if (md5(trim(request('password')))!=$result[0]['password']) {
+				$this->error = 'Login failed';
+				return false;
+			}
+		}
+
+		/* Generate and check md5 key over session information */
+		$key = md5($username.getenv('REMOTE_ADDR').getenv('X-FORWARDED-FOR'));
+		if (isset($_SESSION['key']) &&
+			(strcmp($_SESSION['key'], $key)!=0)) {
+			$this->error = 'Session expired';
+			unset($_SESSION);
+			session_destroy();
+			return false;
+		}
+
+		return true;
+
+	}
+
+
+}
+
+
 ?>

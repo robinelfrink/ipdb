@@ -46,13 +46,19 @@ if ($config->error)
 	exit('Error: '.$config->error);
 
 
+/* Start the session */
+$session = new Session();
+if ($session->error)
+	exit('Error: '.$session->error);
+
+
 /* Initialize the database */
 $database = new Database($config->database);
 if ($database->error)
 	exit('Error: '.$database->error);
 if (!$database->hasDatabase())
 	$page = 'initdb';
-else if (!$session->authenticated())
+else if (!$session->authenticate())
 	$page = 'login';
 else if ($database->hasUpgrade())
 	$page = 'upgradedb';
@@ -63,7 +69,8 @@ if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARAT
 	exit('Error: No code defined for page '.$page);
 require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php';
 $pageobj = new $page();
-if (request('action', null)) {
+if (request('action', null) &&
+	method_exists($pageobj, 'action')) {
 	$pageobj->action();
 	if ($pageobj->error)
 		exit('Error: '.$pageobj->error);

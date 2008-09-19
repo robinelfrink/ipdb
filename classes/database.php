@@ -59,7 +59,7 @@ class Database {
 	}
 
 
-	private function escape($string) {
+	public function escape($string) {
 
 		if ($this->provider=='mysql')
 			return mysql_escape_string($string);
@@ -135,7 +135,7 @@ class Database {
 			$this->query("DROP TABLE admin");
 			if (!$this->query("CREATE TABLE `admin` (".
 							  "`username` varchar(15) NOT NULL,".
-							  "`password` varchar(30) NOT NULL,".
+							  "`password` varchar(32) NOT NULL,".
 							  "PRIMARY KEY  (`username`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
