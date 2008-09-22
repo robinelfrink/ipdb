@@ -35,6 +35,30 @@ div#tree {
 }
 
 
+div#tree ul {
+	list-style-type: none;
+}
+div#tree li {
+	position: relative;
+	z-index: 100;
+	cursor: pointer;
+}
+div#tree li:hover {
+	z-index: 200;
+}
+div#tree li:hover>span {
+	position: absolute;
+	padding: 0.1em;
+	top: 0.8em;
+	left: 2em;
+	background-color: #ffffdd;
+	border: 1px solid;
+	display: block !important;
+	z-index: 200;
+	width: 15em;
+}
+
+
 div#content {
 	float: left;
 	padding: 1em;

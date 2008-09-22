@@ -24,6 +24,7 @@ class Session {
 
 
 	public $error = null;
+	public $authenticated = false;
 
 
 	public function authenticate() {
@@ -85,8 +86,9 @@ class Session {
 		}
 		$_SESSION['username'] = $username;
 		$_SESSION['key'] = $key;
-		$_SESSION['expire'] = time()+(10*60);
+		$_SESSION['expire'] = time()+(15*60);
 
+		$this->authenticated = true;
 		return true;
 
 	}

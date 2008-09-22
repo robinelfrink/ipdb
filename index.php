@@ -26,6 +26,7 @@ require_once 'classes/config.php';
 require_once 'classes/database.php';
 require_once 'classes/session.php';
 require_once 'classes/skin.php';
+require_once 'classes/tree.php';
 
 
 /* Set default page to fetch */
@@ -90,6 +91,8 @@ if ($skin->error)
 $skin->setFile('index.html');
 $skin->setVar('title', $pagedata['title']);
 $skin->setVar('version', $version);
+if ($session->authenticated)
+	$skin->setVar('tree', Tree::get('00000000000000000000000000000000', request('address')));
 $skin->setVar('content', $pagedata['content']);
 echo $skin->get();
 
