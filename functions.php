@@ -20,6 +20,11 @@ $Id$
 */
 
 
+function debug($mixed) {
+	echo '<pre style="color: #009900; font-size: 80%;">'.htmlentities(var_export($mixed, true)).'</pre>';
+}
+
+
 function is_utf8($str) {
 	// Source: http://www.php.net/manual/en/function.mb-detect-encoding.php#85294
 	$c = 0; $b = 0;
@@ -64,6 +69,53 @@ function request($name, $default = NULL) {
 				(is_utf8($_REQUEST[$name]) ? $_REQUEST[$name] : utf8_encode($_REQUEST[$name])));
 	else
 		return $default;
+}
+
+
+function ip2address($address) {
+	if ($address<'00000000000000000000000100000000') {
+		/* IPv4 */
+		$output = '';
+		for ($i=0; $i<8; $i=$i+2)
+			$output .= hexdec(substr($address, 24+$i, 2)).'.';
+		return preg_replace('/\.$/', '', $output);
+	} else {
+		/* IPv6 */
+		$output = preg_replace('/:$/', '', preg_replace('/([0-9a-f]{4})/', '\1:', $address));
+		return ipv6compress($output);
+	}
+}
+
+
+function ipv6uncompress($address) {
+	if (strpos($address, '::')===false)
+		return $address;
+	else if ($address=='::')
+		return '0000:0000:0000:0000:0000:0000:0000:0000';
+	$parts = explode('::', $address);
+	if ($parts[0]=='')
+		$address = str_repeat('0000:', 7-substr_count($parts[1], ':')).$parts[1];
+	else if ($parts[1]=='')
+		$address = $parts[0].str_repeat(':0000', 7-substr_count($parts[0], ':'));
+	else $address = $parts[0].str_repeat(':0000', 6-(substr_count($parts[0], ':')+substr_count($parts[1], ':'))).':'.$parts[1];
+	$address = explode(':', $address);
+	foreach ($address as $nr=>$part)
+		$address[$nr] = str_pad($part, 4, '0', STR_PAD_LEFT);
+	return implode(':', $address);
+}
+
+
+function ipv6compress($address) {
+	if (preg_match_all('/((^|:)0000)+/', $address, $matches)) {
+		$biggest = 0;
+		foreach ($matches[0] as $nr=>$match)
+			if (strlen($match)>strlen($biggest))
+				$biggest = $nr;
+		$address = preg_replace('/'.preg_quote($matches[0][$biggest]).'/', ':', $address);
+		$address = preg_replace('/([^:]:)$/', '\1:', $address);
+	}
+	$address = preg_replace('/(^|:)0+([0-9a-f])/', '\1\2', $address);
+	return $address;
 }
 
 
