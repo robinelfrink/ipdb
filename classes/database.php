@@ -157,6 +157,19 @@ class Database {
 	}
 
 
+	public function getUser($username) {
+		return $this->query("SELECT `password` FROM `admin` WHERE `username` = '".
+							$this->escape($username)."'");
+	}
+
+
+	public function getTree($parent, $recursive = false) {
+		if ($recursive===false)
+			return $this->query("SELECT `address`, `bits`, `description` FROM ip WHERE ".
+								"`parent`='".$this->escape($parent)."' ORDER BY address");
+	}
+
+
 }
 
 

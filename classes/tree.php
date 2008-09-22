@@ -28,12 +28,11 @@ class Tree {
 	public function get($root, $address = null) {
 
 		global $database;
-		$networks = $database->query("SELECT * FROM ip WHERE parent='".
-									 $database->escape($root)."' ORDER BY address");
-		if (count($networks)>0) {
+		$tree = $database->getTree($root, ($address===null ? false : $address));
+		if (count($tree)>0) {
 			$output = '
 <ul id="a_'.$root.'">';
-			foreach ($networks as $network) {
+			foreach ($tree as $network) {
 				$subtree = Tree::get($network['address'], $address);
 				if ($subtree=='')
 					$class = '';
@@ -44,7 +43,7 @@ class Tree {
 				$output .= '
 	<li id="a_'.$network['address'].$class.'">
 		<span style="display: none;">'.htmlentities($network['description']).'</span>
-		'.ip2address($network['address']).'/'.$network['bits'].$tree.'
+		'.ip2address($network['address']).'/'.$network['bits'].$subtree.'
 	</li>';
 			}
 			return $output;

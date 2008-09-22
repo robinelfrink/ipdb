@@ -33,17 +33,16 @@ class main {
 			$content = request('address');
 		} else {
 			$title = 'Main page';
-			$result = $database->query("SELECT `address`, `bits`, `description` FROM ip WHERE ".
-									   "`parent`='00000000000000000000000000000000' ORDER BY `address`");
-			if (count($result)>0) {
+			$tree = $database->getTree('00000000000000000000000000000000', false);
+			if (count($tree)>0) {
 				$content = '
-<p>You have '.count($result).' main networks in your database:</p>
+<p>You have '.count($tree).' main networks in your database:</p>
 <table>
 	<thead>
 		<tr><th>address</th><th>description</th></tr>
 	</thead>
 	<tbody>';
-				foreach ($result as $network)
+				foreach ($tree as $network)
 					$content .= '
 		<tr><td>'.ip2address($network['address']).'/'.$network['bits'].'</td><td>'.$network['description'].'</td></tr>';
 				$content .= '

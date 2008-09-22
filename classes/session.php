@@ -62,8 +62,7 @@ class Session {
 
 		if (request('action')=='login') {
 			global $database;
-			$result = $database->query("SELECT `password` FROM `admin` WHERE `username` = '".
-									   $database->escape($username)."'");
+			$result = $database->getUser($username);
 			if ($result===false) {
 				$this->error = 'Login failed';
 				return false;
