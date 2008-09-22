@@ -35,8 +35,14 @@ class Tree {
 <ul id="a_'.$root.'">';
 			foreach ($networks as $network) {
 				$subtree = Tree::get($network['address'], $address);
+				if ($subtree=='')
+					$class = '';
+				else {
+					$bits = $network['bits']+($network['address']<'00000000000000000000000100000000' ? 96 : 0);
+					debug($network['address'].'/'.$bits);
+				}
 				$output .= '
-	<li id="a_'.$network['address'].'">
+	<li id="a_'.$network['address'].$class.'">
 		<span style="display: none;">'.htmlentities($network['description']).'</span>
 		'.ip2address($network['address']).'/'.$network['bits'].$tree.'
 	</li>';
@@ -44,7 +50,6 @@ class Tree {
 			return $output;
 		} else
 			return '';
-
 	}
 
 

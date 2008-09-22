@@ -25,9 +25,9 @@ foreach ($oldresult as $row) {
 	else
 		$parent = $database->query("SELECT address FROM ipold WHERE id=".$row['parent']);
 	$database->query("INSERT INTO ip (address, bits, parent, description) VALUES('".
-					 $database->escape($row['address'])."', ".
+					 $database->escape(strtolower($row['address']))."', ".
 					 $bits.", '".
-					 $database->escape($parent)."', '".
+					 $database->escape(strtolower($parent))."', '".
 					 $database->escape($row['description'])."')");
 	echo "\n";
 }
