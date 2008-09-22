@@ -36,6 +36,7 @@ function collapse(address) {
 		var children = li.getElementsByTagName('UL');
 		if (children.length>0)
 			li.removeChild(children[0]);
+		li.className = 'collapsed';
 	}
 	return false;
 }
