@@ -18,6 +18,18 @@ $Id$
 */
 
 
+/* Initialize */
+function initialize() {
+	var lis = document.getElementsByTagName('LI');
+	if (lis && (lis.length>0))
+		for (var li in lis)
+			if (lis[li].addEventListener)
+				lis[li].addEventListener('click', click, false);
+			else if (lis[li].attachEvent)
+				lis[li].attachEvent('onclick', click);
+}
+
+
 /* Source: http://www.netlobo.com/javascript_get_element_id.html */
 function elementById(id) {
 	if (document.getElementById)
@@ -30,18 +42,30 @@ function elementById(id) {
 }
 
 
-function collapse(address) {
-	var li = elementById('a_'+address);
-	if (li) {
-		var children = li.getElementsByTagName('UL');
-		if (children.length>0)
-			li.removeChild(children[0]);
-		li.className = 'collapsed';
-	}
-	return false;
+function stopPropagation(e) {
+	e.cancelBubble = true;
+	if (e.stopPropagation) e.stopPropagation();
 }
 
 
-function expand(address) {
-	return false;
+function click(e) {
+	if (!e) var e = window.event;
+	if (e.target && e.target.id &&
+		e.target.id.match(/^a_[0-9a-f]{32}$/)) {
+		stopPropagation(e);
+		if (e.target.parentNode &&
+			e.target.parentNode.tagName &&
+			(e.target.parentNode.tagName=='LI') &&
+			(e.target.parentNode.className=='expanded') &&
+			(e.target.parentNode.getElementsByTagName('UL').length>0)) {
+			e.target.parentNode.removeChild(e.target.parentNode.getElementsByTagName('UL')[0]);
+			e.target.parentNode.className = 'collapsed';
+		}
+		return false;
+	}
+}
+
+
+window.onload = function() {
+	initialize();
 }

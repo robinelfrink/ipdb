@@ -38,20 +38,17 @@ class Tree {
 					if (is_string($address) &&
 						addressIsChild($address, $network['address'], $network['bits'])) {
 						$class = ' class="expanded"';
-						$onclick = ' onclick="return collapse(\''.$network['address'].'\');"';
-						$subtree = Tree::get($network['address']);
+						$subtree = Tree::get($network['address'], $address);
 					} else {
 						$class = ' class="collapsed"';
-						$onclick = ' onclick="return expand(\''.$network['address'].'\');"';
 					}
 				} else {
 					$class = '';
-					$onclick = '';
 				}
 				if (!isHost($network['address'], $network['bits']))
 					$output .= '
-	<li id="a_'.$network['address'].'"'.$class.$onclick.'>
-		<div>
+	<li id="a_'.$network['address'].'"'.$class.'>
+		<div id="a_'.$network['address'].'">
 			<a href="?address='.$network['address'].'">'.ip2address($network['address']).'/'.$network['bits'].'
 				<span style="display: none;">'.htmlentities($network['description']).'</span></a>
 		</div>'.$subtree.'
