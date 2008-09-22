@@ -22,8 +22,10 @@ foreach ($oldresult as $row) {
 	echo ip2address($row['address']).'/'.$bits;
 	if ($row['parent']==0)
 		$parent = '00000000000000000000000000000000';
-	else
+	else {
 		$parent = $database->query("SELECT address FROM ipold WHERE id=".$row['parent']);
+		$parent = $parent[0]['address'];
+	}
 	$database->query("INSERT INTO ip (address, bits, parent, description) VALUES('".
 					 $database->escape(strtolower($row['address']))."', ".
 					 $bits.", '".
