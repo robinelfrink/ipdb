@@ -91,7 +91,7 @@ if ($skin->error)
 $skin->setFile('index.html');
 $skin->setVar('title', $pagedata['title']);
 $skin->setVar('version', $version);
-$skin->setVar('meta', '<script type="text/javascript" src="functions.js"></script>');
+$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
 if ($session->authenticated)
 	$skin->setVar('tree', Tree::get('00000000000000000000000000000000', request('address')));
 $skin->setVar('content', $pagedata['content']);

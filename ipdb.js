@@ -18,3 +18,29 @@ $Id$
 */
 
 
+/* Source: http://www.netlobo.com/javascript_get_element_id.html */
+function elementById(id) {
+	if (document.getElementById)
+		return document.getElementById(id);
+	else if (document.all)
+		return document.all[id];
+	else if (document.layers)
+		return document.layers[id];
+	return false; 
+}
+
+
+function collapse(address) {
+	var li = elementById('a_'+address);
+	if (li) {
+		var children = li.getElementsByTagName('UL');
+		if (children.length>0)
+			li.removeChild(children[0]);
+	}
+	return false;
+}
+
+
+function expand(address) {
+	return false;
+}
