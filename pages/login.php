@@ -29,7 +29,7 @@ class login {
 	public function get() {
 		global $session;
 		$content = '
-<form method="post">
+<form method="post" action="">
 	<input type="hidden" name="action" value="login" />
 	<table id="login">
 		<thead><tr><th colspan="2">Login</th></tr></thead>
