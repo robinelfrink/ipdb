@@ -117,20 +117,23 @@ class Database {
 			$this->query("DROP TABLE ip");
 			if (!$this->query("CREATE TABLE `ip` (".
 							  "`address` varchar(32) NOT NULL,".
-							  "`bitmask` varchar(32) NOT NULL,".
+							  "`bits` INT UNSIGNED NOT NULL,".
 							  "`parent` varchar(32) NOT NULL default '00000000000000000000000000000000',".
+							  "`description` varchar(255),".
 							  "PRIMARY KEY  (`address`),".
-							  "KEY `bitmask` (`bitmask`),".
+							  "KEY `bits` (`bits`),".
 							  "KEY `parent` (`parent`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			if (!$this->query("INSERT INTO `ip` (`address`, `bitmask`) VALUES(".
-							  "'FC030000000000000000000000000000', ".
-							  "'0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF')"))
+			if (!$this->query("INSERT INTO `ip` (`address`, `bits`, `description`) VALUES(".
+							  "'fc030000000000000000000000000000', ".
+							  "16, ".
+							  "'Default IPv6 network.')"))
 				return false;
-			if (!$this->query("INSERT INTO `ip` (`address`, `bitmask`) VALUES(".
+			if (!$this->query("INSERT INTO `ip` (`address`, `bits`, `description`) VALUES(".
 							  "'000000000000000000000000C0A80300', ".
-							  "'000000000000000000000000000000FF')"))
+							  "24, ".
+							  "'Default IPv4 network.')"))
 				return false;
 			$this->query("DROP TABLE admin");
 			if (!$this->query("CREATE TABLE `admin` (".
