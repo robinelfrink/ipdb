@@ -28,24 +28,30 @@ class Tree {
 	public function get($root, $address = null) {
 
 		global $database;
-		$tree = $database->getTree($root, ($address===null ? false : $address));
+		$tree = $database->getTree($root);
 		if (count($tree)>0) {
 			$output = '
 <ul id="a_'.$root.'">';
 			foreach ($tree as $network) {
-				$subtree = Tree::get($network['address'], $address);
-				if ($subtree=='')
+				$subtree = '';
+				if ($database->hasNetworks($network['address'])) {
+					if (is_string($address) &&
+						addressIsChild($address, $network['address'], $network['bits'])) {
+						$class = ' class="expanded"';
+						$subtree = Tree::get($network['address']);
+					} else
+						$class = ' class="collapsed"';
+				} else
 					$class = '';
-				else {
-					$bits = $network['bits']+($network['address']<'00000000000000000000000100000000' ? 96 : 0);
-					debug($network['address'].'/'.$bits);
-				}
-				$output .= '
-	<li id="a_'.$network['address'].$class.'">
-		<span style="display: none;">'.htmlentities($network['description']).'</span>
-		'.ip2address($network['address']).'/'.$network['bits'].$subtree.'
+				if (!isHost($network['address'], $network['bits']))
+					$output .= '
+	<li id="a_'.$network['address'].'"'.$class.'>
+		<a href="?address='.$network['address'].'">'.ip2address($network['address']).'/'.$network['bits'].'
+			<span style="display: none;">'.htmlentities($network['description']).'</span>'.$subtree.'</a>
 	</li>';
 			}
+			$output .= '
+</ul>';
 			return $output;
 		} else
 			return '';

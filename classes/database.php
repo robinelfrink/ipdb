@@ -59,7 +59,7 @@ class Database {
 	}
 
 
-	public function escape($string) {
+	private function escape($string) {
 
 		if ($this->provider=='mysql')
 			return mysql_escape_string($string);
@@ -68,7 +68,7 @@ class Database {
 	}
 
 
-	public function query($sql) {
+	private function query($sql) {
 
 		$this->error = null;
 		if ($this->provider=='mysql') {
@@ -164,9 +164,24 @@ class Database {
 
 
 	public function getTree($parent, $recursive = false) {
+		$result = $this->query("SELECT `address`, `bits`, `description` FROM `ip` WHERE ".
+							   "`parent`='".$this->escape($parent)."' ORDER BY `address`");
 		if ($recursive===false)
-			return $this->query("SELECT `address`, `bits`, `description` FROM ip WHERE ".
-								"`parent`='".$this->escape($parent)."' ORDER BY address");
+			return $result;
+		foreach ($result as $network)
+			if (($recursive===true) ||
+				(is_string($recursive) && addressIsChild($recursive, $result['address'], $result['bits'])))
+				$result['children'] = $this->getTree($result['address'], $recursive);
+		return $result;
+	}
+
+
+	public function hasNetworks($parent) {
+		$result = $this->query("SELECT COUNT(`address`) AS `total` FROM `ip` WHERE `parent`='".
+							   $this->escape($parent)."' AND ".
+							   "(((STRCMP(`address`, '00000000000000000000000100000000')<0) AND (bits<32)) OR ".
+							   "((STRCMP(`address`, '000000000000000000000000ffffffff')>0) AND (bits<128)))");
+		return ($result[0]['total']>0);
 	}
 
 

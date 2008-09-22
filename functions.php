@@ -73,7 +73,7 @@ function request($name, $default = NULL) {
 
 
 function ip2address($address) {
-	if ($address<'00000000000000000000000100000000') {
+	if (strcmp($address, '00000000000000000000000100000000')<0) {
 		/* IPv4 */
 		$output = '';
 		for ($i=0; $i<8; $i=$i+2)
@@ -116,6 +116,48 @@ function ipv6compress($address) {
 	}
 	$address = preg_replace('/(^|:)0+([0-9a-f])/', '\1\2', $address);
 	return $address;
+}
+
+
+function bits2netmask($bits) {
+	return str_pad(str_repeat('0', $bits), 128, '1', STR_PAD_RIGHT);
+}
+
+
+function bits2bitmask($bits) {
+	return str_pad(str_repeat('1', $bits), 128, '0', STR_PAD_RIGHT);
+}
+
+
+function broadcast($address, $bits) {
+	$netmask = bits2netmask(strcmp($address, '00000000000000000000000100000000')<0 ? $bits+96 : $bits);
+	$broadcast = '';
+	for ($i=0; $i<strlen($address); $i++) {
+		$broadcast .= dechex(hexdec($address[$i]) | bindec(substr($netmask, $i*4, 4)));
+	}
+	return $broadcast;
+}
+
+
+function network($address, $bits) {
+	$bitmask = bits2bitmask(strcmp($address, '00000000000000000000000100000000')<0 ? $bits+96 : $bits);
+	$network = '';
+	for ($i=0; $i<strlen($address); $i++) {
+		$network .= dechex(hexdec($address[$i]) & bindec(substr($bitmask, $i*4, 4)));
+	}
+	return $network;
+}
+
+
+function addressIsChild($address, $network, $bits) {
+	return (($address>=network($network, $bits)) &&
+			($address<=broadcast($network, $bits)));
+}
+
+
+function isHost($address, $bits) {
+	$bits = (strcmp($address, '00000000000000000000000100000000')<0 ? $bits+96 : $bits);
+	return ($bits==128);
 }
 
 
