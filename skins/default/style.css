@@ -44,10 +44,10 @@ div#tree li div {
 	background-position: left;
 	padding-left: 16px;
 }
-div#tree li.collapsed div {
+div#tree li.collapsed>div {
 	background-image: url('images/plus.png');
 }
-div#tree li.expanded div {
+div#tree li.expanded>div {
 	background-image: url('images/minus.png');
 }
 div#tree li a, div#tree li a:link, div#tree li a:active {
