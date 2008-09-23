@@ -163,6 +163,13 @@ class Database {
 	}
 
 
+	public function getAddress($address) {
+		$result = $this->query("SELECT `address`, `bits`, `description` FROM `ip` WHERE ".
+							   "`address`='".$this->escape($address)."'");
+		return ($result ? $result[0] : false);
+	}
+
+
 	public function getTree($parent, $recursive = false) {
 		$result = $this->query("SELECT `address`, `bits`, `description` FROM `ip` WHERE ".
 							   "`parent`='".$this->escape($parent)."' ORDER BY `address`");

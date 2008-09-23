@@ -29,10 +29,6 @@ require_once 'classes/skin.php';
 require_once 'classes/tree.php';
 
 
-/* Set default page to fetch */
-$page = request('page', 'main');
-
-
 /* It's good to know where we are */
 $root = dirname(__FILE__);
 
@@ -65,6 +61,32 @@ else if ($database->hasUpgrade())
 	$page = 'upgradedb';
 
 
+/* Set default page and/or address to fetch */
+$page = (request('page') ? request('page') : (isset($_SESSION['page']) ? $_SESSION['page'] : 'main'));
+$address = (request('address') ? request('address') : (isset($_SESSION['address']) ? $_SESSION['address'] : null));
+
+
+/* Save page and address request */
+$_SESSION['page'] = $page;
+$_SESSION['address'] = $address;
+
+
+/* AJAX requests */
+if (request('remote')=='remote') {
+	header('Content-type: text/xml; charset=utf-8');
+	header("Cache-Control: no-cache, must-revalidate");
+	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+	if ($session->authenticated && (request('action')=='getsubtree')) {
+		$commands = str_split(escape('expandtree(\''.$address.'\', \''.escape(Tree::get($address)).'\');'), 1024);
+		echo '<?xml version="1.0" encoding="UTF-8"?>
+<content>
+	<commands>'.implode('</commands><commands>', $commands).'</commands>
+</content>';
+		exit;
+	}
+}
+
+
 /* Fetch the selected page */
 if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php'))
 	exit('Error: No code defined for page '.$page);
@@ -83,20 +105,27 @@ if ($pageobj->error)
 	exit('Error: '.$pageobj->error);
 
 
-
 /* Send back the requested content */
 $skin = new Skin($config->skin);
 if ($skin->error)
 	exit('Error: '.$skin->error);
-$skin->setFile('index.html');
-$skin->setVar('title', $pagedata['title']);
-$skin->setVar('version', $version);
-$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
-if ($session->authenticated)
-	$skin->setVar('tree', Tree::get('00000000000000000000000000000000', request('address')));
-$skin->setVar('content', $pagedata['content']);
-echo $skin->get();
 
+if (request('remote')=='remote') {
+	echo '<?xml version="1.0" encoding="UTF-8"?>
+<content>
+	<title>'.escape($pagedata['title']).'</title>
+	<content>'.escape($pagedata['content']).'</content>
+</content>';
+} else {
+	$skin->setFile('index.html');
+	$skin->setVar('title', $pagedata['title']);
+	$skin->setVar('version', $version);
+	$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
+	if ($session->authenticated)
+		$skin->setVar('tree', Tree::get('00000000000000000000000000000000', $address));
+	$skin->setVar('content', $pagedata['content']);
+	echo $skin->get();
+}
 
 
 /* Close the database */

@@ -48,9 +48,10 @@ class Tree {
 				if (!isHost($network['address'], $network['bits']))
 					$output .= '
 	<li id="a_'.$network['address'].'"'.$class.'>
-		<div id="a_'.$network['address'].'">
+		<div>
 			<a href="?address='.$network['address'].'">'.ip2address($network['address']).'/'.$network['bits'].'
-				<span style="display: none;">'.htmlentities($network['description']).'</span></a>
+				<span>'.$network['description'].'</span>
+			</a>
 		</div>'.$subtree.'
 	</li>';
 			}

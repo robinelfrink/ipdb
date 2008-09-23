@@ -27,10 +27,12 @@ class main {
 
 
 	public function get() {
-		global $database;
-		if (request('address')) {
-			$title = request('address');
-			$content = request('address');
+		global $database, $address;
+		if ($address) {
+			$data = $database->getAddress($address);
+			$title = ip2address($data['address']).'/'.
+				(strcmp($data, '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']);
+			$content = $address;
 		} else {
 			$title = 'Main page';
 			$tree = $database->getTree('00000000000000000000000000000000', false);
