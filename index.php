@@ -49,6 +49,11 @@ if ($session->error)
 	exit('Error: '.$session->error);
 
 
+/* Set default page and/or address to fetch */
+$page = (request('page') ? request('page') : (isset($_SESSION['page']) ? $_SESSION['page'] : 'main'));
+$address = (request('address') ? request('address') : (isset($_SESSION['address']) ? $_SESSION['address'] : null));
+
+
 /* Initialize the database */
 $database = new Database($config->database);
 if ($database->error)
@@ -59,11 +64,6 @@ else if (!$session->authenticate())
 	$page = 'login';
 else if ($database->hasUpgrade())
 	$page = 'upgradedb';
-
-
-/* Set default page and/or address to fetch */
-$page = (request('page') ? request('page') : (isset($_SESSION['page']) ? $_SESSION['page'] : 'main'));
-$address = (request('address') ? request('address') : (isset($_SESSION['address']) ? $_SESSION['address'] : null));
 
 
 /* Save page and address request */
