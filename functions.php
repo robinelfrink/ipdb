@@ -150,8 +150,8 @@ function network($address, $bits) {
 
 
 function addressIsChild($address, $network, $bits) {
-	return (($address>=network($network, $bits)) &&
-			($address<=broadcast($network, $bits)));
+	return ((strcmp($address, network($network, $bits))>=0) &&
+			(strcmp($address, broadcast($network, $bits))<=0));
 }
 
 
