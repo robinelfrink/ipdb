@@ -33,19 +33,19 @@ class Tree {
 			$output = '
 <ul id="a_'.$root.'">';
 			foreach ($tree as $network) {
-				$subtree = '';
-				if ($database->hasNetworks($network['address'])) {
-					if (is_string($address) &&
-						addressIsChild($address, $network['address'], $network['bits'])) {
-						$class = ' class="expanded"';
-						$subtree = Tree::get($network['address'], $address);
+				if (!isHost($network['address'], $network['bits'])) {
+					$subtree = '';
+					if ($database->hasNetworks($network['address'])) {
+						if (is_string($address) &&
+							addressIsChild($address, $network['address'], $network['bits'])) {
+							$class = ' class="expanded"';
+							$subtree = Tree::get($network['address'], $address);
+						} else {
+							$class = ' class="collapsed"';
+						}
 					} else {
-						$class = ' class="collapsed"';
+						$class = '';
 					}
-				} else {
-					$class = '';
-				}
-				if (!isHost($network['address'], $network['bits']))
 					$output .= '
 	<li id="a_'.$network['address'].'"'.$class.'>
 		<div>
@@ -54,6 +54,7 @@ class Tree {
 			</a>
 		</div>'.$subtree.'
 	</li>';
+				}
 			}
 			$output .= '
 </ul>';
