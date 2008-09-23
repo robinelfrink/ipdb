@@ -25,18 +25,18 @@ class Tree {
 
 	public $error = null;
 
-	public function get($root, $address = null) {
+	public function get($node, $address = null) {
 
 		global $config, $database;
-		$tree = $database->getTree($root);
+		$tree = $database->getTree($node);
 		$skin = new Skin($config->skin);
 		$skin->setFile('tree.html');
 		$skin->setBlock('network');
 		if (count($tree)>0) {
 			foreach ($tree as $network) {
-				if (!isHost($network['address'], $network['bits'])) {
+				if ($network['bits']<128) {
 					$subtree = '';
-					if ($database->hasNetworks($network['address'])) {
+					if ($database->hasNetworks($network['id'])) {
 						if (is_string($address) &&
 							addressIsChild($address, $network['address'], $network['bits'])) {
 							$class = 'class="expanded"';
@@ -47,10 +47,10 @@ class Tree {
 					} else {
 						$class = '';
 					}
-					$skin->setVar('address', $network['address']);
-					$skin->setVar('link', '?address='.$network['address']);
+					$skin->setVar('node', $network['id']);
+					$skin->setVar('link', '?node='.$network['id']);
 					$skin->setVar('label', ip2address($network['address']).'/'.
-								  (strcmp($network['address'], '00000000000000000000000000000000')<0 ? 
+								  (strcmp($network['address'], '00000000000000000000000100000000')<0 ? 
 								   $network['bits']-96 : $network['bits']));
 					$skin->setVar('description', htmlentities($network['description']));
 					$skin->setVar('subtree', $subtree);

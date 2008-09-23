@@ -59,7 +59,7 @@ class Database {
 	}
 
 
-	private function escape($string) {
+	public function escape($string) {
 
 		if ($this->provider=='mysql')
 			return mysql_escape_string($string);
@@ -68,7 +68,7 @@ class Database {
 	}
 
 
-	private function query($sql) {
+	public function query($sql) {
 
 		$this->error = null;
 		if ($this->provider=='mysql') {
@@ -116,23 +116,23 @@ class Database {
 			/* Drop old tables, even though we're pretty sure they don't exists. */
 			$this->query("DROP TABLE ip");
 			if (!$this->query("CREATE TABLE `ip` (".
+							  "`id` INT UNSIGNED NOT NULL,".
 							  "`address` varchar(32) NOT NULL,".
 							  "`bits` INT UNSIGNED NOT NULL,".
-							  "`parent` varchar(32) NOT NULL default '00000000000000000000000000000000',".
+							  "`parent` INT UNSIGNED NOT NULL DEFAULT 0,".
 							  "`description` varchar(255),".
-							  "PRIMARY KEY  (`address`),".
+							  "PRIMARY KEY  (`id`),".
+							  "KEY `address` (`address`),".
 							  "KEY `bits` (`bits`),".
 							  "KEY `parent` (`parent`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			if (!$this->query("INSERT INTO `ip` (`address`, `bits`, `description`) VALUES(".
-							  "'fc030000000000000000000000000000', ".
-							  "16, ".
+			if (!$this->query("INSERT INTO `ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
+							  "1, 'fc030000000000000000000000000000', 16, 0, ".
 							  "'Default IPv6 network.')"))
 				return false;
-			if (!$this->query("INSERT INTO `ip` (`address`, `bits`, `description`) VALUES(".
-							  "'000000000000000000000000C0A80300', ".
-							  "24, ".
+			if (!$this->query("INSERT INTO `ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
+							  "2, '000000000000000000000000C0A80300', 120, 0, ".
 							  "'Default IPv4 network.')"))
 				return false;
 			$this->query("DROP TABLE admin");
@@ -163,31 +163,29 @@ class Database {
 	}
 
 
-	public function getAddress($address) {
-		$result = $this->query("SELECT `address`, `bits`, `description` FROM `ip` WHERE ".
-							   "`address`='".$this->escape($address)."'");
+	public function getAddress($node) {
+		$result = $this->query("SELECT `id`, `address`, `bits`, `description` FROM `ip` WHERE ".
+							   "`id`=".$this->escape($node));
 		return ($result ? $result[0] : false);
 	}
 
 
 	public function getTree($parent, $recursive = false) {
-		$result = $this->query("SELECT `address`, `bits`, `description` FROM `ip` WHERE ".
-							   "`parent`='".$this->escape($parent)."' ORDER BY `address`");
+		$result = $this->query("SELECT `id`, `address`, `bits`, `description` FROM `ip` WHERE ".
+							   "`parent`=".$this->escape($parent)." ORDER BY `address`");
 		if ($recursive===false)
 			return $result;
 		foreach ($result as $network)
 			if (($recursive===true) ||
 				(is_string($recursive) && addressIsChild($recursive, $result['address'], $result['bits'])))
-				$result['children'] = $this->getTree($result['address'], $recursive);
+				$result['children'] = $this->getTree($result['id'], $recursive);
 		return $result;
 	}
 
 
 	public function hasNetworks($parent) {
-		$result = $this->query("SELECT COUNT(`address`) AS `total` FROM `ip` WHERE `parent`='".
-							   $this->escape($parent)."' AND ".
-							   "(((STRCMP(`address`, '00000000000000000000000100000000')<0) AND (bits<32)) OR ".
-							   "((STRCMP(`address`, '000000000000000000000000ffffffff')>0) AND (bits<128)))");
+		$result = $this->query("SELECT COUNT(`id`) AS `total` FROM `ip` WHERE `parent`=".
+							   $this->escape($parent)." AND `bits`<128");
 		return ($result[0]['total']>0);
 	}
 

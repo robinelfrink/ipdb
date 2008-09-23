@@ -130,7 +130,7 @@ function bits2bitmask($bits) {
 
 
 function broadcast($address, $bits) {
-	$netmask = bits2netmask(strcmp($address, '00000000000000000000000100000000')<0 ? $bits+96 : $bits);
+	$netmask = bits2netmask($bits);
 	$broadcast = '';
 	for ($i=0; $i<strlen($address); $i++) {
 		$broadcast .= dechex(hexdec($address[$i]) | bindec(substr($netmask, $i*4, 4)));
@@ -140,7 +140,7 @@ function broadcast($address, $bits) {
 
 
 function network($address, $bits) {
-	$bitmask = bits2bitmask(strcmp($address, '00000000000000000000000100000000')<0 ? $bits+96 : $bits);
+	$bitmask = bits2bitmask($bits);
 	$network = '';
 	for ($i=0; $i<strlen($address); $i++) {
 		$network .= dechex(hexdec($address[$i]) & bindec(substr($bitmask, $i*4, 4)));

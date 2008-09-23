@@ -8,7 +8,7 @@ $root = dirname(__FILE__);
 $config = new Config();
 $database = new Database($config->database);
 
-$oldresult = $database->query("SELECT address, netmask, parent, description FROM ipold");
+$oldresult = $database->query("SELECT id, address, netmask, parent, description FROM ipold");
 
 $database->query("DELETE FROM ip");
 
@@ -17,19 +17,12 @@ foreach ($oldresult as $row) {
 	for ($i=0; $i<strlen($row['netmask']); $i++) {
 		$bits += substr_count(decbin(hexdec($row['netmask'][$i])), '1');
 	}
-	if (preg_match('/^000000000000000000000000/', $row['address']))
-		$bits -= 96;
 	echo ip2address($row['address']).'/'.$bits;
-	if ($row['parent']==0)
-		$parent = '00000000000000000000000000000000';
-	else {
-		$parent = $database->query("SELECT address FROM ipold WHERE id=".$row['parent']);
-		$parent = $parent[0]['address'];
-	}
-	$database->query("INSERT INTO ip (address, bits, parent, description) VALUES('".
+	$database->query("INSERT INTO ip (id, address, bits, parent, description) VALUES(".
+					 $database->escape($row['id']).", '".
 					 $database->escape(strtolower($row['address']))."', ".
-					 $bits.", '".
-					 $database->escape(strtolower($parent))."', '".
+					 $bits.", ".
+					 $database->escape($row['parent']).", '".
 					 $database->escape($row['description'])."')");
 	echo "\n";
 }

@@ -65,10 +65,10 @@ else if ($database->hasUpgrade())
 	$page = 'upgradedb';
 
 
-/* Save page and address request */
+/* Save page and node request */
 $_SESSION['page'] = $page;
-$address = (request('address') ? request('address') : (isset($_SESSION['address']) ? $_SESSION['address'] : null));
-$_SESSION['address'] = $address;
+$node = (request('node') ? request('node') : (isset($_SESSION['node']) ? $_SESSION['node'] : null));
+$_SESSION['node'] = $node;
 
 
 /* AJAX requests */
@@ -77,7 +77,7 @@ if (request('remote')=='remote') {
 	header("Cache-Control: no-cache, must-revalidate");
 	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
 	if ($session->authenticated && (request('action')=='getsubtree')) {
-		$commands = str_split(escape('expandtree(\''.$address.'\', \''.escape(Tree::get($address)).'\');'), 1024);
+		$commands = str_split(escape('expandtree(\''.$node.'\', \''.escape(Tree::get($node)).'\');'), 1024);
 		echo '<?xml version="1.0" encoding="UTF-8"?>
 <content>
 	<commands>'.implode('</commands><commands>', $commands).'</commands>
@@ -122,7 +122,7 @@ if (request('remote')=='remote') {
 	$skin->setVar('version', $version);
 	$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
 	if ($session->authenticated)
-		$skin->setVar('tree', Tree::get('00000000000000000000000000000000', $address));
+		$skin->setVar('tree', Tree::get(0, $node));
 	$skin->setVar('content', $pagedata['content']);
 	echo $skin->get();
 }

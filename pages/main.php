@@ -27,29 +27,27 @@ class main {
 
 
 	public function get() {
-		global $database, $address;
-		if ($address) {
-			$data = $database->getAddress($address);
+		global $node, $config, $database;
+		if ($node) {
+			$data = $database->getAddress($node);
 			$title = ip2address($data['address']).'/'.
-				(strcmp($data, '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']);
-			$content = $address;
+				(strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']);
+			$content = $title;
 		} else {
 			$title = 'Main page';
-			$tree = $database->getTree('00000000000000000000000000000000', false);
+			$tree = $database->getTree(0, false);
 			if (count($tree)>0) {
-				$content = '
-<p>You have '.count($tree).' main networks in your database:</p>
-<table>
-	<thead>
-		<tr><th>address</th><th>description</th></tr>
-	</thead>
-	<tbody>';
-				foreach ($tree as $network)
-					$content .= '
-		<tr><td>'.ip2address($network['address']).'/'.$network['bits'].'</td><td>'.$network['description'].'</td></tr>';
-				$content .= '
-	</tbody>
-</table>';
+				$skin = new Skin($config->skin);
+				$skin->setFile('main.html');
+				$skin->setBlock('network');
+				foreach ($tree as $network) {
+					$skin->setVar('label', ip2address($network['address']).'/'.
+								  (strcmp($data, '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
+					$skin->setVar('description', $network['description']);
+					$skin->parse('network');
+				}
+				$skin->setVar('count', count($tree));
+				$content = $skin->get();
 			} else {
 				$content = '
 <p>You currently do not have any networks in your database.</p>';
