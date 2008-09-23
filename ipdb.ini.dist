@@ -21,6 +21,11 @@ password = secret
 prefix = ipdb_
 
 
+; Session
+[session]
+expire = 10m
+
+
 ; Skin
 [skin]
 skin = default

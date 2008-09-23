@@ -25,6 +25,17 @@ class Session {
 
 	public $error = null;
 	public $authenticated = false;
+	private $expire;
+
+
+	public function __construct($config) {
+		if (preg_match('/h$/', $config['expire']))
+			$this->expire = preg_replace('/h$/', '', $config['expire'])*3600;
+		else if (preg_match('/m$/', $config['expire']))
+			$this->expire = preg_replace('/m$/', '', $config['expire'])*60;
+		if (preg_match('/s$/', $config['expire']))
+			$this->expire = preg_replace('/s$/', '', $config['expire']);
+	}
 
 
 	public function authenticate() {
@@ -85,7 +96,7 @@ class Session {
 		}
 		$_SESSION['username'] = $username;
 		$_SESSION['key'] = $key;
-		$_SESSION['expire'] = time()+(15*60);
+		$_SESSION['expire'] = time()+$this->expire;
 
 		$this->authenticated = true;
 		return true;

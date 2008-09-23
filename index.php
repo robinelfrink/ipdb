@@ -44,7 +44,7 @@ if ($config->error)
 
 
 /* Start the session */
-$session = new Session();
+$session = new Session($config->session);
 if ($session->error)
 	exit('Error: '.$session->error);
 

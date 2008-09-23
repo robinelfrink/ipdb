@@ -48,6 +48,7 @@ class login {
 	</table>
 </form>';
 		return array('title'=>'IPDB :: Login',
+					 'tree'=>'&nbsp;',
 					 'content'=>$content);
 	}
 
