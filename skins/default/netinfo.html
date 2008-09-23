@@ -1,0 +1,18 @@
+<h2>{label}</h2>
+{description}
+<table>
+	<tbody>
+		<tr><td>address:</td><td>{address}</td></tr>
+		<!-- BEGIN ipv4 -->
+		<tr><td>netmask:</td><td>{netmask}</td></tr>
+		<tr><td>broadcast:</td><td>{broadcast}</td></tr>
+		<!-- END ipv4 -->
+		<!-- BEGIN parent -->
+		<tr><td>parent:</td><td><a href="{link}">{label}</a></td></tr>
+		<!-- END parent -->
+	</tbody>
+</table>
+
+<a href="?action=add&node={node}">add</a> |
+<a href="?action=delete&node={node}">delete</a> |
+<a href="?action=change&node={node}">change</a>
