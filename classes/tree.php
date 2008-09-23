@@ -25,10 +25,10 @@ class Tree {
 
 	public $error = null;
 
-	public function get($node, $address = null) {
+	public function get($id, $node = null) {
 
 		global $config, $database;
-		$tree = $database->getTree($node);
+		$tree = $database->getTree($id);
 		$skin = new Skin($config->skin);
 		$skin->setFile('tree.html');
 		$skin->setBlock('network');
@@ -37,10 +37,11 @@ class Tree {
 				if ($network['bits']<128) {
 					$subtree = '';
 					if ($database->hasNetworks($network['id'])) {
-						if (is_string($address) &&
-							addressIsChild($address, $network['address'], $network['bits'])) {
+						if (is_numeric($node) &&
+							($child = $database->getAddress($node)) &&
+							addressIsChild($child['address'], $network['address'], $network['bits'])) {
 							$class = 'class="expanded"';
-							$subtree = Tree::get($network['address'], $address);
+							$subtree = Tree::get($network['id'], $child['id']);
 						} else {
 							$class = 'class="collapsed"';
 						}

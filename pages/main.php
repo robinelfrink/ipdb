@@ -32,7 +32,30 @@ class main {
 			$data = $database->getAddress($node);
 			$title = ip2address($data['address']).'/'.
 				(strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']);
-			$content = $title;
+			$skin = new Skin($config->skin);
+			$skin->setFile('netinfo.html');
+			$skin->setBlock('ipv4');
+			$skin->setBlock('parent');
+			if (strcmp($data['address'], '00000000000000000000000100000000')<0) {
+				$skin->setVar('netmask', ip2address(ipv4netmask($data['bits'])));
+				$skin->setVar('broadcast', ip2address(broadcast($data['address'], $data['bits'])));
+				$skin->parse('ipv4');
+			}
+			if ($data['parent']>0) {
+				$parent = $database->getAddress($data['parent']);
+				$skin->setVar('label', ip2address($parent['address']).'/'.
+							  (strcmp($parent['address'], '00000000000000000000000100000000')<0 ? $parent['bits']-96 : $parent['bits']));
+				$skin->setVar('link', '?node='.$parent['id']);
+				$skin->parse('parent');
+			}
+			if ($data['bits']==128) {
+				$skin->setVar('label', 'host '.ip2address($data['address']));
+			} else {
+				$skin->setVar('label', 'network '.ip2address($data['address']).'/'.
+							  (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
+				$skin->setVar('address', ip2address($data['address']));
+			}
+			$content = $skin->get();
 		} else {
 			$title = 'Main page';
 			$tree = $database->getTree(0, false);

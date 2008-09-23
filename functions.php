@@ -132,9 +132,8 @@ function bits2bitmask($bits) {
 function broadcast($address, $bits) {
 	$netmask = bits2netmask($bits);
 	$broadcast = '';
-	for ($i=0; $i<strlen($address); $i++) {
+	for ($i=0; $i<strlen($address); $i++)
 		$broadcast .= dechex(hexdec($address[$i]) | bindec(substr($netmask, $i*4, 4)));
-	}
 	return $broadcast;
 }
 
@@ -142,11 +141,21 @@ function broadcast($address, $bits) {
 function network($address, $bits) {
 	$bitmask = bits2bitmask($bits);
 	$network = '';
-	for ($i=0; $i<strlen($address); $i++) {
+	for ($i=0; $i<strlen($address); $i++)
 		$network .= dechex(hexdec($address[$i]) & bindec(substr($bitmask, $i*4, 4)));
-	}
 	return $network;
 }
+
+
+function ipv4netmask($bits) {
+	$mask = bits2bitmask($bits);
+	$mask = str_repeat('0', 96).substr($mask, 96);
+	$netmask = '';
+	for ($i=0; $i<32; $i++)
+		$netmask .= dechex(bindec(substr($mask, $i*4, 4)));
+	return $netmask;
+}
+
 
 
 function addressIsChild($address, $network, $bits) {

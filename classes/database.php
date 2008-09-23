@@ -164,14 +164,14 @@ class Database {
 
 
 	public function getAddress($node) {
-		$result = $this->query("SELECT `id`, `address`, `bits`, `description` FROM `ip` WHERE ".
+		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
 							   "`id`=".$this->escape($node));
 		return ($result ? $result[0] : false);
 	}
 
 
 	public function getTree($parent, $recursive = false) {
-		$result = $this->query("SELECT `id`, `address`, `bits`, `description` FROM `ip` WHERE ".
+		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
 							   "`parent`=".$this->escape($parent)." ORDER BY `address`");
 		if ($recursive===false)
 			return $result;
