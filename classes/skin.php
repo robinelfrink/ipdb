@@ -25,8 +25,9 @@ class Skin {
 
 	public $error = null;
 	private $skin = null;
-	private $file = null;
+	private $data = null;
 	private $vars = array();
+	private $blocks = array();
 
 
 	public function __construct($config) {
@@ -47,8 +48,10 @@ class Skin {
 
 		global $root;
 		$this->error = null;
-		if (file_exists($this->file = $root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename))
+		if (file_exists($file = $root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename)) {
+			$this->data = file_get_contents($file);
 			return true;
+		}
 		$this->error = 'Cannot read skin file skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename;
 		return false;
 
@@ -62,15 +65,37 @@ class Skin {
 	}
 
 
+	public function setBlock($block) {
+
+		if (preg_match('/<!-- BEGIN '.preg_quote($block).' -->/', $this->data) &&
+			preg_match('/<!-- END '.preg_quote($block).' -->/', $this->data)) {
+			$this->blocks[$block] = preg_replace('/.*<!-- BEGIN '.preg_quote($block).' -->/s', '', $this->data);
+			$this->blocks[$block] = preg_replace('/<!-- END '.preg_quote($block).' -->.*/s', '', $this->blocks[$block]);
+			$this->data = preg_replace('/<!-- BEGIN '.preg_quote($block).' -->.*<!-- END '.preg_quote($block).' -->/s', '{'.$block.'}', $this->data);
+		}
+
+	}
+
+
+	public function parse($block) {
+
+		$blockdata = $this->blocks[$block];
+		foreach ($this->vars as $var=>$value)
+			$vars['/\{'.preg_quote($var).'\}/'] = $value;
+		$blockdata = preg_replace(array_keys($vars), $vars, $blockdata);
+		$this->data = preg_replace('/\{'.preg_quote($block).'\}/', $blockdata.'{'.$block.'}', $this->data);
+
+	}
+
+
 	public function get($cleanunused = true) {
 
-		$data = file_get_contents($this->file);
 		$vars = array();
 		foreach ($this->vars as $var=>$value)
 			$vars['/\{'.preg_quote($var).'\}/'] = $value;
 		if ($cleanunused)
 			$vars['/\{[a-zA-Z0-9_]+\}/'] = '';
-		return preg_replace(array_keys($vars), $vars, $data);
+		return preg_replace(array_keys($vars), $vars, $this->data);
 
 	}
 
