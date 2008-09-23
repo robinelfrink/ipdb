@@ -55,6 +55,9 @@ div#tree a {
 	text-decoration: none;
 	color: inherit;
 	z-index: 24;
+	width: 0;
+	height: 0;
+	outline: 0;
 }
 div#tree a:hover {
 	z-index: 25;
