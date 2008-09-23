@@ -49,9 +49,8 @@ if ($session->error)
 	exit('Error: '.$session->error);
 
 
-/* Set default page and/or address to fetch */
+/* Set default page to fetch */
 $page = (request('page') ? request('page') : (isset($_SESSION['page']) ? $_SESSION['page'] : 'main'));
-$address = (request('address') ? request('address') : (isset($_SESSION['address']) ? $_SESSION['address'] : null));
 
 
 /* Initialize the database */
@@ -68,6 +67,7 @@ else if ($database->hasUpgrade())
 
 /* Save page and address request */
 $_SESSION['page'] = $page;
+$address = (request('address') ? request('address') : (isset($_SESSION['address']) ? $_SESSION['address'] : null));
 $_SESSION['address'] = $address;
 
 
