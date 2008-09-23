@@ -48,7 +48,7 @@ class Tree {
 						$class = '';
 					}
 					$skin->setVar('address', $network['address']);
-					$skin->setVar('link', '?address=a_'.$network['address']);
+					$skin->setVar('link', '?address='.$network['address']);
 					$skin->setVar('label', ip2address($network['address']).'/'.
 								  (strcmp($network['address'], '00000000000000000000000000000000')<0 ? 
 								   $network['bits']-96 : $network['bits']));
