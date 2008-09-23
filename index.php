@@ -113,8 +113,11 @@ if ($skin->error)
 if (request('remote')=='remote') {
 	echo '<?xml version="1.0" encoding="UTF-8"?>
 <content>
-	<title>'.escape($pagedata['title']).'</title>
-	<content>'.escape($pagedata['content']).'</content>
+	'.(isset($pagedata['title']) ? '<title>'.escape($pagedata['title']).'</title>' : '').'
+	'.(isset($pagedata['content']) ? '<content>'.escape($pagedata['content']).'</content>' : '').'
+	'.(isset($pagedata['tree']) ? '<tree>'.escape($pagedata['tree']).'</tree>' : '').'
+	'.(isset($pagedata['menu']) ? '<menu>'.escape($pagedata['menu']).'</menu>' : '').'
+	'.(isset($pagedata['commands']) ? '<commands>'.escape($pagedata['commands']).'</commands>' : '').'
 </content>';
 } else {
 	$skin->setFile('index.html');
