@@ -113,11 +113,11 @@ if ($skin->error)
 if (request('remote')=='remote') {
 	echo '<?xml version="1.0" encoding="UTF-8"?>
 <content>
-	'.(isset($pagedata['title']) ? '<title>'.escape($pagedata['title']).'</title>' : '').'
-	'.(isset($pagedata['content']) ? '<content>'.escape($pagedata['content']).'</content>' : '').'
-	'.(isset($pagedata['tree']) ? '<tree>'.escape($pagedata['tree']).'</tree>' : '').'
-	'.(isset($pagedata['menu']) ? '<menu>'.escape($pagedata['menu']).'</menu>' : '').'
-	'.(isset($pagedata['commands']) ? '<commands>'.escape($pagedata['commands']).'</commands>' : '').'
+	'.(isset($pagedata['title']) ? '<title>'.implode('</title><title>', str_split(escape($pagedata['title']), 1024)).'</title>' : '').'
+	'.(isset($pagedata['content']) ? '<content>'.implode('</content><content>', str_split(escape($pagedata['content']), 1024)).'</content>' : '').'
+	'.(isset($pagedata['tree']) ? '<tree>'.implode('</tree><tree>', str_split(escape($pagedata['tree']), 1024)).'</tree>' : '').'
+	'.(isset($pagedata['menu']) ? '<menu>'.implode('</menu><menu>', str_split(escape($pagedata['menu']), 1024)).'</menu>' : '').'
+	'.(isset($pagedata['commands']) ? '<commands>'.implode('</commands><commands>', str_split(escape($pagedata['commands']), 1024)).'</commands>' : '').'
 </content>';
 } else {
 	$skin->setFile('index.html');
