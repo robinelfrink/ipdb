@@ -48,22 +48,56 @@ class modify {
 
 	private function getAdd() {
 		global $config, $database;
+		$node = request('node');
+		$address = request('address');
+		$bits = request('bits');
 		if (request('confirm')=='yes') {
-		} else {
-			if (request('node'))
-				$new = $database->getAddress(request('node'));
-			else
-				$new = array('id'=>null,
-							 'address'=>request('address'),
-							 'bits'=>request('bits'),
-							 'parent'=>null,
-							 'description'=>'');
-			$skin = new Skin($config->skin);
-			$skin->setVar('address', ip2address($new['address']));
-			$skin->setVar('bits', (strcmp($new['address'], '00000000000000000000000100000000')<0 ? $new['bits']-96 : $new['bits']));
-			$skin->setVar('description', $new['description']);
-			$skin->setFile('newnode.html');
-			return $skin->get();
+			$address = address2ip($address);
+			$bits = (strcmp($address, '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'));
+			$description = request('description');
+			$tree = $database->getParentTree($address);
+			$parent = 0;
+			if (count($tree)>0) {
+				reset($tree);
+				do {
+					$current = current($tree);
+					if (strcmp(broadcast($current['address'], $current['bits']),
+							   broadcast($address, $bits))>=0)
+						$parent = $current['id'];
+				} while (next($tree));
+			}
+			if (($next = $database->getNext($address)) &&
+				(strcmp(broadcast($address, $bits), $next['address'])>=0)) {
+					$this->error = 'Network overlaps with '.ip2address($next['address']).'/'.
+						(strcmp($next['address'], '00000000000000000000000100000000')<0 ? $next['bits']-96 : $next['bits']);
+			} else {
+				$id = $database->addNode($address, $bits, $parent, $description);
+				$_SESSION['node'] = $id;
+				return 'okidoki';
+			}
+		}
+		if ($node) {
+			$new = $database->getAddress($node);
+			if (strcmp($new['address'], '00000000000000000000000100000000')<0)
+				$new['bits'] = $new['bits']-96;
+		} else
+			$new = array('id'=>null,
+						 'address'=>request('address'),
+						 'bits'=>request('bits'),
+						 'parent'=>null,
+						 'description'=>'');
+		$skin = new Skin($config->skin);
+		$skin->setVar('address', ip2address($new['address']));
+		$skin->setVar('bits', $new['bits']);
+		$skin->setVar('description', $new['description']);
+		$skin->setFile('newnode.html');
+		return $skin->get();
+	}
+
+
+	private function getDelete() {
+		global $config, $database;
+		if (request('confirm')=='yes') {
 		}
 	}
 

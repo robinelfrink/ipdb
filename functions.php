@@ -87,6 +87,17 @@ function ip2address($address) {
 }
 
 
+function address2ip($address) {
+	if (preg_match('/^([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$/', $address, $matches))
+		return '000000000000000000000000'.str_pad(dechex($matches[1]), 2, '0', STR_PAD_LEFT).
+			str_pad(dechex($matches[2]), 2, '0', STR_PAD_LEFT).
+			str_pad(dechex($matches[3]), 2, '0', STR_PAD_LEFT).
+			str_pad(dechex($matches[4]), 2, '0', STR_PAD_LEFT);
+	else
+		return preg_replace('/:/', '', ipv6uncompress($address));
+}
+
+
 function ipv6uncompress($address) {
 	if (strpos($address, '::')===false)
 		return $address;

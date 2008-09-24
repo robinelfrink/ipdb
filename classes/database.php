@@ -190,6 +190,41 @@ class Database {
 	}
 
 
+	public function getParentTree($address) {
+		$tree = array();
+		$entry = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
+							  "STRCMP('".$this->escape($address)."', `address`)>=0 ".
+							  "ORDER BY `address` DESC, `bits` ASC LIMIT 1");
+		if (count($entry)>0) {
+			$entry = $entry[0];
+			array_unshift($tree, $entry);
+			while ($entry && ($entry['parent']>0)) {
+				$entry = $this->getAddress($entry['parent']);
+				array_unshift($tree, $entry);
+			}
+		}
+		return $tree;
+	}
+
+
+	public function getNext($address) {
+		$entry = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
+							  "STRCMP('".$this->escape($address)."', `address`)<0 ".
+							  "ORDER BY `address` ASC LIMIT 1");
+		return (count($entry)>0 ? $entry[0] : null);
+	}
+
+
+	public function addNode($address, $bits, $parent, $description) {
+		$max = $this->query("SELECT MAX(`id`) AS `max` FROM `ip`");
+		$this->query("INSERT INTO `ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
+					 $this->escape($max[0]['max']+1).", '".
+					 $this->escape($address)."', ".$this->escape($bits).", ".
+					 $this->escape($parent).", '".$this->escape($description)."')");
+		return $max[0]['max']+1;
+	}
+
+
 }
 
 
