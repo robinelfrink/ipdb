@@ -56,6 +56,35 @@ class main {
 				$skin->setVar('address', ip2address($data['address']));
 			}
 			$content = $skin->get();
+			if ($children = $database->getTree($data['id'])) {
+				$skin->setFile('children.html');
+				$skin->setBlock('child');
+				$base = $data['address'];
+				$networks = array();
+				foreach ($children as $child) {
+					if (strcmp($base, $child['address'])<0) {
+						$unused = findunused($base, $child['address']);
+						if (is_array($unused) && (count($unused)>0))
+							foreach ($unused as $network)
+								$networks[] = $network;
+					}
+					$networks[] = $child;
+					$base = str_pad(dechex(hexdec(broadcast($child['address'], $child['bits']))+1), 32, '0', STR_PAD_LEFT);
+				}
+				$unused = findunused($base, str_pad(dechex(hexdec(broadcast($data['address'], $data['bits']))+1), 32, '0', STR_PAD_LEFT));
+				if (is_array($unused) && (count($unused)>0))
+					foreach ($unused as $network)
+						$networks[] = $network;
+				foreach ($networks as $network) {
+					$skin->setVar('link', ($network['id'] ? '?node='.$network['id'] : '?action=addnet&address='.$network['address']));
+					$skin->setVar('label', ip2address($network['address']).
+								  ($network['bits']==128 ? '' : '/'.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
+					$skin->setVar('description', ($network['id'] ? $network['description'] : 'unused'));
+					$skin->setVar('class', ($network['id'] ? '' : ' class="unused"'));
+					$skin->parse('child');
+				}
+				$content .= $skin->get();
+			}
 		} else {
 			$title = 'Main page';
 			$tree = $database->getTree(0, false);
@@ -65,7 +94,7 @@ class main {
 				$skin->setBlock('network');
 				foreach ($tree as $network) {
 					$skin->setVar('label', ip2address($network['address']).'/'.
-								  (strcmp($data, '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
+								  (strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits']));
 					$skin->setVar('description', $network['description']);
 					$skin->parse('network');
 				}

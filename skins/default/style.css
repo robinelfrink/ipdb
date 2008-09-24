@@ -84,6 +84,19 @@ div#content {
 }
 
 
+div#content table#children {
+	border: 1px solid;
+	border-collapse: collapse;
+}
+div#content table#children thead tr {
+	border-bottom: 1px solid;
+}
+div#content table#children tbody tr.unused td,
+div#content table#children tbody tr.unused a {
+	color: #2a2;
+}
+
+
 div#footer {
 	clear: both;
 	background-color: #fcfcff;

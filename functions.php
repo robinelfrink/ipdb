@@ -184,4 +184,26 @@ function unescape($string) {
 }
 
 
+function findunused($base, $next) {
+	$unused = array();
+	if (strcmp($base, $next)<0) {
+		$bits = 128-floor(log(hexdec($next)-hexdec($base), 2));
+		while (($bits<128) &&
+			   (strcmp($base, network($base, $bits))!=0))
+			$bits++;
+		if (!(preg_match('/^000000000000000000000000......(00|ff)$/', $base) &&
+			  ($bits==128)))
+			$unused[] = array('id'=>null,
+							  'address'=>$base,
+							  'bits'=>$bits);
+		$base = str_pad(dechex(hexdec($base)+pow(2, 128-$bits)), 32, '0', STR_PAD_LEFT);
+		$nextunused = findunused($base, $next);
+		if (is_array($nextunused) && (count($nextunused)>0))
+			foreach ($nextunused as $network)
+				$unused[] = $network;
+	}
+	return $unused;
+}
+
+
 ?>
