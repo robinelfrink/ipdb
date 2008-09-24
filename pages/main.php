@@ -70,9 +70,9 @@ class main {
 								$networks[] = $network;
 					}
 					$networks[] = $child;
-					$base = str_pad(dechex(hexdec(broadcast($child['address'], $child['bits']))+1), 32, '0', STR_PAD_LEFT);
+					$base = plus(broadcast($child['address'], $child['bits']), '00000000000000000000000000000001');
 				}
-				$unused = findunused($base, str_pad(dechex(hexdec(broadcast($data['address'], $data['bits']))+1), 32, '0', STR_PAD_LEFT));
+				$unused = findunused($base, plus(broadcast($data['address'], $data['bits']), '00000000000000000000000000000001'));
 				if (is_array($unused) && (count($unused)>0))
 					foreach ($unused as $network)
 						$networks[] = $network;

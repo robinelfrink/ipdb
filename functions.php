@@ -138,6 +138,60 @@ function broadcast($address, $bits) {
 }
 
 
+function _or($one, $two) {
+	$one = str_pad($one, 32, '0', STR_PAD_LEFT);
+	$two = str_pad($two, 32, '0', STR_PAD_LEFT);
+	$result = '';
+	for ($i=0; $i<32; $i++)
+		$result .= dechex(hexdec($one[$i]) | hexdec($two[$i]));
+	return $result;
+}
+
+
+function _and($one, $two) {
+	$one = str_pad($one, 32, '0', STR_PAD_LEFT);
+	$two = str_pad($two, 32, '0', STR_PAD_LEFT);
+	$result = '';
+	for ($i=0; $i<32; $i++)
+		$result .= dechex(hexdec($one[$i]) & hexdec($two[$i]));
+	return $result;
+}
+
+
+function plus($one, $two) {
+	$one = str_pad($one, 32, '0', STR_PAD_LEFT);
+	$two = str_pad($two, 32, '0', STR_PAD_LEFT);
+	$overflow = 0;
+	for ($i=31; $i>=0; $i--) {
+		$new = hexdec($one[$i])+hexdec($two[$i])+$overflow;
+		if ($new>15) {
+			$overflow = 1;
+			$new = $new-16;
+		} else
+			$overflow = 0;
+		$one[$i] = dechex($new);
+	}
+	return $one;
+}
+
+
+function minus($one, $two) {
+	$one = str_pad($one, 32, '0', STR_PAD_LEFT);
+	$two = str_pad($two, 32, '0', STR_PAD_LEFT);
+	$borrow = 0;
+	for ($i=31; $i>=0; $i--) {
+		$new = hexdec($one[$i])-hexdec($two[$i])-$borrow;
+		if ($new<0) {
+			$borrow = 1;
+			$new = $new+16;
+		} else
+			$borrow = 0;
+		$one[$i] = dechex($new);
+	}
+	return $one;
+}
+
+
 function network($address, $bits) {
 	$bitmask = bits2bitmask($bits);
 	$network = '';
@@ -186,17 +240,18 @@ function unescape($string) {
 
 function findunused($base, $next) {
 	$unused = array();
-	if (strcmp($base, $next)<0) {
-		$bits = 128-floor(log(hexdec($next)-hexdec($base), 2));
+	if ((strcmp($base, $next)<0) &&
+		preg_match('/^([0]*)([1-9a-f]|$)/', minus($next, $base), $matches)) {
+		$bits = 1+(4*strlen($matches[1]))+(4-strlen(decbin(hexdec($matches[2]))));
 		while (($bits<128) &&
 			   (strcmp($base, network($base, $bits))!=0))
 			$bits++;
-		if (!(preg_match('/^000000000000000000000000......(00|ff)$/', $base) &&
-			  ($bits==128)))
+		if ((strcmp($base, '00000000000000000000000100000000')>=0) ||
+			($bits<128))
 			$unused[] = array('id'=>null,
 							  'address'=>$base,
 							  'bits'=>$bits);
-		$base = str_pad(dechex(hexdec($base)+pow(2, 128-$bits)), 32, '0', STR_PAD_LEFT);
+		$base = plus(broadcast($base, $bits), '00000000000000000000000000000001');
 		$nextunused = findunused($base, $next);
 		if (is_array($nextunused) && (count($nextunused)>0))
 			foreach ($nextunused as $network)
