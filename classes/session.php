@@ -72,7 +72,7 @@ class Session {
 		}
 
 		if (request('action')=='login') {
-			global $database;
+			global $database, $page;
 			$result = $database->getUser($username);
 			if ($result===false) {
 				$this->error = 'Login failed';
@@ -83,6 +83,7 @@ class Session {
 				$this->error = 'Login failed';
 				return false;
 			}
+			$page = 'main';
 		}
 
 		/* Generate and check md5 key over session information */
