@@ -55,6 +55,7 @@ class main {
 							  (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
 				$skin->setVar('address', ip2address($data['address']));
 			}
+			$skin->setVar('node', $data['id']);
 			$content = $skin->get();
 			if ($children = $database->getTree($data['id'])) {
 				$skin->setFile('children.html');
@@ -76,7 +77,7 @@ class main {
 					foreach ($unused as $network)
 						$networks[] = $network;
 				foreach ($networks as $network) {
-					$skin->setVar('link', ($network['id'] ? '?node='.$network['id'] : '?action=addnet&address='.$network['address']));
+					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?action=add&address='.$network['address']));
 					$skin->setVar('label', ip2address($network['address']).
 								  ($network['bits']==128 ? '' : '/'.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
 					$skin->setVar('description', ($network['id'] ? $network['description'] : 'unused'));
