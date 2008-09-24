@@ -60,7 +60,7 @@ class modify {
 							 'description'=>'');
 			$skin = new Skin($config->skin);
 			$skin->setVar('address', ip2address($new['address']));
-			$skin->setVar('bits', $new['bits']);
+			$skin->setVar('bits', (strcmp($new['address'], '00000000000000000000000100000000')<0 ? $new['bits']-96 : $new['bits']));
 			$skin->setVar('description', $new['description']);
 			$skin->setFile('newnode.html');
 			return $skin->get();
