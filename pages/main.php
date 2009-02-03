@@ -58,10 +58,10 @@ class main {
 				$skin->setVar('address', ip2address($data['address']));
 				$skin->setBlock('showunused');
 				if (request('showunused')=='yes') {
-					$skin->setVar('unusedlink', me().'?node='.$data['id'].'&showunused=no');
+					$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=no');
 					$skin->setVar('unusedlabel', 'hide unused blocks');
 				} else {
-					$skin->setVar('unusedlink', me().'?node='.$data['id'].'&showunused=yes');
+					$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=yes');
 					$skin->setVar('unusedlabel', 'show unused blocks');
 				}
 				$skin->parse('showunused');
