@@ -124,8 +124,13 @@ if (request('remote')=='remote') {
 	$skin->setVar('title', $pagedata['title']);
 	$skin->setVar('version', $version);
 	$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
-	if ($session->authenticated)
+	if ($session->authenticated) {
+		$skin->setBlock('treediv');
 		$skin->setVar('tree', Tree::get(0, $node));
+		$skin->parse('treediv');
+	} else {
+		$skin->deleteBlock('treediv');
+	}
 	$skin->setVar('content', $pagedata['content']);
 	echo $skin->get();
 }

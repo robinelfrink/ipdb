@@ -10,26 +10,25 @@ body {
 
 
 div#wrapper {
-	width: 760px;
 	margin: 4px auto;
 }
 
 
 div#header {
-	background-color: #fafafc;
-	border: 1px solid #ececef;
+	border: 1px solid #a0a0a0;
+	padding: 0.5em;
+	text-align: center;
+	margin-bottom: 1em;
 }
 
 
 div#menu {
-	background-color: #fcfcff;
-	border: 1px solid #fafafc;
+	margin-bottom: 1em;
 }
 
 
 div#tree {
-	background-color: #fcfcff;
-	border: 1px solid #fafafc;
+	border: 1px solid #a0a0a0;
 	width: 200px;
 	float: left;
 }
@@ -94,6 +93,30 @@ div#content table#children thead tr {
 div#content table#children tbody tr.unused td,
 div#content table#children tbody tr.unused a {
 	color: #2a2;
+}
+
+
+div#login {
+	width: 300px;
+	margin-left: 50%;
+}
+
+
+div#login table {
+	border-collapse: collapse;
+	border: 1px solid #a0a0a0;
+}
+div#login th,
+div#login td {
+	padding: 0.2em 0.5em;
+}
+div#login th,
+div#login td.error {
+	border: 1px solid #a0a0a0;
+}
+div#login td.error {
+	background-color: #ff4040;
+	color: #fff;
 }
 
 

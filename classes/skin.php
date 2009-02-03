@@ -77,6 +77,16 @@ class Skin {
 	}
 
 
+	public function deleteBlock($block) {
+
+		if (preg_match('/<!-- BEGIN '.preg_quote($block).' -->/', $this->data) &&
+			preg_match('/<!-- END '.preg_quote($block).' -->/', $this->data)) {
+			$this->data = preg_replace('/<!-- BEGIN '.preg_quote($block).' -->.*<!-- END '.preg_quote($block).' -->/s', '', $this->data);
+		}
+
+	}
+
+
 	public function parse($block) {
 
 		$blockdata = $this->blocks[$block];
