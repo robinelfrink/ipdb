@@ -49,6 +49,36 @@ function ajaxify_tree() {
 			if (litems[i].id && litems[i].id.match(/^a_/))
 				litems[i].onclick = clicktree;
 	}
+	var names = ['menu', 'content'];
+	for (var j in names) {
+		if (div = getElement(names[j])) {
+			anchors = div.getElementsByTagName('a');
+			for (i=0; i<anchors.length; i++) {
+				if (anchors[i].hasAttribute('remote') &&
+					(anchors[i].getAttribute('remote')=='remote')) {
+					anchors[i].onclick = clicka;
+				}
+			}
+		}
+	}
+}
+
+
+/* Click on an anchor */
+function clicka(event) {
+	var target;
+	if (!event) var event = window.event;
+	if (event.target) target = event.target;
+	else if (event.srcElement) target = event.srcElement;
+	if (target.nodeType == 3)
+		target = target.parentNode;
+	var href = target.href;
+	if (href.match(/\?/))
+		href = href.replace(/\?/, '?remote=remote&');
+	else
+		href = href+'?remote=remote';
+	ajaxrequest(href.replace(/.*\?/, ''));
+	return false;
 }
 
 
