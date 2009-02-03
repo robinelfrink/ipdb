@@ -226,6 +226,25 @@ class Database {
 	}
 
 
+	public function deleteNode($node, $recursive = false) {
+		$children = $this->query("SELECT `id` FROM `ip` WHERE `parent`=".
+								 $this->escape($node));
+		if (count($children)>0) {
+			if ($recursive) {
+				foreach ($children as $child)
+					$this->deleteNode($child, $recursive);
+				$this->query("DELETE FROM `ip` WHERE `id`=".$this->escape($node));
+			} else {
+				$this->error = 'Node has children; recursion not set.';
+				return false;
+			}
+		} else {
+			$this->query("DELETE FROM `ip` WHERE `id`=".$this->escape($node));
+		}
+		return true;
+	}
+
+
 }
 
 

@@ -57,6 +57,7 @@ class main {
 				$skin->setVar('address', ip2address($data['address']));
 			}
 			$skin->setVar('node', $data['id']);
+			$skin->setVar('description', $data['description']);
 			$content = $skin->get();
 			if (!request('showunused')) {
 				$content .= '<p><a href="?node='.$data['id'].'&showunused=yes">show unused blocks</a></p>';
@@ -87,7 +88,7 @@ class main {
 					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
 					$skin->setVar('label', ip2address($network['address']).
 								  ($network['bits']==128 ? '' : '/'.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
-					$skin->setVar('description', ($network['id'] ? $network['description'] : 'unused'));
+					$skin->setVar('description', ($network['id'] ? htmlentities($network['description']) : 'unused'));
 					$skin->setVar('class', ($network['id'] ? '' : ' class="unused"'));
 					$skin->parse('child');
 				}

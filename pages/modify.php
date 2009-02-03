@@ -72,8 +72,7 @@ class modify {
 						(strcmp($next['address'], '00000000000000000000000100000000')<0 ? $next['bits']-96 : $next['bits']);
 			} else {
 				$id = $database->addNode($address, $bits, $parent, $description);
-				$_SESSION['node'] = $id;
-				return $database->error;
+				$this->error = $database->error;
 			}
 		}
 		if ($node) {
@@ -97,7 +96,18 @@ class modify {
 
 	private function getDelete() {
 		global $config, $database;
+		$node = $database->getAddress(request('node'));
 		if (request('confirm')=='yes') {
+			$database->deleteNode($node['id']);
+		} else {
+			$skin = new Skin($config->skin);
+			$skin->setFile('confirm.html');
+			$skin->setVar('title', 'Confirm delete');
+			$skin->setVar('message', 'Really delete '.ip2address($node['address']).'?');
+			$skin->setVar('node', $node['id']);
+			$skin->setVar('page', 'modify');
+			$skin->setVar('action', 'delete');
+			return $skin->get();
 		}
 	}
 
