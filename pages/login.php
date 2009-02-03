@@ -39,8 +39,14 @@ class login {
 		$skin->setVar('username', request('username', $_SESSION['username']));
 
 		$content = $skin->get();
+		$commands = "
+if (getElement('username')) {
+	getElement('username').focus();
+	getElement('username').select();
+}";
 		return array('title'=>'IPDB :: Login',
 					 'tree'=>'&nbsp;',
+					 'commands'=>$commands,
 					 'content'=>$content);
 	}
 

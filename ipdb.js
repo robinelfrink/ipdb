@@ -90,7 +90,7 @@ function clicktree(event) {
 
 /* Expand a tree node */
 function expand(address) {
-	ajaxrequest('action=getsubtree&node='+address);
+	ajaxrequest('action=getsubtree&leaf='+address);
 	return false;
 }
 function expandtree(address, content) {

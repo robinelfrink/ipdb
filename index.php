@@ -21,12 +21,18 @@ $Id$
 
 
 /* Include necessary files */
+require_once 'actions.php';
 require_once 'functions.php';
 require_once 'classes/config.php';
 require_once 'classes/database.php';
 require_once 'classes/session.php';
 require_once 'classes/skin.php';
 require_once 'classes/tree.php';
+
+
+/* Set some settings */
+ini_set('session.bug_compat_warn', 0);
+ini_set('session.bug_compat_42', 0);
 
 
 /* It's good to know where we are */
@@ -49,42 +55,24 @@ if ($session->error)
 	exit('Error: '.$session->error);
 
 
-/* Set default page to fetch */
-$page = (request('page') ? request('page') : (isset($_SESSION['page']) ? $_SESSION['page'] : 'main'));
-
-
 /* Initialize the database */
 $database = new Database($config->database);
 if ($database->error)
 	exit('Error: '.$database->error);
 if (!$database->hasDatabase())
-	$page = 'initdb';
+	request('page', 'initdb', true);
 else if (!$session->authenticate())
-	$page = 'login';
+	request('page', 'login', true);
 else if ($database->hasUpgrade())
-	$page = 'upgradedb';
+	request('page', 'upgradedb', true);
 
 
-/* Save page and node request */
-$_SESSION['page'] = $page;
-$node = (request('node') ? request('node') : (isset($_SESSION['node']) ? $_SESSION['node'] : null));
-$_SESSION['node'] = $node;
+/* Check if we need to act */
+if ($action = request('action'))
+	acton($action);
 
-
-/* AJAX requests */
-if (request('remote')=='remote') {
-	header('Content-type: text/xml; charset=utf-8');
-	header("Cache-Control: no-cache, must-revalidate");
-	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-	if ($session->authenticated && (request('action')=='getsubtree')) {
-		$commands = str_split(escape('expandtree(\''.$node.'\', \''.escape(Tree::get($node)).'\');'), 1024);
-		echo '<?xml version="1.0" encoding="UTF-8"?>
-<content>
-	<commands>'.implode('</commands><commands>', $commands).'</commands>
-</content>';
-		exit;
-	}
-}
+/* Set default page to fetch */
+$page = request('page', 'main');
 
 
 /* Fetch the selected page */
@@ -92,9 +80,8 @@ if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARAT
 	exit('Error: No code defined for page '.$page);
 require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php';
 $pageobj = new $page();
-if (request('action', null) &&
-	method_exists($pageobj, 'action')) {
-	$pageobj->action();
+if (method_exists($pageobj, 'get')) {
+	$pageobj->get();
 	if ($pageobj->error)
 		exit('Error: '.$pageobj->error);
 }
@@ -111,6 +98,9 @@ if ($skin->error)
 	exit('Error: '.$skin->error);
 
 if (request('remote')=='remote') {
+	header('Content-type: text/xml; charset=utf-8');
+	header('Cache-Control: no-cache, must-revalidate');
+	header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
 	echo '<?xml version="1.0" encoding="UTF-8"?>
 <content>
 	'.(isset($pagedata['title']) ? '<title>'.implode('</title><title>', str_split(escape($pagedata['title']), 1024)).'</title>' : '').'
@@ -126,11 +116,16 @@ if (request('remote')=='remote') {
 	$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
 	if ($session->authenticated) {
 		$skin->setBlock('treediv');
-		$skin->setVar('tree', Tree::get(0, $node));
+		$skin->setVar('tree', Tree::get(0, request('node', NULL)));
 		$skin->parse('treediv');
 	} else {
 		$skin->deleteBlock('treediv');
 	}
+	if (isset($pagedata['commands']))
+		$pagedata['content'] .= '
+<script type="text/javascript">
+'.$pagedata['commands'].'
+</script>';
 	$skin->setVar('content', $pagedata['content']);
 	echo $skin->get();
 }

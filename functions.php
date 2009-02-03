@@ -62,13 +62,29 @@ function is_utf8($str) {
 }
 
 
-function request($name, $default = NULL) {
-	if (isset($_REQUEST[$name]))
-		return (get_magic_quotes_gpc() ?
+function me() {
+	return preg_replace('/\?.*$/', '', $_SERVER['REQUEST_URI']);
+}
+
+
+function request($name, $default = NULL, $set = false) {
+	if ($set) {
+		if ($default)
+			$_SESSION[$name] = $default;
+		else if (isset($_SESSION[$name]))
+			unset($_SESSION[$name]);
+	} else if (isset($_REQUEST[$name])) {
+		$value = (get_magic_quotes_gpc() ?
 				stripslashes(is_utf8($_REQUEST[$name]) ? $_REQUEST[$name] : utf8_encode($_REQUEST[$name])) :
 				(is_utf8($_REQUEST[$name]) ? $_REQUEST[$name] : utf8_encode($_REQUEST[$name])));
-	else
-		return $default;
+		if (!preg_match('/^(action|remote)$/', $name))
+			$_SESSION[$name] = $value;
+		return $value;
+	} else if (isset($_SESSION[$name]))
+		return $_SESSION[$name];
+	if (!preg_match('/^(action|remote)$/', $name))
+		$_SESSION[$name] = $default;
+	return $default;
 }
 
 

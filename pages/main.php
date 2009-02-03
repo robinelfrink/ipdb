@@ -27,8 +27,8 @@ class main {
 
 
 	public function get() {
-		global $node, $config, $database;
-		if ($node) {
+		global $config, $database;
+		if ($node = request('node')) {
 			$data = $database->getAddress($node);
 			$title = ip2address($data['address']).'/'.
 				(strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']);
