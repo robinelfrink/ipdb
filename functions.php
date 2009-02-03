@@ -1,6 +1,6 @@
 <?php
 
-/*  Copyright 2008  Robin Elfrink  (email : robin@15augustus.nl)
+/*  Copyright 2009  Robin Elfrink  (email : robin@15augustus.nl)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ function ipv6compress($address) {
 	if (preg_match_all('/((^|:)0000)+/', $address, $matches)) {
 		$biggest = 0;
 		foreach ($matches[0] as $nr=>$match)
-			if (strlen($match)>strlen($biggest))
+			if (strlen($match)>strlen($matches[0][$biggest]))
 				$biggest = $nr;
 		$address = preg_replace('/'.preg_quote($matches[0][$biggest]).'/', ':', $address);
 		$address = preg_replace('/([^:]:)$/', '\1:', $address);
