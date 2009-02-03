@@ -119,7 +119,7 @@ if (request('remote')=='remote') {
 		$skin->setVar('tree', Tree::get(0, request('node', NULL)));
 		$skin->parse('treediv');
 	} else {
-		$skin->deleteBlock('treediv');
+		$skin->hideBlock('treediv');
 	}
 	if (isset($pagedata['commands']))
 		$pagedata['content'] .= '

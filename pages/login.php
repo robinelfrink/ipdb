@@ -35,7 +35,7 @@ class login {
 			$skin->setVar('error', $session->error);
 			$skin->parse('errorheader');
 		} else
-			$skin->deleteBlock('errorheader');
+			$skin->hideBlock('errorheader');
 		$skin->setVar('username', request('username', $_SESSION['username']));
 
 		$content = $skin->get();

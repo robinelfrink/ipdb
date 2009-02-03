@@ -77,7 +77,7 @@ class Skin {
 	}
 
 
-	public function deleteBlock($block) {
+	public function hideBlock($block) {
 
 		if (preg_match('/<!-- BEGIN '.preg_quote($block).' -->/', $this->data) &&
 			preg_match('/<!-- END '.preg_quote($block).' -->/', $this->data)) {

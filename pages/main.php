@@ -51,24 +51,31 @@ class main {
 			if ($data['bits']==128) {
 				$skin->setVar('label', 'host '.ip2address($data['address']));
 				$skin->setVar('address', ip2address($data['address']));
+				$skin->hideBlock('showunused');
 			} else {
 				$skin->setVar('label', 'network '.ip2address($data['address']).'/'.
 							  (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
 				$skin->setVar('address', ip2address($data['address']));
+				$skin->setBlock('showunused');
+				if (request('showunused')=='yes') {
+					$skin->setVar('unusedlink', me().'?node='.$data['id'].'&showunused=no');
+					$skin->setVar('unusedlabel', 'hide unused blocks');
+				} else {
+					$skin->setVar('unusedlink', me().'?node='.$data['id'].'&showunused=yes');
+					$skin->setVar('unusedlabel', 'show unused blocks');
+				}
+				$skin->parse('showunused');
 			}
 			$skin->setVar('node', $data['id']);
 			$skin->setVar('description', $data['description']);
 			$content = $skin->get();
-			if (!request('showunused')) {
-				$content .= '<p><a href="?node='.$data['id'].'&showunused=yes">show unused blocks</a></p>';
-			}
 			if ($children = $database->getTree($data['id'])) {
 				$skin->setFile('children.html');
 				$skin->setBlock('child');
 				$base = $data['address'];
 				$networks = array();
 				foreach ($children as $child) {
-					if (request('showunused') &&
+					if ((request('showunused')=='yes') &&
 						(strcmp($base, $child['address'])<0)) {
 						$unused = findunused($base, $child['address']);
 						if (is_array($unused) && (count($unused)>0))
@@ -78,7 +85,7 @@ class main {
 					$networks[] = $child;
 					$base = plus(broadcast($child['address'], $child['bits']), '00000000000000000000000000000001');
 				}
-				if (request('showunused')) {
+				if (request('showunused')=='yes') {
 					$unused = findunused($base, plus(broadcast($data['address'], $data['bits']), '00000000000000000000000000000001'));
 					if (is_array($unused) && (count($unused)>0))
 						foreach ($unused as $network)
