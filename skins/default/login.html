@@ -1,0 +1,22 @@
+<div id="login">
+	<form method="post" action="">
+		<input type="hidden" name="action" value="login" />
+		<table id="login">
+			<thead><tr><th colspan="2">Login</th></tr></thead>
+			<tbody>
+				<!-- BEGIN errorheader -->
+				<tr><td class="error" colspan="2">{error}</td></tr>
+				<!-- END errorheader -->
+				<tr>
+					<td>Username:</td>
+					<td><input size="20" type="text" name="username" value="{username}" /></td>
+				</tr>
+				<tr>
+					<td>Password:</td>
+					<td><input size="20" type="password" name="password" /></td>
+				</tr>
+				<tr><td></td><td><input type="submit" value="login" /></td></tr>
+			</tbody>
+		</table>
+	</form>
+</div>
