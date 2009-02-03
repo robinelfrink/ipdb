@@ -57,13 +57,17 @@ class main {
 			}
 			$skin->setVar('node', $data['id']);
 			$content = $skin->get();
+			if (!request('showunused')) {
+				$content .= '<p><a href="?node='.$data['id'].'&showunused=yes">show unused blocks</a></p>';
+			}
 			if ($children = $database->getTree($data['id'])) {
 				$skin->setFile('children.html');
 				$skin->setBlock('child');
 				$base = $data['address'];
 				$networks = array();
 				foreach ($children as $child) {
-					if (strcmp($base, $child['address'])<0) {
+					if (request('showunused') &&
+						(strcmp($base, $child['address'])<0)) {
 						$unused = findunused($base, $child['address']);
 						if (is_array($unused) && (count($unused)>0))
 							foreach ($unused as $network)
@@ -72,10 +76,12 @@ class main {
 					$networks[] = $child;
 					$base = plus(broadcast($child['address'], $child['bits']), '00000000000000000000000000000001');
 				}
-				$unused = findunused($base, plus(broadcast($data['address'], $data['bits']), '00000000000000000000000000000001'));
-				if (is_array($unused) && (count($unused)>0))
-					foreach ($unused as $network)
-						$networks[] = $network;
+				if (request('showunused')) {
+					$unused = findunused($base, plus(broadcast($data['address'], $data['bits']), '00000000000000000000000000000001'));
+					if (is_array($unused) && (count($unused)>0))
+						foreach ($unused as $network)
+							$networks[] = $network;
+				}
 				foreach ($networks as $network) {
 					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
 					$skin->setVar('label', ip2address($network['address']).

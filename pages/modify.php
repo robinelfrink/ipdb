@@ -73,7 +73,7 @@ class modify {
 			} else {
 				$id = $database->addNode($address, $bits, $parent, $description);
 				$_SESSION['node'] = $id;
-				return 'okidoki';
+				return $database->error;
 			}
 		}
 		if ($node) {

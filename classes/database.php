@@ -124,6 +124,7 @@ class Database {
 							  "PRIMARY KEY  (`id`),".
 							  "KEY `address` (`address`),".
 							  "KEY `bits` (`bits`),".
+							  "UNIQUE INDEX `addressbits` (`address`, `bits`),".
 							  "KEY `parent` (`parent`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
