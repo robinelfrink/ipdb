@@ -50,6 +50,7 @@ class main {
 			}
 			if ($data['bits']==128) {
 				$skin->setVar('label', 'host '.ip2address($data['address']));
+				$skin->setVar('address', ip2address($data['address']));
 			} else {
 				$skin->setVar('label', 'network '.ip2address($data['address']).'/'.
 							  (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
