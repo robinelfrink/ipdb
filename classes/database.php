@@ -113,7 +113,7 @@ class Database {
 
 		$this->error = null;
 		if (in_array($this->provider, array('mysql', 'mysqli'))) {
-			/* Drop old tables, even though we're pretty sure they don't exists. */
+			/* Drop old tables, even though we're pretty sure they don't exist. */
 			$this->query("DROP TABLE ip");
 			if (!$this->query("CREATE TABLE `ip` (".
 							  "`id` INT UNSIGNED NOT NULL,".
