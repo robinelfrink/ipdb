@@ -29,3 +29,12 @@ expire = 10m
 ; Skin
 [skin]
 skin = default
+
+
+; Additional columns, these are shown between 'address' and 'description'
+; [column_hostname]
+; type = text
+
+; [column_customercode]
+; type = url
+; url = "http://customers.domain.com/?customer=%s"

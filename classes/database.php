@@ -247,6 +247,12 @@ class Database {
 	}
 
 
+	public function getColumn($column, $node) {
+		$value = $this->query("SELECT value FROM column_".$column." WHERE node=".$node);
+		return ($value===false ? '' : $value[0]['value']);
+	}
+
+
 }
 
 

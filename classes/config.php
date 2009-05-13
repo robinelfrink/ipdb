@@ -34,6 +34,7 @@ class Config {
 							 'prefix'=>'_ipdb');
 	public $session = array('expire'=>'10m');
 	public $skin = array('skin'=>'default');
+	public $columns = array();
 
 
 	public function __construct() {
@@ -49,6 +50,9 @@ class Config {
 					foreach (array('database', 'session', 'skin') as $section)
 						if (isset($ini[$section]))
 							$this->$section = array_merge($this->$section, $ini[$section]);
+					foreach (array_keys($ini) as $section)
+						if (preg_match('/^column_/', $section))
+							$this->columns[preg_replace('/^column_/', '', $section)] = $ini[$section];
 				} else
 					$this->error = 'Cannot read config file '.$file;
 	}
