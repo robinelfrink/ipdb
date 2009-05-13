@@ -1,6 +1,8 @@
 <?php
 
-/*  Copyright 2009  Robin Elfrink  (email : robin@15augustus.nl)
+/*
+Copyright 2009 Introweb Nederland bv
+Author: Robin Elfrink <robin@15augustus.nl>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
