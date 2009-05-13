@@ -9,9 +9,17 @@
 				<td>description:</td>
 				<td><textarea name="description">{description}</textarea></td>
 			</tr>
+			<!-- BEGIN addnode -->
 			<tr><td></td><td><input type="submit" value="add" /></td></tr>
 		</tbody>
 	</table>
-	<input type="hidden" name="action" value="add" />
-	<input type="hidden" name="confirm" value="yes" />
+	<input type="hidden" name="action" value="addnode" />
+			<!-- END addnode -->
+			<!-- BEGIN changenode -->
+			<tr><td></td><td><input type="submit" value="change" /></td></tr>
+		</tbody>
+	</table>
+	<input type="hidden" name="action" value="changenode" />
+	<input type="hidden" name="node" value="{node}" />
+			<!-- END changenode -->
 </form>
