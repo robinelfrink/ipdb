@@ -114,10 +114,9 @@ div#login td {
 div#login th,
 div#login td.error {
 	border: 1px solid #a0a0a0;
-}
-div#login td.error {
 	background-color: #ff4040;
 	color: #fff;
+	text-align: center;
 }
 
 
