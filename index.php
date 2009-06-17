@@ -103,14 +103,21 @@ if (request('remote')=='remote') {
 	header('Content-type: text/xml; charset=utf-8');
 	header('Cache-Control: no-cache, must-revalidate');
 	header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
-	echo '<?xml version="1.0" encoding="UTF-8"?>
+	if ($session->authenticated && ($action=='login')) {
+		echo '<?xml version="1.0" encoding="UTF-8"?>
 <content>
-	'.(isset($pagedata['title']) ? '<title>'.implode('</title><title>', str_split(escape($pagedata['title']), 1024)).'</title>' : '').'
-	'.(isset($pagedata['content']) ? '<content>'.implode('</content><content>', str_split(escape($pagedata['content']), 1024)).'</content>' : '').'
-	'.(isset($pagedata['tree']) ? '<tree>'.implode('</tree><tree>', str_split(escape($pagedata['tree']), 1024)).'</tree>' : '').'
-	'.(isset($pagedata['menu']) ? '<menu>'.implode('</menu><menu>', str_split(escape($pagedata['menu']), 1024)).'</menu>' : '').'
-	'.(isset($pagedata['commands']) ? '<commands>'.implode('</commands><commands>', str_split(escape($pagedata['commands']), 1024)).'</commands>' : '').'
+	<commands>location.href=\''.escape(me()).'\';</commands>
 </content>';
+	} else {
+		echo '<?xml version="1.0" encoding="UTF-8"?>
+<content>
+		'.(isset($pagedata['title']) ? '<title>'.implode('</title><title>', str_split(escape($pagedata['title']), 1024)).'</title>' : '').'
+		'.(isset($pagedata['content']) ? '<content>'.implode('</content><content>', str_split(escape($pagedata['content']), 1024)).'</content>' : '').'
+		'.(isset($pagedata['tree']) ? '<tree>'.implode('</tree><tree>', str_split(escape($pagedata['tree']), 1024)).'</tree>' : '').'
+		'.(isset($pagedata['menu']) ? '<menu>'.implode('</menu><menu>', str_split(escape($pagedata['menu']), 1024)).'</menu>' : '').'
+		'.(isset($pagedata['commands']) ? '<commands>'.implode('</commands><commands>', str_split(escape($pagedata['commands']), 1024)).'</commands>' : '').'
+</content>';
+	}
 } else {
 	$skin->setFile('index.html');
 	$skin->setVar('title', $pagedata['title']);

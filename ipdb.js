@@ -22,7 +22,7 @@ $Id$
 
 /* Initialize */
 function initialize() {
-	ajaxify_tree();
+	ajaxify();
 }
 
 
@@ -39,8 +39,14 @@ function getElement(id) {
 }
 
 
-/* AJAXify the address tree */
-function ajaxify_tree() {
+/* escape() does not escape '+' */
+function escapeplus(str) {
+	return escape(str).replace(/\+/, '%2B');
+}
+
+
+/* AJAXify the anchors and forms */
+function ajaxify() {
 	var div, litems, anchors, i;
 	if (div = getElement('tree')) {
 		anchors = div.getElementsByTagName('a');
@@ -59,6 +65,14 @@ function ajaxify_tree() {
 				if (anchors[i].hasAttribute('remote') &&
 					(anchors[i].getAttribute('remote')=='remote')) {
 					anchors[i].onclick = clicka;
+				}
+			}
+			forms = div.getElementsByTagName('form');
+			for (i=0; i<forms.length; i++) {
+				if (forms[i].getAttribute('remote')!=null) {
+					forms[i].onsubmit = function(event) {
+						return submitform(event);
+					}
 				}
 			}
 		}
@@ -80,6 +94,56 @@ function clicka(event) {
 	else
 		href = href+'?remote=remote';
 	ajaxrequest(href.replace(/.*\?/, ''));
+	return false;
+}
+
+
+/* Submit a form */
+function submitform(event) {
+	var vars = 'remote=remote';
+	var form;
+	var submit = null;
+
+	if (event && event.name && event.name.match(/form/))
+		form = event;
+	else if (event && !event.target && event.type && event.type == 'submit') {
+		form = event.form;
+		submit = event.name;
+	} else {
+		if (!event) 
+			var event = window.event;
+		if (event.target) 
+			form = event.target;
+		else 
+			if (event.srcElement) 
+				form = event.srcElement;
+	}
+
+	if (!form.confirm &&
+		form.getAttribute('confirm') &&
+		!eval(form.getAttribute('confirm')+'(form)'))
+		return false;
+
+	if (form.elements) {
+		for (var i = 0; i < form.elements.length; i++) {
+			if (form.elements[i].name) {
+				if (form.elements[i].type == 'checkbox') 
+					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + (form.elements[i].checked ? 'on' : 'off');
+				else if (form.elements[i].type == 'radio') 
+					vars = vars + (form.elements[i].checked ? '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value) : '');
+				else if (form.elements[i].type == 'submit') {
+					if (form.elements[i].name == submit) 
+						vars = vars + '&submit=' + escapeplus(form.elements[i].name);
+				} else if (form.elements[i].type == 'select-one') {
+					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].options[form.elements[i].selectedIndex].value);
+				} else
+					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value);
+				if (form.elements[i].type == 'password') 
+					form.elements[i].value = '';
+			}
+		}
+		ajaxrequest(location.href.replace(/\?.*/, '')+'?'+vars);
+	}
 	return false;
 }
 
