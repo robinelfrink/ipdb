@@ -71,10 +71,14 @@ function me() {
 
 function request($name, $default = NULL, $set = false) {
 	if ($set) {
-		if ($default)
+		if ($default) {
 			$_SESSION[$name] = $default;
-		else if (isset($_SESSION[$name]))
+			$_REQUEST[$name] = $default;
+		} else {
 			unset($_SESSION[$name]);
+			unset($_REQUEST[$name]);
+		}
+		return $default;
 	} else if (isset($_REQUEST[$name])) {
 		$value = (get_magic_quotes_gpc() ?
 				stripslashes(is_utf8($_REQUEST[$name]) ? $_REQUEST[$name] : utf8_encode($_REQUEST[$name])) :
@@ -288,6 +292,43 @@ function findunused($base, $next) {
 	}
 	return $unused;
 }
+
+
+function send($data) {
+	if (request('remote')=='remote') {
+		header('Content-type: text/xml; charset=utf-8');
+		header('Cache-Control: no-cache, must-revalidate');
+		header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
+		echo '<?xml version="1.0" encoding="UTF-8"?>
+<content>';
+		foreach ($data as $key=>$content)
+			echo '
+	<'.$key.'>'.implode('</'.$key.'><'.$key.'>', str_split(escape($content), 1024)).'</'.$key.'>';
+		echo '
+</content>';
+		} else {
+			$skin->setFile('index.html');
+			$skin->setVar('title', $pagedata['title']);
+			$skin->setVar('version', $version);
+			$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
+			if ($session->authenticated) {
+				$skin->setBlock('treediv');
+				$skin->setVar('tree', Tree::get(0, request('node', NULL)));
+				$skin->parse('treediv');
+			} else {
+				$skin->hideBlock('treediv');
+			}
+			if (isset($pagedata['commands']))
+				$pagedata['content'] .= '
+<script type="text/javascript">
+	'.$pagedata['commands'].'
+</script>';
+			$skin->setVar('content', $pagedata['content']);
+			echo $skin->get();
+		}
+	exit;
+}
+
 
 
 ?>

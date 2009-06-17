@@ -186,6 +186,13 @@ class Database {
 	}
 
 
+	public function hasChildren($parent) {
+		$result = $this->query("SELECT COUNT(`id`) AS `total` FROM `ip` WHERE `parent`=".
+							   $this->escape($parent));
+		return ($result[0]['total']>0);
+	}
+
+
 	public function hasNetworks($parent) {
 		$result = $this->query("SELECT COUNT(`id`) AS `total` FROM `ip` WHERE `parent`=".
 							   $this->escape($parent)." AND `bits`<128");

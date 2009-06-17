@@ -27,8 +27,12 @@ function acton($action) {
 	switch ($action) {
 	  case 'login':
 		  global $session;
-		  if ($session->authenticated)
-			  request('page', 'main', true);
+		  if ($session->authenticated) {
+			  if (request('remote')=='remote')
+				  send(array('commands', 'location.href=\''.escape(me()).'\''));
+		  	  else
+			  	request('page', 'main', true);
+		  }
 		  break;
 	  case 'logout':
 		  if (request('remote')!='remote')
@@ -36,18 +40,13 @@ function acton($action) {
 		  break;
 	  case 'getsubtree':
 		  global $session;
-		  if ((request('remote')=='remote') && $session->authenticated) {
-			  header('Content-type: text/xml; charset=utf-8');
-			  header('Cache-Control: no-cache, must-revalidate');
-			  header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
-			  $commands = str_split(escape('expandtree(\''.request('leaf').'\', \''.escape(Tree::get(request('leaf'))).'\');'), 1024);
-			  echo '<?xml version="1.0" encoding="UTF-8"?>
-<content>
-	<commands>'.implode('</commands><commands>', $commands).'</commands>
-</content>';
-			  exit;
-		  }
+		  if ($session->authenticated)
+			  send(array('commands'=>'expandtree(\''.request('leaf').'\', \''.escape(Tree::get(request('leaf'))).'\');'));
 		  break;
+	  case 'addnode':
+		  global $session;
+		  if ($session->authenticated) {
+		  }
 	}
 
 }
