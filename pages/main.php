@@ -111,6 +111,7 @@ class main {
 				$skin->setFile('main.html');
 				$skin->setBlock('network');
 				foreach ($tree as $network) {
+					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
 					$skin->setVar('label', ip2address($network['address']).'/'.
 								  (strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits']));
 					$skin->setVar('description', $network['description']);
