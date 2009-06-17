@@ -95,6 +95,10 @@ div#content table#children tbody tr.unused td,
 div#content table#children tbody tr.unused a {
 	color: #2a2;
 }
+div#content span.error {
+	border: 1px solid #a0a0a0;
+	color: #cc4040;
+}
 
 
 div#login {

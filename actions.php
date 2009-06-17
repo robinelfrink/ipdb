@@ -29,7 +29,7 @@ function acton($action) {
 		  global $session;
 		  if ($session->authenticated) {
 			  if (request('remote')=='remote')
-				  send(array('commands', 'location.href=\''.escape(me()).'\''));
+				  send(array('commands'=>'location.href=\''.escape(me()).'\''));
 		  	  else
 			  	request('page', 'main', true);
 		  }
@@ -46,6 +46,7 @@ function acton($action) {
 	  case 'addnode':
 		  global $session;
 		  if ($session->authenticated) {
+			  send(array('content'=>var_export($_REQUEST, true)));
 		  }
 	}
 

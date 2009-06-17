@@ -295,6 +295,10 @@ function findunused($base, $next) {
 
 
 function send($data) {
+	global $session, $config;
+	$skin = new Skin($config->skin);
+	if ($skin->error)
+		exit('Error: '.$skin->error);
 	if (request('remote')=='remote') {
 		header('Content-type: text/xml; charset=utf-8');
 		header('Cache-Control: no-cache, must-revalidate');
@@ -308,7 +312,7 @@ function send($data) {
 </content>';
 		} else {
 			$skin->setFile('index.html');
-			$skin->setVar('title', $pagedata['title']);
+			$skin->setVar('title', $data['title']);
 			$skin->setVar('version', $version);
 			$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
 			if ($session->authenticated) {
@@ -318,12 +322,12 @@ function send($data) {
 			} else {
 				$skin->hideBlock('treediv');
 			}
-			if (isset($pagedata['commands']))
-				$pagedata['content'] .= '
+			if (isset($data['commands']))
+				$data['content'] .= '
 <script type="text/javascript">
-	'.$pagedata['commands'].'
+	'.$data['commands'].'
 </script>';
-			$skin->setVar('content', $pagedata['content']);
+			$skin->setVar('content', $data['content']);
 			echo $skin->get();
 		}
 	exit;

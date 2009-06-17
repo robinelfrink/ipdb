@@ -70,6 +70,7 @@ else if ($database->hasUpgrade())
 
 
 /* Check if we need to act */
+$error = false;
 if ($action = request('action'))
 	acton($action);
 
@@ -94,54 +95,17 @@ if ($pageobj->error)
 	exit('Error: '.$pageobj->error);
 
 
-/* Send back the requested content */
-$skin = new Skin($config->skin);
-if ($skin->error)
-	exit('Error: '.$skin->error);
-
-if (request('remote')=='remote') {
-	header('Content-type: text/xml; charset=utf-8');
-	header('Cache-Control: no-cache, must-revalidate');
-	header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
-	if ($session->authenticated && ($action=='login')) {
-		echo '<?xml version="1.0" encoding="UTF-8"?>
-<content>
-	<commands>location.href=\''.escape(me()).'\';</commands>
-</content>';
-	} else {
-		echo '<?xml version="1.0" encoding="UTF-8"?>
-<content>
-		'.(isset($pagedata['title']) ? '<title>'.implode('</title><title>', str_split(escape($pagedata['title']), 1024)).'</title>' : '').'
-		'.(isset($pagedata['content']) ? '<content>'.implode('</content><content>', str_split(escape($pagedata['content']), 1024)).'</content>' : '').'
-		'.(isset($pagedata['tree']) ? '<tree>'.implode('</tree><tree>', str_split(escape($pagedata['tree']), 1024)).'</tree>' : '').'
-		'.(isset($pagedata['menu']) ? '<menu>'.implode('</menu><menu>', str_split(escape($pagedata['menu']), 1024)).'</menu>' : '').'
-		'.(isset($pagedata['commands']) ? '<commands>'.implode('</commands><commands>', str_split(escape($pagedata['commands']), 1024)).'</commands>' : '').'
-</content>';
-	}
-} else {
-	$skin->setFile('index.html');
-	$skin->setVar('title', $pagedata['title']);
-	$skin->setVar('version', $version);
-	$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
-	if ($session->authenticated) {
-		$skin->setBlock('treediv');
-		$skin->setVar('tree', Tree::get(0, request('node', NULL)));
-		$skin->parse('treediv');
-	} else {
-		$skin->hideBlock('treediv');
-	}
-	if (isset($pagedata['commands']))
-		$pagedata['content'] .= '
-<script type="text/javascript">
-'.$pagedata['commands'].'
-</script>';
-	$skin->setVar('content', $pagedata['content']);
-	echo $skin->get();
+/* Check if we had an error */
+if ($error) {
+	if (isset($pagedata['content']))
+		$pagedata['content'] = '<span class="error">'.$error.'</span>'.$pagedata['content'];
+	else
+		$pagedata['content'] = '<span class="error">'.$error.'</span>';
 }
 
 
-/* Close the database */
-$database->close();
+/* Send back the requested content */
+send($pagedata);
 
 
 ?>
