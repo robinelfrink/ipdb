@@ -23,7 +23,10 @@ $Id$
 
 
 function debug($mixed) {
-	echo '<pre style="color: #009900; font-size: 80%;">'.htmlentities(var_export($mixed, true)).'</pre>';
+	global $config, $debugstr;
+	if ($config->debug['debug'])
+		$debugstr .= htmlentities(var_export($mixed, true)).'<hr />';
+	//		echo '<pre style="color: #009900; font-size: 80%;">'.htmlentities(var_export($mixed, true)).'</pre>';
 }
 
 
@@ -295,11 +298,25 @@ function findunused($base, $next) {
 
 
 function send($data) {
-	global $session, $config;
+	global $debugstr, $error, $session, $config;
+
+	$data['debug'] = '<pre>'.$debugstr.'</pre>';
+
+	/* Check if we had an error */
+	if ($error) {
+		if (isset($data['content']))
+			$data['content'] = '<p class="error">'.$error.'</p><br />'.$data['content'];
+		else
+			$data['content'] = '<p class="error">'.$error.'</p><br />';
+	}
+
 	$skin = new Skin($config->skin);
 	if ($skin->error)
 		exit('Error: '.$skin->error);
 	if (request('remote')=='remote') {
+		if (preg_match('/^(add|delete|change)/', request('action')) &&
+			!isset($data['tree']))
+			$data['tree'] = Tree::get(0, request('node', NULL));
 		header('Content-type: text/xml; charset=utf-8');
 		header('Cache-Control: no-cache, must-revalidate');
 		header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
@@ -322,6 +339,14 @@ function send($data) {
 			} else {
 				$skin->hideBlock('treediv');
 			}
+
+			if (isset($data['debug'])) {
+				$skin->setBlock('debugdiv');
+				$skin->setVar('debug', $data['debug']);
+				$skin->parse('debugdiv');
+			} else
+				$skin->hideBlock('debugdiv');
+
 			if (isset($data['commands']))
 				$data['content'] .= '
 <script type="text/javascript">

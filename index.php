@@ -35,6 +35,8 @@ require_once 'classes/tree.php';
 /* Set some settings */
 ini_set('session.bug_compat_warn', 0);
 ini_set('session.bug_compat_42', 0);
+$error = false;
+$debugstr = '';
 
 
 /* It's good to know where we are */
@@ -70,7 +72,6 @@ else if ($database->hasUpgrade())
 
 
 /* Check if we need to act */
-$error = false;
 if ($action = request('action'))
 	acton($action);
 
@@ -93,15 +94,6 @@ if (get_class($pageobj)!=$page)
 $pagedata = $pageobj->get();
 if ($pageobj->error)
 	exit('Error: '.$pageobj->error);
-
-
-/* Check if we had an error */
-if ($error) {
-	if (isset($pagedata['content']))
-		$pagedata['content'] = '<span class="error">'.$error.'</span>'.$pagedata['content'];
-	else
-		$pagedata['content'] = '<span class="error">'.$error.'</span>';
-}
 
 
 /* Send back the requested content */

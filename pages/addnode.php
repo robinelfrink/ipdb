@@ -44,6 +44,7 @@ class addnode {
 			$skin->setVar('address', ip2address($data['address']));
 			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
 			$skin->setVar('description', $data['description']);
+			$skin->setVar('parent', $node);
 		}
 		$skin->hideBlock('changenode');
 		$skin->parse('addnode');

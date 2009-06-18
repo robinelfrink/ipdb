@@ -29,7 +29,7 @@ function acton($action) {
 		  global $session;
 		  if ($session->authenticated) {
 			  if (request('remote')=='remote')
-				  send(array('commands'=>'location.href=\''.escape(me()).'\''));
+				  send(array('commands'=>'location.href=\''.me().'\''));
 		  	  else
 			  	request('page', 'main', true);
 		  }
@@ -46,8 +46,41 @@ function acton($action) {
 	  case 'addnode':
 		  global $session;
 		  if ($session->authenticated) {
-			  send(array('content'=>var_export($_REQUEST, true)));
+			  global $database;
+			  $address = address2ip(request('address'));
+			  $bits = (strcmp($address, '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'));
+			  $parent = request('parent');
+			  $newnode = $database->addNode($address, $bits, request('parent'), request('description'));
+			  if ($database->error) {
+				  global $error;
+				  $error = $database->error;
+			  } else {
+				  request('node', $newnode, true);
+				  request('page', 'main', true);
+			  }
 		  }
+		  break;
+	  case 'deletenode':
+		  global $session;
+		  if ($session->authenticated) {
+			  global $database, $error;
+			  $details = $database->getAddress($node);
+			  if ($database->error) {
+				  $error = $database->error;
+			  } else {
+				  $database->deleteNode($node);
+				  if ($database->error) {
+					  $error = $database->error;
+				  } else {
+					  request('node', $details['parent'], true);
+					  request('page', 'main', true);
+				  }
+			  }
+		  }
+		  break;
+	  default:
+		  global $error;
+		  $error = 'Unknown action requested';
 	}
 
 }

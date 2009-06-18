@@ -33,6 +33,7 @@ class Config {
 							 'password'=>'secret',
 							 'prefix'=>'_ipdb');
 	public $session = array('expire'=>'10m');
+	public $debug = array('debug'=>'false');
 	public $skin = array('skin'=>'default');
 	public $columns = array();
 
@@ -47,7 +48,7 @@ class Config {
 		foreach ($files as $file)
 			if (file_exists($file))
 				if ($ini = @parse_ini_file($file, true)) {
-					foreach (array('database', 'session', 'skin') as $section)
+					foreach (array('database', 'debug', 'session', 'skin') as $section)
 						if (isset($ini[$section]))
 							$this->$section = array_merge($this->$section, $ini[$section]);
 					foreach (array_keys($ini) as $section)

@@ -26,6 +26,11 @@ prefix = ipdb_
 expire = 10m
 
 
+; Debugging mode
+[debug]
+debug = false
+
+
 ; Skin
 [skin]
 skin = default

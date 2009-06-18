@@ -226,11 +226,59 @@ class Database {
 
 
 	public function addNode($address, $bits, $parent, $description) {
+		$broadcast = broadcast($address, $bits);
+		/* Check for exact match */
+		$check = $this->query("SELECT `id` FROM `ip` WHERE `address`='".
+							  $this->escape($address)."' AND `bits`=".
+							  $this->escape($bits));
+		if (count($check)>0) {
+			$this->error = 'Node '.ip2address($address).'/'.(strcmp($address, '00000000000000000000000100000000')>0 ? $bits : $bits-96).' already exists';
+			return false;
+		}
+
+		/* Check if the new node fits in parent */
+		$parentnode = $this->getAddress($parent);
+		if ((strcmp($address, $parentnode['address'])<0) ||
+			(strcmp($broadcast, broadcast($parentnode['address'], $parentnode['bits'])) >0)) {
+			$this->error = 'Node '.ip2address($address).'/'.(strcmp($address, '00000000000000000000000100000000')>0 ? $bits : $bits-96).' does not fit in parent node '.ip2address($parentnode['address']).'/'.(strcmp($parentnode['address'], '00000000000000000000000100000000')>0 ? $parentnode['bits'] : $parentnode['bits']-96);
+			return false;
+		}
+
+		/* Check for nodes that overlap */
+		$nodes = $this->query("SELECT `id`, `address`, `bits`, `parent` FROM `ip` WHERE `address`<='".
+							  $this->escape($broadcast)."' ORDER BY `address`, `bits` DESC");
+		if (count($nodes)>0) {
+			$newchildren = array();
+			foreach ($nodes as $victim) {
+				$vaddress = $victim['address'];
+				$vbroadcast = broadcast($victim['address'], $victim['bits']);
+				if (((strcmp($address, $vaddress)>0) &&
+					 (strcmp($address, $vbroadcast)<0) &&
+					 (strcmp($broadcast, $vbroadcast)>0)) ||
+					((strcmp($address, $vaddress)<0) &&
+					 (strcmp($broadcast, $vbroadcast)<0))) {
+					$this->error = 'Node '.ip2address($address).'/'.(strcmp($address, '00000000000000000000000100000000')>0 ? $bits : $bits-96).' overlaps with node '.ip2address($victim['address']).'/'.(strcmp($victim['address'], '00000000000000000000000100000000')>0 ? $victim['bits'] : $victim['bits']-96);
+					return false;
+				}
+				/* While where looping, check for possible children */
+				if (($victim['parent']==$parent) &&
+					(strcmp($address, $vaddress)<=0) &&
+					(strcmp($broadcast, $vbroadcast)>=0))
+					$newchildren[] = $victim['id'];
+			}
+		}
+
+		/* Add new node */
 		$max = $this->query("SELECT MAX(`id`) AS `max` FROM `ip`");
 		$this->query("INSERT INTO `ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
 					 $this->escape($max[0]['max']+1).", '".
 					 $this->escape($address)."', ".$this->escape($bits).", ".
 					 $this->escape($parent).", '".$this->escape($description)."')");
+
+		/* Update possible children */
+		if (count($newchildren)>0)
+			$this->query("UPDATE `ip` SET `parent`=".$this->escape($max[0]['max']+1).
+						 " WHERE `id` IN (".implode(',', $newchildren).")");
 		return $max[0]['max']+1;
 	}
 

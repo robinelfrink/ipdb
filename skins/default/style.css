@@ -14,6 +14,36 @@ div#wrapper {
 }
 
 
+div#debugwrapper {
+	background-color: #fef;
+	position: absolute;
+	left: 1em;
+	top: 1em;
+	font-family: mono;
+	font-size: 80%;
+	padding: 0.5em;
+	border: 1px solid #44a;
+	z-index: 2000;
+}
+
+
+div#debugwrapper a, div#debugwrapper a:hover, div#debugwrapper a:link, div#debugwrapper a:active {
+	color: #220044;
+	text-decoration: none;
+}
+
+
+div#debug {
+	display: none;
+	margin-top: 1em;
+}
+
+
+div#debugwrapper a:hover div {
+	display: block;
+}
+
+
 div#header {
 	border: 1px solid #a0a0a0;
 	padding: 0.5em;
@@ -95,9 +125,12 @@ div#content table#children tbody tr.unused td,
 div#content table#children tbody tr.unused a {
 	color: #2a2;
 }
-div#content span.error {
+div#content p.error {
 	border: 1px solid #a0a0a0;
 	color: #cc4040;
+	padding: 0px 0.2em;
+	font-weight: bold;
+	display: inline;
 }
 
 
