@@ -85,15 +85,10 @@ if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARAT
 require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php';
 $pageobj = new $page();
 if (method_exists($pageobj, 'get')) {
-	$pageobj->get();
+	$pagedata = $pageobj->get();
 	if ($pageobj->error)
 		exit('Error: '.$pageobj->error);
 }
-if (get_class($pageobj)!=$page)
-	$pageobj = new $page();
-$pagedata = $pageobj->get();
-if ($pageobj->error)
-	exit('Error: '.$pageobj->error);
 
 
 /* Send back the requested content */
