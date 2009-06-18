@@ -76,6 +76,7 @@ class Database {
 		if ($this->provider=='mysql') {
 			if (!($resource = mysql_query($sql, $this->db))) {
 				$this->error = mysql_error($this->db);
+				debug('Faulty query: '.$sql);
 				return false;
 			}
 			$result = array();
@@ -283,20 +284,35 @@ class Database {
 	}
 
 
-	public function deleteNode($node, $recursive = false) {
+	public function deleteNode($node, $childaction = 'none') {
+		$address = $this->getAddress($node);
+		if ($this->error)
+			return false;
 		$children = $this->query("SELECT `id` FROM `ip` WHERE `parent`=".
 								 $this->escape($node));
+		if ($this->error)
+			return false;
 		if (count($children)>0) {
-			if ($recursive) {
+			if ($childaction=='delete') {
 				foreach ($children as $child)
-					$this->deleteNode($child, $recursive);
+					if (!($this->deleteNode($child['id'], $childaction)))
+						return false;
 				$this->query("DELETE FROM `ip` WHERE `id`=".$this->escape($node));
+			} else if ($childaction=='move') {
+				if (!$this->query("UPDATE `ip` SET `parent`=".
+								  $this->escape($address['parent']).
+								  " WHERE `parent`=".
+								  $this->escape($node)))
+					return false;
+				if (!$this->query("DELETE FROM `ip` WHERE `id`=".$this->escape($node)))
+					return false;
 			} else {
-				$this->error = 'Node has children; recursion not set.';
+				$this->error = 'Node has children';
 				return false;
 			}
 		} else {
-			$this->query("DELETE FROM `ip` WHERE `id`=".$this->escape($node));
+			if (!$this->query("DELETE FROM `ip` WHERE `id`=".$this->escape($node)))
+				return false;
 		}
 		return true;
 	}

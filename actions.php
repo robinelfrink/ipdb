@@ -64,11 +64,11 @@ function acton($action) {
 		  global $session;
 		  if ($session->authenticated) {
 			  global $database, $error;
-			  $details = $database->getAddress($node);
+			  $details = $database->getAddress(request('node'));
 			  if ($database->error) {
 				  $error = $database->error;
 			  } else {
-				  $database->deleteNode($node);
+				  $database->deleteNode(request('node'), request('childaction'));
 				  if ($database->error) {
 					  $error = $database->error;
 				  } else {
