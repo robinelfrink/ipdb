@@ -33,7 +33,6 @@ class Tree {
 		$tree = $database->getTree($id);
 		$skin = new Skin($config->skin);
 		$skin->setFile('tree.html');
-		$skin->setBlock('network');
 		if (count($tree)>0) {
 			foreach ($tree as $network) {
 				if ($network['bits']<128) {

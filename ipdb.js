@@ -258,6 +258,9 @@ function ajaxrequest(args) {
 								document.getElementById(node).innerHTML = unescape(nodes[node]);
 							else if (node == 'title') 
 								document.title = unescape(nodes[node]);
+							if (node == 'content') {
+								window.scrollTo(0, 0);
+							}
 						}
 						if (typeof(nodes['commands']) == 'object') {
 							eval(unescape(nodes['commands']));

@@ -50,8 +50,12 @@ class Skin {
 
 		global $root;
 		$this->error = null;
+		$this->data = null;
+		$this->vars = array('skindir'=>'skins/'.$this->skin);
+		$this->blocks = array();
 		if (file_exists($file = $root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename)) {
 			$this->data = file_get_contents($file);
+			$this->findBlocks();
 			return true;
 		}
 		$this->error = 'Cannot read skin file skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename;
@@ -60,31 +64,24 @@ class Skin {
 	}
 
 
+	private function findBlocks() {
+
+		if (preg_match_all('/<!-- BEGIN ([a-z0-9]+) -->/', $this->data, $blocks)) {
+			$blocks = $blocks[1];
+			krsort($blocks, SORT_NUMERIC);
+			foreach ($blocks as $block) {
+				$this->blocks[$block] = preg_replace('/.*<!-- BEGIN '.preg_quote($block).' -->/s', '', $this->data);
+				$this->blocks[$block] = preg_replace('/<!-- END '.preg_quote($block).' -->.*/s', '', $this->blocks[$block]);
+				$this->data = preg_replace('/<!-- BEGIN '.preg_quote($block).' -->.*<!-- END '.preg_quote($block).' -->/s', '{'.$block.'}', $this->data);
+			}
+		}
+
+	}
+
+
 	public function setVar($var, $value) {
 
 		$this->vars[$var] = $value;
-
-	}
-
-
-	public function setBlock($block) {
-
-		if (preg_match('/<!-- BEGIN '.preg_quote($block).' -->/', $this->data) &&
-			preg_match('/<!-- END '.preg_quote($block).' -->/', $this->data)) {
-			$this->blocks[$block] = preg_replace('/.*<!-- BEGIN '.preg_quote($block).' -->/s', '', $this->data);
-			$this->blocks[$block] = preg_replace('/<!-- END '.preg_quote($block).' -->.*/s', '', $this->blocks[$block]);
-			$this->data = preg_replace('/<!-- BEGIN '.preg_quote($block).' -->.*<!-- END '.preg_quote($block).' -->/s', '{'.$block.'}', $this->data);
-		}
-
-	}
-
-
-	public function hideBlock($block) {
-
-		if (preg_match('/<!-- BEGIN '.preg_quote($block).' -->/', $this->data) &&
-			preg_match('/<!-- END '.preg_quote($block).' -->/', $this->data)) {
-			$this->data = preg_replace('/<!-- BEGIN '.preg_quote($block).' -->.*<!-- END '.preg_quote($block).' -->/s', '', $this->data);
-		}
 
 	}
 

@@ -33,11 +33,9 @@ class login {
 		$skin = new Skin($config->skin);
 		$skin->setFile('login.html');
 		if ($session->error) {
-			$skin->setBlock('errorheader');
 			$skin->setVar('error', $session->error);
 			$skin->parse('errorheader');
-		} else
-			$skin->hideBlock('errorheader');
+		}
 		$skin->setVar('username', request('username', $_SESSION['username']));
 
 		$content = $skin->get();

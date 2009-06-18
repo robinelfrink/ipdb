@@ -37,8 +37,6 @@ class main {
 				(strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']);
 			$skin = new Skin($config->skin);
 			$skin->setFile('netinfo.html');
-			$skin->setBlock('ipv4');
-			$skin->setBlock('parent');
 			if (strcmp($data['address'], '00000000000000000000000100000000')<0) {
 				$skin->setVar('netmask', ip2address(ipv4netmask($data['bits'])));
 				$skin->setVar('broadcast', ip2address(broadcast($data['address'], $data['bits'])));
@@ -54,12 +52,10 @@ class main {
 			if ($data['bits']==128) {
 				$skin->setVar('label', 'host '.ip2address($data['address']));
 				$skin->setVar('address', ip2address($data['address']));
-				$skin->hideBlock('showunused');
 			} else {
 				$skin->setVar('label', 'network '.ip2address($data['address']).'/'.
 							  (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
 				$skin->setVar('address', ip2address($data['address']));
-				$skin->setBlock('showunused');
 				if (request('showunused')=='yes') {
 					$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=no');
 					$skin->setVar('unusedlabel', 'hide unused blocks');
@@ -74,7 +70,7 @@ class main {
 			$content = $skin->get();
 			if ($children = $database->getTree($data['id'])) {
 				$skin->setFile('children.html');
-				$skin->setBlock('child');
+				debug($skin);
 				$base = $data['address'];
 				$networks = array();
 				foreach ($children as $child) {
@@ -98,10 +94,28 @@ class main {
 					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
 					$skin->setVar('label', ip2address($network['address']).
 								  ($network['bits']==128 ? '' : '/'.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
+					if (count($config->columns)>0)
+						foreach ($config->columns as $column=>$details) {
+							if ($details['inoverview']) {
+								$value = $database->getColumn($column, $network['id']);
+								if (isset($details['url']))
+									$skin->setVar('column', '<a href="'.htmlentities(sprintf($details['url'], $value)).'">'.htmlentities($value).'</a>');
+								else
+									$skin->setVar('column', htmlentities($value));
+							}
+							$skin->parse('columndata');
+						}
+
 					$skin->setVar('description', ($network['id'] ? htmlentities($network['description']) : 'unused'));
 					$skin->setVar('class', ($network['id'] ? '' : ' class="unused"'));
 					$skin->parse('child');
 				}
+				if (count($config->columns)>0)
+					foreach ($config->columns as $column=>$details)
+						if ($details['inoverview']) {
+							$skin->setVar('column', $column);
+							$skin->parse('columnheader');
+						}
 				$content .= $skin->get();
 			}
 		} else {
@@ -110,7 +124,6 @@ class main {
 			if (count($tree)>0) {
 				$skin = new Skin($config->skin);
 				$skin->setFile('main.html');
-				$skin->setBlock('network');
 				foreach ($tree as $network) {
 					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
 					$skin->setVar('label', ip2address($network['address']).'/'.

@@ -25,8 +25,7 @@ $Id$
 function debug($mixed) {
 	global $config, $debugstr;
 	if ($config->debug['debug'])
-		$debugstr .= htmlentities(var_export($mixed, true)).'<hr />';
-	//		echo '<pre style="color: #009900; font-size: 80%;">'.htmlentities(var_export($mixed, true)).'</pre>';
+		$debugstr .= preg_replace('/\{/', '&#123;', htmlentities(var_export($mixed, true))).'<hr />';
 }
 
 
@@ -333,19 +332,14 @@ function send($data) {
 			$skin->setVar('version', $version);
 			$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
 			if ($session->authenticated) {
-				$skin->setBlock('treediv');
 				$skin->setVar('tree', Tree::get(0, request('node', NULL)));
 				$skin->parse('treediv');
-			} else {
-				$skin->hideBlock('treediv');
 			}
 
 			if (isset($data['debug'])) {
-				$skin->setBlock('debugdiv');
 				$skin->setVar('debug', $data['debug']);
 				$skin->parse('debugdiv');
-			} else
-				$skin->hideBlock('debugdiv');
+			}
 
 			if (isset($data['commands']))
 				$data['content'] .= '

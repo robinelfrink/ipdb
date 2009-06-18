@@ -34,19 +34,22 @@ class addnode {
 		$skin->setFile('node.html');
 		if ($node = request('node')) {
 			$data = $database->getAddress($node);
+			$parent = $database->getAddress($data['parent']);
+			$skin->setVar('parentaddress', ip2address($parent['address']));
+			$skin->setVar('parentbits', (strcmp($parent['address'], '00000000000000000000000100000000')<0 ? $parent['bits']-96 : $parent['bits']));
+			$skin->setVar('parentlink', me().'?page=main&node='.$node);
 			if (count($config->columns)>0)
 				foreach ($config->columns as $column=>$details) {
 					$skin->setVar('name', $column);
 					$skin->setVar('fullname', $details['name']);
 					$skin->setVar('value', $database->getColumn($column, $node));
-					$skin->parse('column', true);
+					$skin->parse('column');
 				}
 			$skin->setVar('address', ip2address($data['address']));
 			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
 			$skin->setVar('description', $data['description']);
 			$skin->setVar('parent', $node);
 		}
-		$skin->hideBlock('changenode');
 		$skin->parse('addnode');
 		$content = $skin->get();
 		return array('title'=>$title,
