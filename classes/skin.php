@@ -41,8 +41,6 @@ class Skin {
 		else if (!file_exists($root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.'index.html'))
 			$this->error = 'Skin '.$this->skin.' file not found';
 
-		$this->vars['skindir'] = 'skins/'.$this->skin;
-
 	}
 
 
@@ -51,7 +49,6 @@ class Skin {
 		global $root;
 		$this->error = null;
 		$this->data = null;
-		$this->vars = array('skindir'=>'skins/'.$this->skin);
 		$this->blocks = array();
 		if (file_exists($file = $root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename)) {
 			$this->data = file_get_contents($file);
@@ -73,8 +70,10 @@ class Skin {
 				$this->blocks[$block] = preg_replace('/.*<!-- BEGIN '.preg_quote($block).' -->/s', '', $this->data);
 				$this->blocks[$block] = preg_replace('/<!-- END '.preg_quote($block).' -->.*/s', '', $this->blocks[$block]);
 				$this->data = preg_replace('/<!-- BEGIN '.preg_quote($block).' -->.*<!-- END '.preg_quote($block).' -->/s', '{'.$block.'}', $this->data);
+				$this->vars[$block] = '';
 			}
 		}
+		$this->vars['skindir'] = 'skins/'.$this->skin;
 
 	}
 
@@ -86,13 +85,31 @@ class Skin {
 	}
 
 
-	public function parse($block) {
+	public function parse($block = NULL) {
 
-		$blockdata = $this->blocks[$block];
+		if ($block)
+			$blockdata = $this->blocks[$block];
+		else
+			$blockdata = $this->data;
+
+		/* Find the vars we have */
+		preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $blockdata, $matches);
+
+		/* Replace our vars */
+		$vars = array();
 		foreach ($this->vars as $var=>$value)
 			$vars['/\{'.preg_quote($var).'\}/'] = $value;
 		$blockdata = preg_replace(array_keys($vars), $vars, $blockdata);
-		$this->data = preg_replace('/\{'.preg_quote($block).'\}/', $blockdata.'{'.$block.'}', $this->data);
+		if ($block)
+			$this->vars[$block] .= $blockdata;
+		else
+			$this->data = $blockdata;
+
+		/* Clear vars that came from blocks */
+		if (count($matches)>1)
+			foreach ($matches[1] as $var)
+				if (isset($this->blocks[$var]))
+					$this->vars[$var] = '';
 
 	}
 

@@ -70,7 +70,6 @@ class main {
 			$content = $skin->get();
 			if ($children = $database->getTree($data['id'])) {
 				$skin->setFile('children.html');
-				debug($skin);
 				$base = $data['address'];
 				$networks = array();
 				foreach ($children as $child) {
@@ -102,8 +101,8 @@ class main {
 									$skin->setVar('column', '<a href="'.htmlentities(sprintf($details['url'], $value)).'">'.htmlentities($value).'</a>');
 								else
 									$skin->setVar('column', htmlentities($value));
+								$skin->parse('columndata');
 							}
-							$skin->parse('columndata');
 						}
 
 					$skin->setVar('description', ($network['id'] ? htmlentities($network['description']) : 'unused'));
