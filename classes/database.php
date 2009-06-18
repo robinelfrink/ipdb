@@ -237,6 +237,12 @@ class Database {
 			return false;
 		}
 
+		/* Check if network address matches bitmask */
+		if (strcmp($address, network($address, $bits))!=0) {
+			$this->error = 'Address '.ip2address($address).' is not on a boundary with '.(strcmp($address, '00000000000000000000000100000000')>0 ? $bits : $bits-96).' bits';
+			return false;
+		}
+
 		/* Check if the new node fits in parent */
 		$parentnode = $this->getAddress($parent);
 		if ((strcmp($address, $parentnode['address'])<0) ||
@@ -321,6 +327,39 @@ class Database {
 	public function getColumn($column, $node) {
 		$value = $this->query("SELECT value FROM column_".$column." WHERE node=".$node);
 		return ($value===false ? '' : $value[0]['value']);
+	}
+
+
+	public function changeNode($node, $address, $bits, $description) {
+		global $config;
+		if (!($entry = $this->getAddress($node)))
+			return false;
+		if ((strcmp($address, $entry['address'])==0) &&
+			($bits==$entry['bits']) &&
+			(strcmp($description, $entry['description'])==0))
+			return $node;
+		$parent = $entry['parent'];
+		if (!$this->query('BEGIN'))
+			return false;
+		if (!$this->deleteNode($node, 'move')) {
+			$error = $this->error;
+			$this->query('ROLLBACK');
+			$this->error = $error;
+			return false;
+		}
+		if (!($node = $this->addNode($address, $bits, $parent, $description))) {
+			$error = $this->error;
+			$this->query('ROLLBACK');
+			$this->error = $error;
+			return false;
+		}
+		if (!$this->query('COMMIT')) {
+			$error = $this->error;
+			$this->query('ROLLBACK');
+			$this->error = $error;
+			return false;
+		}
+		return $node;
 	}
 
 

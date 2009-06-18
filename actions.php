@@ -24,9 +24,10 @@ $Id$
 
 function acton($action) {
 
+	global $config, $database, $error, $session;
+
 	switch ($action) {
 	  case 'login':
-		  global $session;
 		  if ($session->authenticated) {
 			  if (request('remote')=='remote')
 				  send(array('commands'=>'location.href=\''.me().'\''));
@@ -39,20 +40,16 @@ function acton($action) {
 			  header('Location: '.me());
 		  break;
 	  case 'getsubtree':
-		  global $session;
 		  if ($session->authenticated)
 			  send(array('commands'=>'expandtree(\''.request('leaf').'\', \''.escape(Tree::get(request('leaf'))).'\');'));
 		  break;
 	  case 'addnode':
-		  global $session;
 		  if ($session->authenticated) {
-			  global $database;
 			  $address = address2ip(request('address'));
 			  $bits = (strcmp($address, '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'));
 			  $parent = request('parent');
 			  $newnode = $database->addNode($address, $bits, request('parent'), request('description'));
 			  if ($database->error) {
-				  global $error;
 				  $error = $database->error;
 			  } else {
 				  request('node', $newnode, true);
@@ -60,10 +57,29 @@ function acton($action) {
 			  }
 		  }
 		  break;
-	  case 'deletenode':
-		  global $session;
+	  case 'changenode':
 		  if ($session->authenticated) {
-			  global $database, $error;
+			  $details = $database->getAddress(request('node'));
+			  if ($database->error) {
+				  $error = $database->error;
+			  } else {
+				  $address = address2ip(request('address'));
+				  $bits = (strcmp($address, '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'));
+				  $node = $database->changeNode(request('node'), $address, $bits,
+												request('description'));
+				  if ($database->error) {
+					  $error = $database->error;
+				  } else {
+					  if (!$error) {
+						  request('node', $node, true);
+						  request('page', 'main', true);
+					  }
+				  }
+			  }
+		  }
+		  break;
+	  case 'deletenode':
+		  if ($session->authenticated) {
 			  $details = $database->getAddress(request('node'));
 			  if ($database->error) {
 				  $error = $database->error;
@@ -79,7 +95,6 @@ function acton($action) {
 		  }
 		  break;
 	  default:
-		  global $error;
 		  $error = 'Unknown action requested';
 	}
 
