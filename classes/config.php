@@ -35,7 +35,7 @@ class Config {
 	public $session = array('expire'=>'10m');
 	public $debug = array('debug'=>'false');
 	public $skin = array('skin'=>'default');
-	public $columns = array();
+	public $extrafields = array();
 
 
 	public function __construct() {
@@ -52,8 +52,8 @@ class Config {
 						if (isset($ini[$section]))
 							$this->$section = array_merge($this->$section, $ini[$section]);
 					foreach (array_keys($ini) as $section)
-						if (preg_match('/^column_/', $section))
-							$this->columns[preg_replace('/^column_/', '', $section)] = $ini[$section];
+						if (preg_match('/^extrafield_/', $section))
+							$this->extrafields[preg_replace('/^extrafield_/', '', $section)] = $ini[$section];
 				} else
 					$this->error = 'Cannot read config file '.$file;
 	}

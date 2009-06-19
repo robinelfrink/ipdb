@@ -70,6 +70,14 @@ function acton($action) {
 				  if ($database->error) {
 					  $error = $database->error;
 				  } else {
+					  if (count($config->extrafields)>0) {
+						  foreach ($config->extrafields as $field=>$details) {
+							  if (!$database->setField($field, $node, request($field))) {
+								  $error = $database->error;
+								  break;
+							  }
+						  }
+					  }
 					  if (!$error) {
 						  request('node', $node, true);
 						  request('page', 'main', true);

@@ -8,9 +8,10 @@ $root = dirname(__FILE__);
 $config = new Config();
 $database = new Database($config->database);
 
-$oldresult = $database->query("SELECT id, address, netmask, parent, description FROM ipold");
+$oldresult = $database->query("SELECT * FROM ipold");
 
 $database->query("DELETE FROM ip");
+$database->query("DELETE FROM extrafields");
 
 foreach ($oldresult as $row) {
 	$bits = 0;
@@ -24,6 +25,14 @@ foreach ($oldresult as $row) {
 					 $bits.", ".
 					 $database->escape($row['parent']).", '".
 					 $database->escape($row['description'])."')");
+	if ($row['debtor']) {
+		echo ', '.$row['debtor'];
+		$database->setField('customer', $row['id'], $row['debtor']);
+	}
+	if ($row['abo']) {
+		echo ', '.$row['abonr'];
+		$database->setField('abonr', $row['id'], $row['abo']);
+	}
 	echo "\n";
 }
 

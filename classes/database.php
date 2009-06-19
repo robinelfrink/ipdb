@@ -156,6 +156,14 @@ class Database {
 				return false;
 			if (!$this->query("INSERT INTO `version` (`version`) VALUES(1)"))
 				return false;
+			$this->query("DROP TABLE extrafields");
+			if (!$this->query("CREATE TABLE `extrafields` (".
+							  "`node` INT UNSIGNED NOT NULL,".
+							  "`field` varchar(15) NOT NULL,".
+							  "`value` varchar(255) NOT NULL,".
+							  "PRIMARY KEY(`node`, `field`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
 		}
 
 	}
@@ -324,8 +332,10 @@ class Database {
 	}
 
 
-	public function getColumn($column, $node) {
-		$value = $this->query("SELECT value FROM column_".$column." WHERE node=".$node);
+	public function getField($field, $node) {
+		$value = $this->query("SELECT `value` FROM `extrafields` WHERE `node`=".
+							  $this->escape($node)." AND `field`='".
+							  $this->escape($field)."'");
 		return ($value===false ? '' : $value[0]['value']);
 	}
 
@@ -347,11 +357,20 @@ class Database {
 			$this->error = $error;
 			return false;
 		}
-		if (!($node = $this->addNode($address, $bits, $parent, $description))) {
+		if (!($newnode = $this->addNode($address, $bits, $parent, $description))) {
 			$error = $this->error;
 			$this->query('ROLLBACK');
 			$this->error = $error;
 			return false;
+		}
+		if (count($config->extrafields)>0) {
+			foreach ($config->extrafields as $field=>$details)
+				if (!$this->query("UPDATE `extrafields` SET `node`=".$this->escape($newnode).
+								  " WHERE `node`=".$this->escape($node))) {
+					$error = $this->error;
+					$this->query('ROLLBACK');
+					$this->error = $error;
+				}
 		}
 		if (!$this->query('COMMIT')) {
 			$error = $this->error;
@@ -359,7 +378,18 @@ class Database {
 			$this->error = $error;
 			return false;
 		}
-		return $node;
+		return $newnode;
+	}
+
+
+	public function setField($field, $node, $value) {
+		$old = $this->getField($field, $node);
+		if (strcmp($value, $old)!=0)
+			return $this->query("REPLACE INTO `extrafields` (`node`, `field`, `value`) VALUES (".
+								$this->escape($node).", '".
+								$this->escape($field)."', '".
+								$this->escape($value)."')");
+		return true;
 	}
 
 

@@ -30,8 +30,7 @@ class main {
 
 	public function get() {
 		global $config, $database;
-		if (($node = request('node')) &&
-			($node!=0)) {
+		if (($node = request('node')) && $node) {
 			$data = $database->getAddress($node);
 			$title = ip2address($data['address']).'/'.
 				(strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']);
@@ -67,6 +66,13 @@ class main {
 			}
 			$skin->setVar('node', $data['id']);
 			$skin->setVar('description', $data['description']);
+			if (count($config->extrafields)>0)
+				foreach ($config->extrafields as $field=>$details) {
+					$skin->setVar('field', $field);
+					$skin->setVar('value', $database->getField($field, $node));
+					$skin->parse('extrafield');
+				}
+
 			$content = $skin->get();
 			if ($children = $database->getTree($data['id'])) {
 				$skin->setFile('children.html');
@@ -93,15 +99,15 @@ class main {
 					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
 					$skin->setVar('label', ip2address($network['address']).
 								  ($network['bits']==128 ? '' : '/'.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
-					if (count($config->columns)>0)
-						foreach ($config->columns as $column=>$details) {
+					if (count($config->extrafields)>0)
+						foreach ($config->extrafields as $field=>$details) {
 							if ($details['inoverview']) {
-								$value = $database->getColumn($column, $network['id']);
+								$value = $database->getField($field, $network['id']);
 								if (isset($details['url']))
-									$skin->setVar('column', '<a href="'.htmlentities(sprintf($details['url'], $value)).'">'.htmlentities($value).'</a>');
+									$skin->setVar('extrafield', '<a href="'.htmlentities(sprintf($details['url'], $value)).'">'.htmlentities($value).'</a>');
 								else
-									$skin->setVar('column', htmlentities($value));
-								$skin->parse('columndata');
+									$skin->setVar('extrafield', htmlentities($value));
+								$skin->parse('extrafielddata');
 							}
 						}
 
@@ -109,11 +115,11 @@ class main {
 					$skin->setVar('class', ($network['id'] ? '' : ' class="unused"'));
 					$skin->parse('child');
 				}
-				if (count($config->columns)>0)
-					foreach ($config->columns as $column=>$details)
+				if (count($config->extrafields)>0)
+					foreach ($config->extrafields as $field=>$details)
 						if ($details['inoverview']) {
-							$skin->setVar('column', $column);
-							$skin->parse('columnheader');
+							$skin->setVar('extrafield', $field);
+							$skin->parse('extrafieldheader');
 						}
 				$content .= $skin->get();
 			}
