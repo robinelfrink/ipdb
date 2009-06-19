@@ -226,6 +226,14 @@ class Database {
 	}
 
 
+	public function search($search) {
+		return $this->query("SELECT DISTINCT `id`, `address`, `bits`, `parent`, `description` FROM `ip` LEFT JOIN ".
+							"`extrafields` ON `extrafields`.`node`=`ip`.`id` WHERE `address`='".
+							address2ip($search)."' OR `description` LIKE '%".
+							$this->escape($search)."%' OR `extrafields`.`value` LIKE '%".
+							$this->escape($search)."%'");
+	}
+
 	public function getNext($address) {
 		$entry = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
 							  "STRCMP('".$this->escape($address)."', `address`)<0 ".

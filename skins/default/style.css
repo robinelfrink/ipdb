@@ -56,6 +56,15 @@ div#menu {
 	margin-bottom: 1em;
 }
 
+div#menu ul {
+	list-style-type: none;
+	padding: 0px;
+}
+
+div#menu li {
+	margin-right: 1em;
+}
+
 
 div#tree {
 	border: 1px solid #a0a0a0;

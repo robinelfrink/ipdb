@@ -331,6 +331,7 @@ function send($data) {
 			$skin->setVar('title', $data['title']);
 			$skin->setVar('version', $version);
 			$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
+			$skin->setVar('menu', Menu::get());
 			if ($session->authenticated) {
 				$skin->setVar('tree', Tree::get(0, request('node', NULL)));
 				$skin->parse('treediv');

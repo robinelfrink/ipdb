@@ -102,6 +102,17 @@ function acton($action) {
 			  }
 		  }
 		  break;
+	  case 'search':
+		  if ($session->authenticated) {
+			  global $searchresult;
+			  $searchresult = $database->search(request('search'));
+			  if (count($searchresult)>0) {
+				  request('node', -1, true);
+				  request('page', 'main', true);
+			  } else
+				  $error = 'Search result is empty.';
+		  }
+		  break;
 	  default:
 		  $error = 'Unknown action requested';
 	}

@@ -27,6 +27,7 @@ require_once 'actions.php';
 require_once 'functions.php';
 require_once 'classes/config.php';
 require_once 'classes/database.php';
+require_once 'classes/menu.php';
 require_once 'classes/session.php';
 require_once 'classes/skin.php';
 require_once 'classes/tree.php';
