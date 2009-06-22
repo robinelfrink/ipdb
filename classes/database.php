@@ -366,7 +366,6 @@ class Database {
 			return false;
 		}
 
-		$broadcast = broadcast($address, $bits);
 		/* Check for exact match */
 		$check = $this->query("SELECT `id` FROM `ip` WHERE `address`='".
 							  $this->escape($address)."' AND `bits`=".
@@ -418,11 +417,12 @@ class Database {
 		}
 
 		/* Check if old children still fit */
-		$children = $this->getTree($entry['parent']);
+		$children = $this->getTree($entry['id']);
 		if (count($children)>0)
 			foreach ($children as $child)
-				if ((strcmp($address, $child['address'])>0) ||
-					(strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))<0))
+				if (($child['id']!=$node) &&
+					((strcmp($address, $child['address'])>0) ||
+					 (strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))<0)))
 					if (!$this->query("UPDATE `ip` SET `parent`=".$this->escape($entry['parent']).
 									  " WHERE `id`=".$this->escape($child['id']))) {
 						$error = $this->error;
@@ -432,20 +432,19 @@ class Database {
 					}
 
 		/* Check for new children */
-		if ($parent!=$entry['parent']) {
-			$children = $this->getTree($parent);
-			if (count($children)>0) 
-				foreach ($children as $child)
-					if ((strcmp($address, $child['address'])<=0) &&
-						(strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))>=0))
-						if (!$this->query("UPDATE `ip` SET `parent`=".$this->escape($entry['id']).
-										  " WHERE `id`=".$this->escape($child['id']))) {
-							$error = $this->error;
-							$this->query('ROLLBACK');
-							$this->error = $error;
-							return false;
-						}
-		}
+		$children = $this->getTree($parent);
+		if (count($children)>0) 
+			foreach ($children as $child)
+				if (($child['id']!=$node) &&
+					(strcmp($address, $child['address'])<=0) &&
+					(strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))>=0))
+					if (!$this->query("UPDATE `ip` SET `parent`=".$this->escape($entry['id']).
+									  " WHERE `id`=".$this->escape($child['id']))) {
+						$error = $this->error;
+						$this->query('ROLLBACK');
+						$this->error = $error;
+						return false;
+					}
 
 		if (!$this->query('COMMIT')) {
 			$error = $this->error;
