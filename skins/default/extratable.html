@@ -1,0 +1,25 @@
+<h2>{table}</h2>
+
+<form method="post" action="" remote="remote">
+	<!-- BEGIN noitems -->
+	<p>There are no items defined in table {table}.</p>
+	<!-- END noitems -->
+	<!-- BEGIN items -->
+	<table>
+		<thead>
+			<tr><th>item</th><th>description</th><th></th><th></th></tr>
+		</thead>
+		<tbody>
+			<!-- BEGIN itemrow -->
+			<tr>
+				<td class="extraitem"><a>{item}<span>{comments}</span></a></td>
+				<td>{description}</td>
+				<td><a href="?page=changeextra&item={item}" remote="remote">change</a></td>
+				<td><a href="?page=deleteextra&item={item}" remote="remote">delete</a></td>
+			</tr>
+			<!-- END item -->
+		</tbody>
+	</table>
+	<!-- END items -->
+	<a href="?page=addextra" remote="remote">add</a> an item
+</form>

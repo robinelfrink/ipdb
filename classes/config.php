@@ -36,6 +36,7 @@ class Config {
 	public $debug = array('debug'=>'false');
 	public $skin = array('skin'=>'default');
 	public $extrafields = array();
+	public $extratables = array();
 
 
 	public function __construct() {
@@ -54,6 +55,8 @@ class Config {
 					foreach (array_keys($ini) as $section)
 						if (preg_match('/^extrafield_/', $section))
 							$this->extrafields[preg_replace('/^extrafield_/', '', $section)] = $ini[$section];
+						else if (preg_match('/^extratable_/', $section))
+							$this->extratables[preg_replace('/^extratable_/', '', $section)] = $ini[$section];
 				} else
 					$this->error = 'Cannot read config file '.$file;
 	}

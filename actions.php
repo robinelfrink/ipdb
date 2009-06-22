@@ -118,7 +118,23 @@ function acton($action) {
 		  else
 			  request('action', false, true);
 		  break;
+	  case 'addextra':
+		  if ($session->authenticated &&
+			  $database->addExtra(request('table'), request('item'), request('description'), request('comments')))
+			  request('page', 'extratable', true);
+		  break;
+	  case 'changeextra':
+		  if ($session->authenticated &&
+			  $database->changeExtra(request('table'), request('olditem'), request('item'), request('description'), request('comments')))
+			  request('page', 'extratable', true);
+		  break;
+	  case 'deleteextra':
+		  if ($session->authenticated &&
+			  $database->deleteExtra(request('table'), request('item')))
+			  request('page', 'extratable', true);
+		  break;
 	  default:
+		  debug('action: '.request('action'));
 		  $error = 'Unknown action requested';
 	}
 

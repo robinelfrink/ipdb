@@ -176,18 +176,19 @@ class Database {
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."extratables` (".
 							  "`table` varchar(15) NOT NULL,".
-							  "`value` varchar(255) NOT NULL,".
+							  "`item` varchar(50) NOT NULL,".
+							  "`description` varchar(80) NOT NULL,".
 							  "`comments` text NOT NULL,".
-							  "PRIMARY KEY(`table`, `value`)".
+							  "PRIMARY KEY(`table`, `item`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
 			$this->query("DROP TABLE `".$this->prefix."tablenode`");
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."tablenode` (".
 							  "`table` varchar(15) NOT NULL,".
-							  "`value` varchar(255) NOT NULL,".
+							  "`item` varchar(50) NOT NULL,".
 							  "`node` INT UNSIGNED NOT NULL,".
-							  "PRIMARY KEY(`table`, `value`, `node`)".
+							  "PRIMARY KEY(`table`, `item`, `node`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
 		}
@@ -497,6 +498,54 @@ class Database {
 								$this->escape($field)."', '".
 								$this->escape($value)."')");
 		return true;
+	}
+
+
+	public function getExtra($table, $item = null) {
+		if ($item===null)
+			return $this->query("SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
+								$this->escape($table)."' ORDER BY `item`");
+		$items = $this->query("SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
+							  $this->escape($table)."' AND `item`='".$this->escape($item)."'");
+		return (count($items)>0?  $items[0] : false);
+	}
+
+
+	public function addExtra($table, $item, $description, $comments) {
+		return $this->query("INSERT INTO `".$this->prefix.
+							"extratables` (`table`, `item`, `description`, `comments`) VALUES('".
+							$this->escape($table)."', '".
+							$this->escape($item)."', '".
+							$this->escape($description)."', '".
+							$this->escape($comments)."')");
+	}
+
+
+	public function changeExtra($table, $olditem, $item, $description, $comments) {
+		$this->query("UPDATE `".$this->prefix."extratables` SET `item`='".
+					 $this->escape($item)."', `description`='".
+					 $this->escape($description)."', `comments`='".
+					 $this->escape($comments)."' WHERE `item`='".
+					 $this->escape($olditem)."' AND `table`='".
+					 $this->escape($table)."'");
+		if ($this->error)
+			return false;
+		return $this->query("UDPATE `".$this->prefix."tablenode` SET `item`='".
+							$this->escape($item)."' WHERE `item`='".
+							$this->escape($olditem)."' AND `table`='".
+							$this->escape($table)."'");
+	}
+
+
+	public function deleteExtra($table, $olditem) {
+		$this->query("DELETE FROM `".$this->prefix."extratables` WHERE `item`='".
+					 $this->escape($item)."' AND `table`='".
+					 $this->escape($table)."'");
+		if ($this->error)
+			return false;
+		return $this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `item`='".
+							$this->escape($olditem)."' AND `table`='".
+							$this->escape($table)."'");
 	}
 
 

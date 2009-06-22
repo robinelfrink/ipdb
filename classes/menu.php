@@ -38,6 +38,12 @@ class Menu {
 </form>');
 			$skin->setVar('item', '<a href="'.me().'?page=main&node=0" remote=remote>The World</a>');
 			$skin->parse('menuitem');
+			if (count($config->extratables)>0)
+				foreach ($config->extratables as $table=>$details) {
+					$skin->setVar('item', '<a href="'.me().'?page=extratable&table='.$table.'" remote=remote>'.
+								  $details['description'].'</a>');
+					$skin->parse('menuitem');
+				}
 			$skin->setVar('item', '<a href="'.me().'?page=login&action=logout" remote=remote>Logout '.
 						  $session->username.'</a>');
 			$skin->parse('menuitem');
