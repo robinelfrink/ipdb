@@ -355,43 +355,106 @@ class Database {
 
 	public function changeNode($node, $address, $bits, $description) {
 		global $config;
-		if (!($entry = $this->getAddress($node)))
+		if (!($entry = $this->getAddress($node))) {
+			$this->error = 'Node not found';
 			return false;
-		if ((strcmp($address, $entry['address'])==0) &&
-			($bits==$entry['bits']) &&
-			(strcmp($description, $entry['description'])==0))
-			return $node;
-		$parent = $entry['parent'];
+		}
+
+		/* Prepare for stupidity */
+		if ($address=='00000000000000000000000000000000') {
+			$this->error = 'The World already exists';
+			return false;
+		}
+
+		$broadcast = broadcast($address, $bits);
+		/* Check for exact match */
+		$check = $this->query("SELECT `id` FROM `ip` WHERE `address`='".
+							  $this->escape($address)."' AND `bits`=".
+							  $this->escape($bits));
+		if ((count($check)>0) && ($check[0]['id']!=$node)) {
+			$this->error = 'Node '.showip($address, $bits).' already exists';
+			return false;
+		}
+
+		/* Check if network address matches bitmask */
+		if (strcmp($address, network($address, $bits))!=0) {
+			$this->error = 'Address '.ip2address($address).' is not on a boundary with '.(strcmp($address, '00000000000000000000000100000000')>0 ? $bits : $bits-96).' bits';
+			return false;
+		}
+
+		/* Start transaction */
 		if (!$this->query('BEGIN'))
 			return false;
-		if (!$this->deleteNode($node, 'move')) {
+
+		/* Change node */
+		if (!($this->query("UPDATE `ip` SET `address`='".$this->escape($address).
+						   "', `bits`=".$this->escape($bits).
+						   ", `description`='".$this->escape($description)."' WHERE `id`=".
+						   $this->escape($node)))) {
 			$error = $this->error;
 			$this->query('ROLLBACK');
 			$this->error = $error;
 			return false;
 		}
-		if (!($newnode = $this->addNode($address, $bits, $parent, $description))) {
-			$error = $this->error;
-			$this->query('ROLLBACK');
-			$this->error = $error;
-			return false;
-		}
-		if (count($config->extrafields)>0) {
-			foreach ($config->extrafields as $field=>$details)
-				if (!$this->query("UPDATE `extrafields` SET `node`=".$this->escape($newnode).
-								  " WHERE `node`=".$this->escape($node))) {
-					$error = $this->error;
-					$this->query('ROLLBACK');
-					$this->error = $error;
+
+		/* Find new parent */
+		$parent = $entry['parent'];
+		$parents = $this->query("SELECT `id`, `address`, `bits` FROM `ip` WHERE `address`<='".
+								$this->escape($address)."' AND `id`!=".$this->escape($node).
+								" ORDER BY `address` DESC, `bits` DESC");
+		if (count($parents)>0)
+			foreach ($parents as $parentnode)
+				if (strcmp(broadcast($address, $bits), broadcast($parentnode['address'], $parentnode['bits']))<=0) {
+					$parent = $parentnode['id'];
+					break;
 				}
+		if (($parent!=$entry['parent']) &&
+			!$this->query("UPDATE `ip` SET `parent`=".$this->escape($parent)." WHERE `id`=".
+						  $this->escape($node))) {
+			$error = $this->error;
+			$this->query('ROLLBACK');
+			$this->error = $error;
+			return false;
 		}
+
+		/* Check if old children still fit */
+		$children = $this->getTree($entry['parent']);
+		if (count($children)>0)
+			foreach ($children as $child)
+				if ((strcmp($address, $child['address'])>0) ||
+					(strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))<0))
+					if (!$this->query("UPDATE `ip` SET `parent`=".$this->escape($entry['parent']).
+									  " WHERE `id`=".$this->escape($child['id']))) {
+						$error = $this->error;
+						$this->query('ROLLBACK');
+						$this->error = $error;
+						return false;
+					}
+
+		/* Check for new children */
+		if ($parent!=$entry['parent']) {
+			$children = $this->getTree($parent);
+			if (count($children)>0) 
+				foreach ($children as $child)
+					if ((strcmp($address, $child['address'])<=0) &&
+						(strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))>=0))
+						if (!$this->query("UPDATE `ip` SET `parent`=".$this->escape($entry['id']).
+										  " WHERE `id`=".$this->escape($child['id']))) {
+							$error = $this->error;
+							$this->query('ROLLBACK');
+							$this->error = $error;
+							return false;
+						}
+		}
+
 		if (!$this->query('COMMIT')) {
 			$error = $this->error;
 			$this->query('ROLLBACK');
 			$this->error = $error;
 			return false;
 		}
-		return $newnode;
+
+		return true;
 	}
 
 

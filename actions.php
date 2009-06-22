@@ -64,21 +64,20 @@ function acton($action) {
 			  } else {
 				  $address = address2ip(request('address'));
 				  $bits = (strcmp($address, '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'));
-				  $node = $database->changeNode(request('node'), $address, $bits,
-												request('description'));
+				  $database->changeNode(request('node'), $address, $bits,
+										request('description'));
 				  if ($database->error) {
 					  $error = $database->error;
 				  } else {
 					  if (count($config->extrafields)>0) {
 						  foreach ($config->extrafields as $field=>$details) {
-							  if (!$database->setField($field, $node, request($field))) {
+							  if (!$database->setField($field, request('node'), request($field))) {
 								  $error = $database->error;
 								  break;
 							  }
 						  }
 					  }
 					  if (!$error) {
-						  request('node', $node, true);
 						  request('page', 'main', true);
 					  }
 				  }
