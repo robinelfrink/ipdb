@@ -27,6 +27,7 @@ class Session {
 
 	public $error = null;
 	public $authenticated = false;
+	public $username = true;
 	private $expire;
 
 
@@ -102,6 +103,7 @@ class Session {
 		$_SESSION['expire'] = time()+$this->expire;
 
 		$this->authenticated = true;
+		$this->username = $username;
 		return true;
 
 	}

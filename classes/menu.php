@@ -38,7 +38,8 @@ class Menu {
 </form>');
 			$skin->setVar('item', '<a href="'.me().'?page=main&node=0" remote=remote>The World</a>');
 			$skin->parse('menuitem');
-			$skin->setVar('item', '<a href="'.me().'?page=login&action=logout" remote=remote>Logout');
+			$skin->setVar('item', '<a href="'.me().'?page=login&action=logout" remote=remote>Logout '.
+						  $session->username.'</a>');
 			$skin->parse('menuitem');
 			return $skin->get();
 		}
