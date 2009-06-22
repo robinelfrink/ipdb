@@ -52,4 +52,5 @@ skin = default
 ; type = integer
 ; description = VLAN
 ; linkaddress = true
+; inoverview = yes
 

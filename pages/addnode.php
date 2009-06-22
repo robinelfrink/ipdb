@@ -54,6 +54,16 @@ class addnode {
 					$skin->setVar('value', request($field));
 				$skin->parse('extrafield');
 			}
+		if (count($config->extratables)>0)
+			foreach ($config->extratables as $table=>$details)
+				if ($details['linkaddress']) {
+					$skin->setVar('table', $table);
+					if ($data)
+						$skin->setVar('item', $database->getExtra($table, $node));
+					else
+						$skin->setVar('item', request('extratableitem'));
+					$skin->parse('extratable');
+				}
 		$skin->setVar('address', request('address'));
 		$skin->setVar('bits', request('bits'));
 		$skin->parse('addnode');

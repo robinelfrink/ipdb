@@ -69,6 +69,12 @@ class main {
 					$skin->setVar('value', $database->getField($field, $node));
 					$skin->parse('extrafield');
 				}
+			if (count($config->extratables)>0)
+				foreach ($config->extratables as $table=>$details)
+					if ($details['linkaddress']) {
+						$skin->setVar('table', $table);
+						$skin->parse('extratable');
+					}
 
 			$content = $skin->get();
 			if (count($children)>0)
@@ -137,6 +143,13 @@ class main {
 						$skin->parse('extrafielddata');
 					}
 				}
+			if (count($config->extratables)>0)
+				foreach ($config->extratables as $table=>$details) 
+					 if ($details['inoverview'] && $details['linkaddress']) {
+						 $item = $database->getExtra($table, $network['id']);
+						 $skin->setVar('extratable', $item['item']);
+						 $skin->parse('extratabledata');
+					 }
 
 			$skin->setVar('description', ($network['id'] ? htmlentities($network['description']) : 'unused'));
 			$skin->setVar('class', ($network['id'] ? '' : ' class="unused"'));
@@ -147,6 +160,12 @@ class main {
 				if ($details['inoverview']) {
 					$skin->setVar('extrafield', $field);
 					$skin->parse('extrafieldheader');
+				}
+		if (count($config->extratables)>0)
+			foreach ($config->extratables as $table=>$details)
+				if ($details['inoverview'] && $details['linkaddress']) {
+					$skin->setVar('extratable', $table);
+					$skin->parse('extratableheader');
 				}
 		return $skin->get();
 	}
