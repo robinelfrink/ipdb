@@ -46,6 +46,7 @@ if (getElement('username')) {
 }";
 		return array('title'=>'IPDB :: Login',
 					 'tree'=>'&nbsp;',
+					 'menu'=>'&nbsp;',
 					 'commands'=>$commands,
 					 'content'=>$content);
 	}
