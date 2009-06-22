@@ -13,7 +13,6 @@ host = localhost
 database = ipdb
 username = ipuser
 password = secret
-prefix = ip
 
 ; sqlite example
 ; provider = sqlite
