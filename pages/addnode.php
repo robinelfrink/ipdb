@@ -32,24 +32,24 @@ class addnode {
 		global $config, $database;
 		$skin = new skin($config->skin);
 		$skin->setFile('node.html');
-		if ($node = request('node')) {
-			$data = $database->getAddress($node);
+		if ($data = $database->findAddress(address2ip(request('address')), strcmp(address2ip(request('address')), '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'))) {
 			$parent = $database->getAddress($data['parent']);
 			$skin->setVar('parentaddress', ip2address($parent['address']));
 			$skin->setVar('parentbits', (strcmp($parent['address'], '00000000000000000000000100000000')<0 ? $parent['bits']-96 : $parent['bits']));
 			$skin->setVar('parentlink', me().'?page=main&node='.$node);
-			if (count($config->extrafields)>0)
-				foreach ($config->extrafields as $field=>$details) {
-					$skin->setVar('name', $field);
-					$skin->setVar('fullname', $details['name']);
-					$skin->setVar('value', $database->getField($field, $node));
-					$skin->parse('extrafield');
-				}
-			$skin->setVar('address', ip2address($data['address']));
-			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
+			$skin->parse('parent');
 			$skin->setVar('description', $data['description']);
-			$skin->setVar('parent', $node);
 		}
+		if (count($config->extrafields)>0)
+			foreach ($config->extrafields as $field=>$details) {
+				$skin->setVar('name', $field);
+				$skin->setVar('fullname', $details['name']);
+				if ($data)
+					$skin->setVar('value', $database->getField($field, $node));
+				$skin->parse('extrafield');
+			}
+		$skin->setVar('address', request('address'));
+		$skin->setVar('bits', request('bits'));
 		$skin->parse('addnode');
 		$content = $skin->get();
 		return array('title'=>$title,

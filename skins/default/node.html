@@ -5,10 +5,12 @@
 				<td>address:</td>
 				<td><input type="text" name="address" value="{address}" /> / <input type="text" name="bits" size="4" value="{bits}" /></td>
 			</tr>
+			<!-- BEGIN parent -->
 			<tr>
 				<td>parent:</td>
 				<td><a href="{parentlink}" remote="remote">{parentaddress}/{parentbits}</a></td>
 			</tr>
+			<!-- END parent -->
 			<!-- BEGIN extrafield -->
 			<tr>
 				<td>{name}</td>
@@ -24,7 +26,6 @@
 		</tbody>
 	</table>
 	<input type="hidden" name="action" value="addnode" />
-	<input type="hidden" name="parent" value="{parent}" />
 			<!-- END addnode -->
 			<!-- BEGIN changenode -->
 			<tr><td></td><td><input type="submit" value="change" /></td></tr>

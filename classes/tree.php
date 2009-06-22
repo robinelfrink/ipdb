@@ -51,9 +51,7 @@ class Tree {
 					}
 					$skin->setVar('node', $network['id']);
 					$skin->setVar('link', '?page=main&node='.$network['id']);
-					$skin->setVar('label', ip2address($network['address']).'/'.
-								  (strcmp($network['address'], '00000000000000000000000100000000')<0 ? 
-								   $network['bits']-96 : $network['bits']));
+					$skin->setVar('label', showip($network['address'], $network['bits']));
 					$skin->setVar('description', htmlentities($network['description']));
 					$skin->setVar('subtree', $subtree);
 					$skin->setVar('class', $class);

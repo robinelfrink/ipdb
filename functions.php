@@ -122,6 +122,20 @@ function address2ip($address) {
 }
 
 
+function showip($address, $bits) {
+	if ($address=='00000000000000000000000100000000') {
+		/* The World */
+		return 'World';
+	} else if (strcmp($address, '00000000000000000000000100000000')<0) {
+		/* IPv4 */
+		return ip2address($address).($bits==128 ? '' : '/'.($bits-96));
+	} else {
+		/* IPv6 */
+		return ip2address($address).'/'.$bits;
+	}
+}
+
+
 function ipv6uncompress($address) {
 	if (strpos($address, '::')===false)
 		return $address;
@@ -299,8 +313,6 @@ function findunused($base, $next) {
 function send($data) {
 	global $debugstr, $error, $session, $config;
 
-	$data['debug'] = '<pre>'.$debugstr.'</pre>';
-
 	/* Check if we had an error */
 	if ($error) {
 		if (isset($data['content']))
@@ -316,6 +328,8 @@ function send($data) {
 		if (preg_match('/^(add|delete|change)/', request('action')) &&
 			!isset($data['tree']))
 			$data['tree'] = Tree::get(0, request('node', NULL));
+		if ($debugstr)
+			$data['debug'] = '<pre>'.$debugstr.'</pre>';
 		header('Content-type: text/xml; charset=utf-8');
 		header('Cache-Control: no-cache, must-revalidate');
 		header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
@@ -337,10 +351,10 @@ function send($data) {
 				$skin->parse('treediv');
 			}
 
-			if (isset($data['debug'])) {
-				$skin->setVar('debug', $data['debug']);
-				$skin->parse('debugdiv');
+			if ($debugstr) {
+				$skin->setVar('debug', '<pre>'.$debugstr.'</pre>');
 			}
+			$skin->parse('debugdiv');
 
 			if (isset($data['commands']))
 				$data['content'] .= '

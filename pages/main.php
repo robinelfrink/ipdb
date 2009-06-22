@@ -32,8 +32,7 @@ class main {
 		global $config, $database;
 		if (($node = request('node')) && $node>0) {
 			$data = $database->getAddress($node);
-			$title = ip2address($data['address']).'/'.
-				(strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']);
+			$title = showip($data['address'], $data['bits']);
 			$skin = new Skin($config->skin);
 			$skin->setFile('netinfo.html');
 			if (strcmp($data['address'], '00000000000000000000000100000000')<0) {
@@ -43,18 +42,16 @@ class main {
 			}
 			if ($data['parent']>0) {
 				$parent = $database->getAddress($data['parent']);
-				$skin->setVar('label', ip2address($parent['address']).'/'.
-							  (strcmp($parent['address'], '00000000000000000000000100000000')<0 ? $parent['bits']-96 : $parent['bits']));
+				$skin->setVar('label', showip($parent['address'], $parent['bits']));
 				$skin->setVar('link', '?node='.$parent['id']);
 				$skin->parse('parent');
 			}
+			$skin->setVar('address', ip2address($data['address']));
+			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
 			if ($data['bits']==128) {
 				$skin->setVar('label', 'host '.ip2address($data['address']));
-				$skin->setVar('address', ip2address($data['address']));
 			} else {
-				$skin->setVar('label', 'network '.ip2address($data['address']).'/'.
-							  (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
-				$skin->setVar('address', ip2address($data['address']));
+				$skin->setVar('label', 'network '.showip($data['address'], $data['bits']));
 				if (request('showunused')=='yes') {
 					$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=no');
 					$skin->setVar('unusedlabel', 'hide unused blocks');
@@ -75,10 +72,10 @@ class main {
 
 			$content = $skin->get();
 			if ($children = $database->getTree($data['id']))
-				$content .= $this->listchildren($children);
+				$content .= $this->listchildren($data, $children);
 		} else if (request('node')<0) {
 			global $searchresult;
-			$content = $this->listchildren($searchresult);
+			$content = $this->listchildren(NULL, $searchresult);
 		} else {
 			$title = 'Main page';
 			$tree = $database->getTree(0, false);
@@ -87,8 +84,7 @@ class main {
 				$skin->setFile('main.html');
 				foreach ($tree as $network) {
 					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
-					$skin->setVar('label', ip2address($network['address']).'/'.
-								  (strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits']));
+					$skin->setVar('label', showip($network['address'], $network['bits']));
 					$skin->setVar('description', $network['description']);
 					$skin->parse('network');
 				}
@@ -104,11 +100,11 @@ class main {
 	}
 
 
-	private function listchildren($children) {
+	private function listchildren($node, $children) {
 		global $config, $database;
 		$skin = new Skin($config->skin);
 		$skin->setFile('children.html');
-		$base = $data['address'];
+		$base = ($node ? $node['address'] : '00000000000000000000000000000000');;
 		$networks = array();
 		foreach ($children as $child) {
 			if ((request('showunused')=='yes') &&
@@ -128,9 +124,8 @@ class main {
 					$networks[] = $network;
 		}
 		foreach ($networks as $network) {
-			$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
-			$skin->setVar('label', ip2address($network['address']).
-						  ($network['bits']==128 ? '' : '/'.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
+			$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=addnode&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits']).'&node='.$node['id']));
+			$skin->setVar('label', showip($network['address'], $network['bits']));
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					if ($details['inoverview']) {

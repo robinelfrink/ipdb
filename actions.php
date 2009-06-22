@@ -47,8 +47,7 @@ function acton($action) {
 		  if ($session->authenticated) {
 			  $address = address2ip(request('address'));
 			  $bits = (strcmp($address, '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'));
-			  $parent = request('parent');
-			  $newnode = $database->addNode($address, $bits, request('parent'), request('description'));
+			  $newnode = $database->addNode($address, $bits, request('description'));
 			  if ($database->error) {
 				  $error = $database->error;
 			  } else {
