@@ -48,9 +48,10 @@ class main {
 			}
 			$skin->setVar('address', ip2address($data['address']));
 			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
+			$children = $database->getTree($data['id']);
 			if ($data['bits']==128) {
 				$skin->setVar('label', 'host '.ip2address($data['address']));
-			} else {
+			} else if (count($children)>0) {
 				$skin->setVar('label', 'network '.showip($data['address'], $data['bits']));
 				if (request('showunused')=='yes') {
 					$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=no');
@@ -71,7 +72,7 @@ class main {
 				}
 
 			$content = $skin->get();
-			if ($children = $database->getTree($data['id']))
+			if (count($children)>0)
 				$content .= $this->listchildren($data, $children);
 		} else if (request('node')<0) {
 			global $searchresult;
