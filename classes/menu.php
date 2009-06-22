@@ -31,13 +31,14 @@ class Menu {
 		if ($session->authenticated) {
 			$skin = new Skin($config->skin);
 			$skin->setFile('menu.html');
-			$skin->setVar('item', '<a href="'.me().'?page=main&node=0" remote=remote>The World</a>');
-			$skin->parse('menuitem');
-			$skin->setVar('item', '<form method="" action="" remote="remote">
+			$skin->setVar('searchform', '<form method="" action="" remote="remote">
 	<input type="text" size="20" name="search" value="'.htmlentities(request('search', '')).'" />
-	<input type="image" src="{skindir}/images/search.png" />
+	<input type="image" src="skins/'.$config->skin['skin'].'/images/search.png" />
 	<input type="hidden" name="action" value="search" />
 </form>');
+			$skin->setVar('item', '<a href="'.me().'?page=main&node=0" remote=remote>The World</a>');
+			$skin->parse('menuitem');
+			$skin->setVar('item', '<a href="'.me().'?page=login&action=logout" remote=remote>Logout');
 			$skin->parse('menuitem');
 			return $skin->get();
 		}

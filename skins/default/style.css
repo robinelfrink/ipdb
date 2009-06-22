@@ -59,6 +59,7 @@ div#menu {
 div#menu ul {
 	list-style-type: none;
 	padding: 0px;
+	text-align: right;
 }
 
 div#menu li {
