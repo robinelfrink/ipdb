@@ -164,6 +164,43 @@ class Database {
 							  "PRIMARY KEY(`node`, `field`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
+			$this->query("DROP TABLE extratables");
+			if (!$this->query("CREATE TABLE `extratables` (".
+							  "`table` varchar(15) NOT NULL,".
+							  "`value` varchar(255) NOT NULL,".
+							  "`comments` text NOT NULL,".
+							  "PRIMARY KEY(`table`, `value`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+			$this->query("DROP TABLE tablenode");
+			if (!$this->query("CREATE TABLE `tablenode` (".
+							  "`table` varchar(15) NOT NULL,".
+							  "`value` varchar(255) NOT NULL,".
+							  "`node` INT UNSIGNED NOT NULL,".
+							  "PRIMARY KEY(`table`, `value`, `node`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+			$this->query("DROP TABLE adminnodeaccess");
+			if (!$this->query("CREATE TABLE `adminnodeaccess` (".
+							  "`username` varchar(15) NOT NULL,".
+							  "`node` INT UNSIGNED NOT NULL,".
+							  "PRIMARY KEY(`username`, `node`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+			$this->query("DROP TABLE adminfieldaccess");
+			if (!$this->query("CREATE TABLE `adminfieldaccess` (".
+							  "`username` varchar(15) NOT NULL,".
+							  "`field` varchar(15) NOT NULL,".
+							  "PRIMARY KEY(`username`, `field`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+			$this->query("DROP TABLE admintableaccess");
+			if (!$this->query("CREATE TABLE `admintableaccess` (".
+							  "`username` varchar(15) NOT NULL,".
+							  "`table` varchar(15) NOT NULL,".
+							  "PRIMARY KEY(`username`, `field`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
 		}
 
 	}
