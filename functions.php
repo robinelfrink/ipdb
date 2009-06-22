@@ -123,9 +123,9 @@ function address2ip($address) {
 
 
 function showip($address, $bits) {
-	if ($address=='00000000000000000000000100000000') {
+	if ($address=='00000000000000000000000000000000') {
 		/* The World */
-		return 'World';
+		return 'The World';
 	} else if (strcmp($address, '00000000000000000000000100000000')<0) {
 		/* IPv4 */
 		return ip2address($address).($bits==128 ? '' : '/'.($bits-96));

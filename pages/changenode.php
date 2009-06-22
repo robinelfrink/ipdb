@@ -34,10 +34,14 @@ class changenode {
 		$skin->setFile('node.html');
 		if ($node = request('node')) {
 			$data = $database->getAddress($node);
-			$parent = $database->getAddress($data['parent']);
-			$skin->setVar('parentaddress', ip2address($parent['address']));
-			$skin->setVar('parentbits', (strcmp($parent['address'], '00000000000000000000000100000000')<0 ? $parent['bits']-96 : $parent['bits']));
-			$skin->setVar('parentlink', me().'?page=main&node='.$node);
+			if ($parent = $database->getAddress($data['parent'])) {
+				$skin->setVar('parentaddress', showip($parent['address'], $parent['bits']));
+				$skin->setVar('parentlink', me().'?page=main&node='.$parent['id']);
+			} else {
+				$skin->setVar('parentaddress', showip('00000000000000000000000000000000', 0));
+				$skin->setVar('parentlink', me().'?page=main&node=0');
+			}
+			$skin->parse('parent');
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					$skin->setVar('name', $field);
