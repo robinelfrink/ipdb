@@ -13,6 +13,7 @@ host = localhost
 database = ipdb
 username = ipuser
 password = secret
+prefix = ip
 
 ; sqlite example
 ; provider = sqlite
@@ -39,7 +40,17 @@ skin = default
 ; Additional fields, these are shown between 'address' and 'description'
 ; [extrafield_hostname]
 ; type = text
+; description = hostname
 
 ; [extrafield_customercode]
 ; type = url
+; description = "customer code"
 ; url = "http://customers.domain.com/?customer=%s"
+
+
+; Additional tables
+; [extratable_vlan]
+; type = integer
+; description = VLAN
+; linkaddress = true
+

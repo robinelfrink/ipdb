@@ -37,28 +37,15 @@ and password \'secret\'.</p>';
 			$content = '
 <p>You do not yet have a database. Please click the \'create\'-button below
 to create an initial database.</p>
-<form method="post">
+<form method="post" remote="remote">
 	<input type="hidden" name="page" value="initdb" />
-	<input type="hidden" name="action" value="create" />
+	<input type="hidden" name="action" value="createdb" />
 	<input type="submit" value="create" />
 </form>';
 		}
 		return array('title'=>'IPDB :: Initialize database',
 					 'content'=>$content);
 	}
-
-
-	public function action() {
-
-		if (request('action')=='create') {
-			global $database, $page;
-			$database->initialize();
-			$this->error = $database->error;
-		} else
-			$page = 'main';
-
-	}
-
 
 
 }

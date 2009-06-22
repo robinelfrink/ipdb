@@ -63,6 +63,11 @@ div#menu ul {
 
 div#menu li {
 	margin-right: 1em;
+	display: inline;
+}
+
+div#menu form {
+	display: inline;
 }
 
 

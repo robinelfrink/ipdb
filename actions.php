@@ -111,6 +111,11 @@ function acton($action) {
 				  $error = 'Search result is empty.';
 		  }
 		  break;
+	  case 'createdb':
+		  $database->initialize();
+		  if (!$database->error)
+			  request('page', 'main', true);
+		  break;
 	  default:
 		  $error = 'Unknown action requested';
 	}

@@ -30,8 +30,7 @@ class main {
 
 	public function get() {
 		global $config, $database;
-		if (($node = request('node')) && $node>0) {
-			$data = $database->getAddress($node);
+		if (($node = request('node')) && ($node>0) && ($data = $database->getAddress($node))) {
 			$title = showip($data['address'], $data['bits']);
 			$skin = new Skin($config->skin);
 			$skin->setFile('netinfo.html');

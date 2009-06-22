@@ -29,7 +29,7 @@ class Database {
 	public $error = null;
 	private $provider = null;
 	private $dbversion = '1';
-
+	private $prefix = '';
 
 	public function __construct($config) {
 
@@ -49,6 +49,7 @@ class Database {
 				$this->error = 'No support for '.$this->provider.' databases';
 		} else
 			$this->error = 'Unknown database provider '.$this->provider;
+		$this->prefix = $config['prefix'];
 
 	}
 
@@ -76,6 +77,7 @@ class Database {
 		if ($this->provider=='mysql') {
 			if (!($resource = mysql_query($sql, $this->db))) {
 				$this->error = mysql_error($this->db);
+				debug($this->error);
 				debug('Faulty query: '.$sql);
 				return false;
 			}
@@ -93,7 +95,7 @@ class Database {
 	public function hasDatabase() {
 
 		$this->error = null;
-		$version = $this->query('SELECT version FROM version');
+		$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`');
 		if ($this->error) {
 			$this->error = null;
 			return false;
@@ -106,7 +108,7 @@ class Database {
 	public function hasUpgrade() {
 
 		$this->error = null;
-		$version = $this->query('SELECT version FROM version');
+		$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`');
 		return ($version[0]['version']<1);
 
 	}
@@ -117,8 +119,9 @@ class Database {
 		$this->error = null;
 		if (in_array($this->provider, array('mysql', 'mysqli'))) {
 			/* Drop old tables, even though we're pretty sure they don't exist. */
-			$this->query("DROP TABLE ip");
-			if (!$this->query("CREATE TABLE `ip` (".
+			$this->query("DROP TABLE `".$this->prefix."ip`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."ip` (".
 							  "`id` INT UNSIGNED NOT NULL,".
 							  "`address` varchar(32) NOT NULL,".
 							  "`bits` INT UNSIGNED NOT NULL,".
@@ -131,71 +134,81 @@ class Database {
 							  "KEY `parent` (`parent`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			if (!$this->query("INSERT INTO `ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
+			if (!$this->query("INSERT INTO `".$this->prefix.
+							  "ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
 							  "1, 'fc030000000000000000000000000000', 16, 0, ".
 							  "'Default IPv6 network.')"))
 				return false;
-			if (!$this->query("INSERT INTO `ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
+			if (!$this->query("INSERT INTO `".$this->prefix.
+							  "ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
 							  "2, '000000000000000000000000C0A80300', 120, 0, ".
 							  "'Default IPv4 network.')"))
 				return false;
-			$this->query("DROP TABLE admin");
-			if (!$this->query("CREATE TABLE `admin` (".
+			$this->query("DROP TABLE `".$this->prefix."admin`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."admin` (".
 							  "`username` varchar(15) NOT NULL,".
 							  "`password` varchar(32) NOT NULL,".
 							  "PRIMARY KEY  (`username`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			if (!$this->query("INSERT INTO `admin` (`username`, `password`) VALUES('admin', '".
+			if (!$this->query("INSERT INTO `".$this->prefix."admin` (`username`, `password`) VALUES('admin', '".
 							  md5('secret')."')"))
 				return false;
-			$this->query("DROP TABLE version");
-			if (!$this->query("CREATE TABLE `version` (".
+			$this->query("DROP TABLE `".$this->prefix."version`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."version` (".
 							  "`version` INT NOT NULL".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			if (!$this->query("INSERT INTO `version` (`version`) VALUES(1)"))
+			if (!$this->query("INSERT INTO `".$this->prefix."version` (`version`) VALUES(1)"))
 				return false;
-			$this->query("DROP TABLE extrafields");
-			if (!$this->query("CREATE TABLE `extrafields` (".
+			$this->query("DROP TABLE `".$this->prefix."extrafields`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."extrafields` (".
 							  "`node` INT UNSIGNED NOT NULL,".
 							  "`field` varchar(15) NOT NULL,".
 							  "`value` varchar(255) NOT NULL,".
 							  "PRIMARY KEY(`node`, `field`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			$this->query("DROP TABLE extratables");
-			if (!$this->query("CREATE TABLE `extratables` (".
+			$this->query("DROP TABLE `".$this->prefix."extratables`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."extratables` (".
 							  "`table` varchar(15) NOT NULL,".
 							  "`value` varchar(255) NOT NULL,".
 							  "`comments` text NOT NULL,".
 							  "PRIMARY KEY(`table`, `value`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			$this->query("DROP TABLE tablenode");
-			if (!$this->query("CREATE TABLE `tablenode` (".
+			$this->query("DROP TABLE `".$this->prefix."tablenode`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."tablenode` (".
 							  "`table` varchar(15) NOT NULL,".
 							  "`value` varchar(255) NOT NULL,".
 							  "`node` INT UNSIGNED NOT NULL,".
 							  "PRIMARY KEY(`table`, `value`, `node`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			$this->query("DROP TABLE adminnodeaccess");
-			if (!$this->query("CREATE TABLE `adminnodeaccess` (".
+			$this->query("DROP TABLE `".$this->prefix."adminnodeaccess`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."adminnodeaccess` (".
 							  "`username` varchar(15) NOT NULL,".
 							  "`node` INT UNSIGNED NOT NULL,".
 							  "PRIMARY KEY(`username`, `node`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			$this->query("DROP TABLE adminfieldaccess");
-			if (!$this->query("CREATE TABLE `adminfieldaccess` (".
+			$this->query("DROP TABLE `".$this->prefix."adminfieldaccess`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."adminfieldaccess` (".
 							  "`username` varchar(15) NOT NULL,".
 							  "`field` varchar(15) NOT NULL,".
 							  "PRIMARY KEY(`username`, `field`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			$this->query("DROP TABLE admintableaccess");
-			if (!$this->query("CREATE TABLE `admintableaccess` (".
+			$this->query("DROP TABLE `".$this->prefix."admintableaccess`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."admintableaccess` (".
 							  "`username` varchar(15) NOT NULL,".
 							  "`table` varchar(15) NOT NULL,".
 							  "PRIMARY KEY(`username`, `field`)".
@@ -207,20 +220,22 @@ class Database {
 
 
 	public function getUser($username) {
-		return $this->query("SELECT `password` FROM `admin` WHERE `username` = '".
+		return $this->query("SELECT `password` FROM `".$this->prefix."admin` WHERE `username` = '".
 							$this->escape($username)."'");
 	}
 
 
 	public function getAddress($node) {
-		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
+		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
+							   $this->prefix."ip` WHERE ".
 							   "`id`=".$this->escape($node));
 		return ($result ? $result[0] : false);
 	}
 
 
 	public function findAddress($address, $bits) {
-		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
+		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
+							   $this->prefix."ip` WHERE ".
 							   "`address`='".$this->escape($address)."' AND `bits`=".
 							   $this->escape($bits));
 		return ($result ? $result[0] : false);
@@ -228,7 +243,8 @@ class Database {
 
 
 	public function getTree($parent, $recursive = false) {
-		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
+		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
+							   $this->prefix."ip` WHERE ".
 							   "`parent`=".$this->escape($parent)." ORDER BY `address`");
 		if ($recursive===false)
 			return $result;
@@ -241,14 +257,14 @@ class Database {
 
 
 	public function hasChildren($parent) {
-		$result = $this->query("SELECT COUNT(`id`) AS `total` FROM `ip` WHERE `parent`=".
-							   $this->escape($parent));
+		$result = $this->query("SELECT COUNT(`id`) AS `total` FROM `".$this->prefix.
+							   "ip` WHERE `parent`=".$this->escape($parent));
 		return ($result[0]['total']>0);
 	}
 
 
 	public function hasNetworks($parent) {
-		$result = $this->query("SELECT COUNT(`id`) AS `total` FROM `ip` WHERE `parent`=".
+		$result = $this->query("SELECT COUNT(`id`) AS `total` FROM `".$this->prefix."ip` WHERE `parent`=".
 							   $this->escape($parent)." AND `bits`<128");
 		return ($result[0]['total']>0);
 	}
@@ -256,7 +272,8 @@ class Database {
 
 	public function getParentTree($address) {
 		$tree = array();
-		$entry = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
+		$entry = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
+							  $this->prefix."ip` WHERE ".
 							  "STRCMP('".$this->escape($address)."', `address`)>=0 ".
 							  "ORDER BY `address` DESC, `bits` ASC LIMIT 1");
 		if (count($entry)>0) {
@@ -272,7 +289,8 @@ class Database {
 
 
 	public function search($search) {
-		return $this->query("SELECT DISTINCT `id`, `address`, `bits`, `parent`, `description` FROM `ip` LEFT JOIN ".
+		return $this->query("SELECT DISTINCT `id`, `address`, `bits`, `parent`, `description` FROM `".
+							$this->prefix."ip` LEFT JOIN ".
 							"`extrafields` ON `extrafields`.`node`=`ip`.`id` WHERE `address`='".
 							address2ip($search)."' OR `description` LIKE '%".
 							$this->escape($search)."%' OR `extrafields`.`value` LIKE '%".
@@ -280,7 +298,8 @@ class Database {
 	}
 
 	public function getNext($address) {
-		$entry = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `ip` WHERE ".
+		$entry = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
+							  $this->prefix."ip` WHERE ".
 							  "STRCMP('".$this->escape($address)."', `address`)<0 ".
 							  "ORDER BY `address` ASC LIMIT 1");
 		return (count($entry)>0 ? $entry[0] : null);
@@ -296,7 +315,7 @@ class Database {
 
 		$broadcast = broadcast($address, $bits);
 		/* Check for exact match */
-		$check = $this->query("SELECT `id` FROM `ip` WHERE `address`='".
+		$check = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `address`='".
 							  $this->escape($address)."' AND `bits`=".
 							  $this->escape($bits));
 		if (count($check)>0) {
@@ -312,7 +331,7 @@ class Database {
 
 		/* Check possible parent */
 		$parent = 0;
-		$parents = $this->query("SELECT `id`, `address`, `bits` FROM `ip` WHERE `address`<='".
+		$parents = $this->query("SELECT `id`, `address`, `bits` FROM `".$this->prefix."ip` WHERE `address`<='".
 								$this->escape($address)."' ORDER BY `address` DESC, `bits` DESC");
 		if (count($parents)>0)
 			foreach ($parents as $parentnode)
@@ -330,8 +349,8 @@ class Database {
 					unset($children[$id]);
 
 		/* Add new node */
-		$max = $this->query("SELECT MAX(`id`) AS `max` FROM `ip`");
-		$this->query("INSERT INTO `ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
+		$max = $this->query("SELECT MAX(`id`) AS `max` FROM `".$this->prefix."ip`");
+		$this->query("INSERT INTO `".$this->prefix."ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
 					 $this->escape($max[0]['max']+1).", '".
 					 $this->escape($address)."', ".$this->escape($bits).", ".
 					 $this->escape($parent).", '".$this->escape($description)."')");
@@ -341,7 +360,7 @@ class Database {
 			$ids = array();
 			foreach ($children as $child)
 				$ids[] = $child['id'];
-			$this->query("UPDATE `ip` SET `parent`=".$this->escape($max[0]['max']+1).
+			$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($max[0]['max']+1).
 						 " WHERE `id` IN (".implode(',', $ids).")");
 		}
 		return $max[0]['max']+1;
@@ -352,7 +371,7 @@ class Database {
 		$address = $this->getAddress($node);
 		if ($this->error)
 			return false;
-		$children = $this->query("SELECT `id` FROM `ip` WHERE `parent`=".
+		$children = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `parent`=".
 								 $this->escape($node));
 		if ($this->error)
 			return false;
@@ -361,21 +380,21 @@ class Database {
 				foreach ($children as $child)
 					if (!($this->deleteNode($child['id'], $childaction)))
 						return false;
-				$this->query("DELETE FROM `ip` WHERE `id`=".$this->escape($node));
+				$this->query("DELETE FROM `".$this->prefix."ip` WHERE `id`=".$this->escape($node));
 			} else if ($childaction=='move') {
-				if (!$this->query("UPDATE `ip` SET `parent`=".
+				if (!$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".
 								  $this->escape($address['parent']).
 								  " WHERE `parent`=".
 								  $this->escape($node)))
 					return false;
-				if (!$this->query("DELETE FROM `ip` WHERE `id`=".$this->escape($node)))
+				if (!$this->query("DELETE FROM `".$this->prefix."ip` WHERE `id`=".$this->escape($node)))
 					return false;
 			} else {
 				$this->error = 'Node has children';
 				return false;
 			}
 		} else {
-			if (!$this->query("DELETE FROM `ip` WHERE `id`=".$this->escape($node)))
+			if (!$this->query("DELETE FROM `".$this->prefix."ip` WHERE `id`=".$this->escape($node)))
 				return false;
 		}
 		return true;
@@ -383,7 +402,7 @@ class Database {
 
 
 	public function getField($field, $node) {
-		$value = $this->query("SELECT `value` FROM `extrafields` WHERE `node`=".
+		$value = $this->query("SELECT `value` FROM `".$this->prefix."extrafields` WHERE `node`=".
 							  $this->escape($node)." AND `field`='".
 							  $this->escape($field)."'");
 		return ($value===false ? '' : $value[0]['value']);
@@ -404,7 +423,7 @@ class Database {
 		}
 
 		/* Check for exact match */
-		$check = $this->query("SELECT `id` FROM `ip` WHERE `address`='".
+		$check = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `address`='".
 							  $this->escape($address)."' AND `bits`=".
 							  $this->escape($bits));
 		if ((count($check)>0) && ($check[0]['id']!=$node)) {
@@ -423,7 +442,7 @@ class Database {
 			return false;
 
 		/* Change node */
-		if (!($this->query("UPDATE `ip` SET `address`='".$this->escape($address).
+		if (!($this->query("UPDATE `".$this->prefix."ip` SET `address`='".$this->escape($address).
 						   "', `bits`=".$this->escape($bits).
 						   ", `description`='".$this->escape($description)."' WHERE `id`=".
 						   $this->escape($node)))) {
@@ -435,7 +454,7 @@ class Database {
 
 		/* Find new parent */
 		$parent = $entry['parent'];
-		$parents = $this->query("SELECT `id`, `address`, `bits` FROM `ip` WHERE `address`<='".
+		$parents = $this->query("SELECT `id`, `address`, `bits` FROM `".$this->prefix."ip` WHERE `address`<='".
 								$this->escape($address)."' AND `id`!=".$this->escape($node).
 								" ORDER BY `address` DESC, `bits` DESC");
 		if (count($parents)>0)
@@ -445,7 +464,7 @@ class Database {
 					break;
 				}
 		if (($parent!=$entry['parent']) &&
-			!$this->query("UPDATE `ip` SET `parent`=".$this->escape($parent)." WHERE `id`=".
+			!$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($parent)." WHERE `id`=".
 						  $this->escape($node))) {
 			$error = $this->error;
 			$this->query('ROLLBACK');
@@ -460,7 +479,7 @@ class Database {
 				if (($child['id']!=$node) &&
 					((strcmp($address, $child['address'])>0) ||
 					 (strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))<0)))
-					if (!$this->query("UPDATE `ip` SET `parent`=".$this->escape($entry['parent']).
+					if (!$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($entry['parent']).
 									  " WHERE `id`=".$this->escape($child['id']))) {
 						$error = $this->error;
 						$this->query('ROLLBACK');
@@ -475,7 +494,7 @@ class Database {
 				if (($child['id']!=$node) &&
 					(strcmp($address, $child['address'])<=0) &&
 					(strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))>=0))
-					if (!$this->query("UPDATE `ip` SET `parent`=".$this->escape($entry['id']).
+					if (!$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($entry['id']).
 									  " WHERE `id`=".$this->escape($child['id']))) {
 						$error = $this->error;
 						$this->query('ROLLBACK');
@@ -497,7 +516,7 @@ class Database {
 	public function setField($field, $node, $value) {
 		$old = $this->getField($field, $node);
 		if (strcmp($value, $old)!=0)
-			return $this->query("REPLACE INTO `extrafields` (`node`, `field`, `value`) VALUES (".
+			return $this->query("REPLACE INTO `".$this->prefix."extrafields` (`node`, `field`, `value`) VALUES (".
 								$this->escape($node).", '".
 								$this->escape($field)."', '".
 								$this->escape($value)."')");
