@@ -252,7 +252,7 @@ class Database {
 
 	public function addNode($address, $bits, $description) {
 		/* Prepare for stupidity */
-		if (($address=='00000000000000000000000000000000') && ($bits==0)) {
+		if ($address=='00000000000000000000000000000000') {
 			$this->error = 'The World already exists';
 			return false;
 		}

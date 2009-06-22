@@ -38,14 +38,17 @@ class addnode {
 			$skin->setVar('parentbits', (strcmp($parent['address'], '00000000000000000000000100000000')<0 ? $parent['bits']-96 : $parent['bits']));
 			$skin->setVar('parentlink', me().'?page=main&node='.$node);
 			$skin->parse('parent');
-			$skin->setVar('description', $data['description']);
-		}
+			$skin->setVar('description', request('description', $data['description']));
+		} else
+			$skin->setVar('description', request('description'));
 		if (count($config->extrafields)>0)
 			foreach ($config->extrafields as $field=>$details) {
 				$skin->setVar('name', $field);
 				$skin->setVar('fullname', $details['name']);
 				if ($data)
-					$skin->setVar('value', $database->getField($field, $node));
+					$skin->setVar('value', request($field, $database->getField($field, $node)));
+				else
+					$skin->setVar('value', request($field));
 				$skin->parse('extrafield');
 			}
 		$skin->setVar('address', request('address'));
