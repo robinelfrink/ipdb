@@ -29,7 +29,7 @@ class initdb {
 
 
 	public function get() {
-		if (request('action')=='create') {
+		if (request('action')=='createdb') {
 			$content = '
 <p>A default database has been created. You can now
 <a href="'.me().'?page=login" remote=remote">log in</a> with username \'admin\'

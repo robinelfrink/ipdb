@@ -190,30 +190,6 @@ class Database {
 							  "PRIMARY KEY(`table`, `value`, `node`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			$this->query("DROP TABLE `".$this->prefix."adminnodeaccess`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."adminnodeaccess` (".
-							  "`username` varchar(15) NOT NULL,".
-							  "`node` INT UNSIGNED NOT NULL,".
-							  "PRIMARY KEY(`username`, `node`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			$this->query("DROP TABLE `".$this->prefix."adminfieldaccess`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."adminfieldaccess` (".
-							  "`username` varchar(15) NOT NULL,".
-							  "`field` varchar(15) NOT NULL,".
-							  "PRIMARY KEY(`username`, `field`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			$this->query("DROP TABLE `".$this->prefix."admintableaccess`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."admintableaccess` (".
-							  "`username` varchar(15) NOT NULL,".
-							  "`table` varchar(15) NOT NULL,".
-							  "PRIMARY KEY(`username`, `field`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
 		}
 
 	}

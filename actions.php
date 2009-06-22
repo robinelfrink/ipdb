@@ -113,8 +113,10 @@ function acton($action) {
 		  break;
 	  case 'createdb':
 		  $database->initialize();
-		  if (!$database->error)
-			  request('page', 'main', true);
+		  if ($database->error)
+			  $error = $database->error;
+		  else
+			  request('action', false, true);
 		  break;
 	  default:
 		  $error = 'Unknown action requested';
