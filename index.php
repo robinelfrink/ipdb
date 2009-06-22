@@ -77,12 +77,15 @@ if ($action = request('action'))
 	acton($action);
 
 /* Set default page to fetch */
+$oldpage = $_SESSION['page'];
 $page = request('page', 'main');
 
 
 /* Fetch the selected page */
-if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php'))
+if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php')) {
+	$_SESSION['page'] = $oldpage;
 	exit('Error: No code defined for page '.$page);
+}
 require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php';
 $pageobj = new $page();
 if (method_exists($pageobj, 'get')) {
