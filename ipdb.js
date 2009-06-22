@@ -214,6 +214,7 @@ function collapse(address) {
 /* Send an AJAX request */
 function ajaxrequest(args) {
 	var request;
+	fade();
 	document.URL.replace(/\?.*$/, '');
 	try {
 		request = new XMLHttpRequest();
@@ -266,14 +267,17 @@ function ajaxrequest(args) {
 							eval(unescape(nodes['commands']));
 						}
 						initialize();
+						unfade();
 				} else {
 					alert('Error: '+request.responseText);
 				}
+				unfade();
 			}
 		}
 		request.open('GET', document.URL.replace(/\?.*$/, '')+'?remote=remote&'+args);
 		request.send(null);
-	}
+	} else
+		unfade();
 }
 
 
@@ -293,5 +297,66 @@ function object_content(object) {
 }
 
 
+/* Fade in.out */
+var fadetimer = null;
+var fadecolor = '#b0b0b0';
+var fadefps = 60;
+var fadeopacity = 75;
+var fadetime = 500;
+function fade(dofade) {
+	if (dofade!=undefined) {
+		var fadediv;
+		if (!(fadediv = document.getElementById('fadediv'))) {
+			var div = document.createElement('div');
+			div.id = 'fadediv';
+			div.style.position = 'fixed';
+			div.style.top = '0px';
+			div.style.bottom = '0px';
+			div.style.left = '0px';
+			div.style.right = '0px';
+			div.style.zIndex = '1000';
+			div.style.backgroundColor = fadecolor;
+			div.style.display = 'none';
+			div.innerHTML = '&nbsp;';
+			document.body.appendChild(div);
+			fadediv = document.getElementById('fadediv');
+		}
+		fadediv.style.opacity = 0;
+		fadediv.style.filter = 'alpha(opacity=0)';
+		fadediv.style.display = '';
+		var steps = Math.floor((fadetime/1000)*fadefps);
+		var step = fadeopacity/steps;
+		for (var t = 1; t < steps; t++)
+			setTimeout('dofade(document.getElementById(\'fadediv\'), '+
+						Math.floor(t*step)+');', (t*(1000/fadefps)));
+	} else if (!fadetimer) {
+		/* Wait 1 second before fading */
+		fadetimer = setTimeout('fade(true);', 1000);
+	}
+}
+function unfade() {
+	if (fadetimer) {
+		clearTimeout(fadetimer);
+		fadetimer = 0;
+	} else {
+		var fadediv;
+		if (fadediv = document.getElementById('fadediv')) {
+			opacity = (fadediv.style.opacity*100);
+			fadediv.style.opacity = opacity/100;
+			fadediv.style.filter = 'alpha(opacity='+opacity+')';
+			fadediv.style.display = '';
+			var steps = Math.floor((fadetime/1000)*fadefps);
+			var step = fadeopacity/steps;
+			for (var t = 1; t < steps; t++)
+				setTimeout('dofade(document.getElementById(\'fadediv\'), '+
+						   Math.floor(opacity-(t*step))+');', (t*(1000/fadefps)));
+			setTimeout('try { document.body.removeChild(document.getElementById(\'fadediv\')) } catch (e) { };', (t*(1000/fadefps)));
+		}
+	}
+}
+function dofade(fadediv, opacity) {
+	fadediv.style.opacity = opacity/100;
+	fadediv.style.filter = 'alpha(opacity='+opacity+')';
+}
 
 window.onload = initialize;
