@@ -62,8 +62,7 @@ function ajaxify() {
 		if (div = getElement(names[j])) {
 			anchors = div.getElementsByTagName('a');
 			for (i=0; i<anchors.length; i++) {
-				if (anchors[i].hasAttribute('remote') &&
-					(anchors[i].getAttribute('remote')=='remote')) {
+				if (anchors[i].getAttribute('remote')=='remote') {
 					anchors[i].onclick = clicka;
 				}
 			}
