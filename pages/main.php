@@ -66,7 +66,11 @@ class main {
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					$skin->setVar('field', $field);
-					$skin->setVar('value', $database->getField($field, $node));
+					$value = $database->getField($field, $node);
+					if ($details['url'])
+						$skin->setVar('value', '<a href="'.sprintf($details['url'], $value).'">'.$value.'</a>');
+					else
+						$skin->setVar('value', $value);
 					$skin->parse('extrafield');
 				}
 			if (count($config->extratables)>0)
