@@ -45,10 +45,7 @@ if (getElement('username')) {
 	getElement('username').select();
 }";
 		return array('title'=>'IPDB :: Login',
-					 'tree'=>'&nbsp;',
-					 'menu'=>'&nbsp;',
-					 'commands'=>$commands,
-					 'content'=>$content);
+					 'commands'=>$commands);
 	}
 
 

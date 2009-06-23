@@ -340,30 +340,36 @@ function send($data) {
 	<'.$key.'>'.implode('</'.$key.'><'.$key.'>', str_split(escape($content), 1024)).'</'.$key.'>';
 		echo '
 </content>';
-		} else {
-			$skin->setFile('index.html');
-			$skin->setVar('title', $data['title']);
-			$skin->setVar('version', $version);
-			$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
-			$skin->setVar('menu', Menu::get());
-			if ($session->authenticated) {
-				$skin->setVar('tree', Tree::get(0, request('node', NULL)));
-				$skin->parse('treediv');
-			}
+	} else if (request('page')=='login') {
+		$skin->setFile('login.html');
+		$skin->setVar('title', $data['title']);
+		$skin->setVar('version', $version);
+		$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
+		echo $skin->get();
+	} else {
+		$skin->setFile('index.html');
+		$skin->setVar('title', $data['title']);
+		$skin->setVar('version', $version);
+		$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
+		$skin->setVar('menu', Menu::get());
+		if ($session->authenticated) {
+			$skin->setVar('tree', Tree::get(0, request('node', NULL)));
+			$skin->parse('treediv');
+		}
 
-			if ($debugstr) {
-				$skin->setVar('debug', '<pre>'.$debugstr.'</pre>');
-			}
-			$skin->parse('debugdiv');
+		if ($debugstr) {
+			$skin->setVar('debug', '<pre>'.$debugstr.'</pre>');
+		}
+		$skin->parse('debugdiv');
 
-			if (isset($data['commands']))
-				$data['content'] .= '
+		if (isset($data['commands']))
+			$data['content'] .= '
 <script type="text/javascript">
 	'.$data['commands'].'
 </script>';
-			$skin->setVar('content', $data['content']);
-			echo $skin->get();
-		}
+		$skin->setVar('content', $data['content']);
+		echo $skin->get();
+	}
 	exit;
 }
 
