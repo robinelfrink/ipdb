@@ -83,6 +83,7 @@ div#tree {
 div#tree ul {
 	list-style-type: none;
 	padding-left: 1em;
+	margin-left: 0px;
 }
 div#tree li div {
 	background-repeat: no-repeat;
