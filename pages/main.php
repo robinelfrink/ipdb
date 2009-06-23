@@ -72,7 +72,9 @@ class main {
 			if (count($config->extratables)>0)
 				foreach ($config->extratables as $table=>$details)
 					if ($details['linkaddress']) {
+						$item = $database->getItem($table, $data['id']);
 						$skin->setVar('table', $table);
+						$skin->setVar('item', $item['item'].' '.$item['description']);
 						$skin->parse('extratable');
 					}
 
@@ -146,7 +148,7 @@ class main {
 			if (count($config->extratables)>0)
 				foreach ($config->extratables as $table=>$details) 
 					 if ($details['inoverview'] && $details['linkaddress']) {
-						 $item = $database->getExtra($table, $network['id']);
+						 $item = $database->getItem($table, $network['id']);
 						 $skin->setVar('extratable', $item['item']);
 						 $skin->parse('extratabledata');
 					 }

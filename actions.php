@@ -77,6 +77,13 @@ function acton($action) {
 							  }
 						  }
 					  }
+					  if (count($config->extratables)>0)
+						  foreach ($config->extratables as $table=>$details)
+							  if ($details['linkaddress'] &&
+								  !$database->setItem($table, request($table), request('node'), (request($table.'-recursive')=='on' ? true : false))) {
+								  $error = $database->error;
+								  break;
+							  }
 					  if (!$error) {
 						  request('page', 'main', true);
 					  }

@@ -549,6 +549,49 @@ class Database {
 	}
 
 
+	public function getItem($table, $node) {
+		$item = $this->query("SELECT `".$this->prefix."tablenode`.`item` AS `item`, `".
+							 $this->prefix."extratables`.`description` AS `description` FROM `".
+							 $this->prefix."tablenode` LEFT JOIN `".
+							 $this->prefix."extratables` ON `".$this->prefix."tablenode`.`item`=`".
+							 $this->prefix."extratables`.`item` AND `".$this->prefix."tablenode`.`table`=`".
+							 $this->prefix."extratables`.`table` WHERE `node`=".
+							 $this->escape($node)." AND `".$this->prefix."tablenode`.`table`='".
+							 $this->escape($table)."'");
+		if ($this->error)
+			return false;
+		else if (count($item)>0)
+			return $item[0];
+		else
+			return array($table=>'-', 'description'=>'');
+	}
+
+
+	public function setItem($table, $item, $node, $recursive = false) {
+		if (empty($item) || ($item=='-'))
+			$this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `table`='".
+						 $this->escape($table)."' AND `node`=".
+						 $this->escape($node));
+		else
+			$this->query("REPLACE INTO `".$this->prefix."tablenode` (`table`, `item`, `node`) VALUES('".
+						 $this->escape($table)."', '".$this->escape($item)."', ".
+						 $this->escape($node).")");
+		if ($this->error)
+			return false;
+		if ($recursive) {
+			$children = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `parent`=".
+									 $this->escape($node));
+			if ($this->error)
+				return false;
+			if (count($children)>0)
+				foreach ($children as $child)
+					if (!$this->setItem($table, $item, $child['id'], $recursive ))
+						return false;
+		}
+		return true;
+	}
+
+
 }
 
 

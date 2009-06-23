@@ -53,12 +53,12 @@ class changenode {
 				foreach ($config->extratables as $table=>$details)
 					if ($details['linkaddress']) {
 						$tableitems = $database->getExtra($table);
-						$item = $database->getExtra($table, $node);
+						$item = $database->getItem($table, $node);
 						$options = '<option value="">-</option>';
 						if (count($tableitems)>0)
 							foreach ($tableitems as $tableitem)
 								$options .= '<option value="'.$tableitem['item'].'"'.
-								($item && ($item['item']==$tableitem['item'] ? ' selected="selected"' : '')).
+								($item['item']==$tableitem['item'] ? ' selected="selected"' : '').
 								'>'.$tableitem['item'].' '.$tableitem['description'].'</option>';
 						$skin->setVar('table', $table);
 						$skin->setVar('tableoptions', $options);
