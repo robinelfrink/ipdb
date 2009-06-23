@@ -126,7 +126,7 @@ class main {
 			$base = plus(broadcast($child['address'], $child['bits']), '00000000000000000000000000000001');
 		}
 		if (request('showunused')=='yes') {
-			$unused = findunused($base, plus(broadcast($data['address'], $data['bits']), '00000000000000000000000000000001'));
+			$unused = findunused($base, plus(broadcast($node['address'], $node['bits']), '00000000000000000000000000000001'));
 			if (is_array($unused) && (count($unused)>0))
 				foreach ($unused as $network)
 					$networks[] = $network;
