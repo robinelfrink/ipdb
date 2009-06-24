@@ -50,16 +50,18 @@ class main {
 			$children = $database->getTree($data['id']);
 			if ($data['bits']==128) {
 				$skin->setVar('label', 'host '.ip2address($data['address']));
-			} else if (count($children)>0) {
+			} else {
 				$skin->setVar('label', 'network '.showip($data['address'], $data['bits']));
-				if (request('showunused')=='yes') {
-					$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=no');
-					$skin->setVar('unusedlabel', 'hide unused blocks');
-				} else {
-					$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=yes');
-					$skin->setVar('unusedlabel', 'show unused blocks');
+				if (count($children)>0) {
+					if (request('showunused')=='yes') {
+						$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=no');
+						$skin->setVar('unusedlabel', 'hide unused blocks');
+					} else {
+						$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=yes');
+						$skin->setVar('unusedlabel', 'show unused blocks');
+					}
+					$skin->parse('showunused');
 				}
-				$skin->parse('showunused');
 			}
 			$skin->setVar('node', $data['id']);
 			$skin->setVar('description', $data['description']);
@@ -82,6 +84,8 @@ class main {
 						$skin->parse('extratable');
 					}
 
+			$skin->setVar('address', ip2address($data['address']));
+			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
 			$content = $skin->get();
 			if (count($children)>0)
 				$content .= $this->listchildren($data, $children);
