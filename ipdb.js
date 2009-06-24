@@ -259,7 +259,7 @@ function ajaxrequest(args) {
 							else if (node == 'title') 
 								document.title = unescape(nodes[node]);
 							if (node == 'content') {
-								window.scrollTo(0, 0);
+								window.scrollTo(0, document.getElementById(node).offsetTop);
 							}
 						}
 						if (typeof(nodes['commands']) == 'object') {
