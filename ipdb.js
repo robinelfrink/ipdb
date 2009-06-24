@@ -267,7 +267,7 @@ function ajaxrequest(args) {
 						}
 						initialize();
 						unfade();
-				} else {
+				} else if (request.responseText && !request.responseText.match(/^\s*$/)) {
 					alert('Error: '+request.responseText);
 				}
 				unfade();
