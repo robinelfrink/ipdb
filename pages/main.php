@@ -64,7 +64,7 @@ class main {
 				}
 			}
 			$skin->setVar('node', $data['id']);
-			$skin->setVar('description', $data['description']);
+			$skin->setVar('description', htmlentities($data['description']));
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					$skin->setVar('field', $field);
