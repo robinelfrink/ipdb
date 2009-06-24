@@ -64,7 +64,7 @@ class addnode {
 						$skin->setVar('item', request('extratableitem'));
 					$skin->parse('extratable');
 				}
-		$skin->setVar('address', request('address'));
+		$skin->setVar('address', ip2address(request('address')));
 		$skin->setVar('bits', request('bits'));
 		$skin->parse('addnode');
 		$content = $skin->get();
