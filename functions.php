@@ -337,8 +337,7 @@ function send($data) {
 <content>';
 		if (request('page')=='login')
 			echo '
-	<commands>document.location = document.URL.replace(/\?.*/, \'\');</commands>
-	</commands>';
+	<commands>'.escape('document.location = document.URL.replace(/\?.*/, \'\');').'</commands>';
 		else
 			foreach ($data as $key=>$content)
 				echo '
