@@ -335,8 +335,13 @@ function send($data) {
 		header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
 		echo '<?xml version="1.0" encoding="UTF-8"?>
 <content>';
-		foreach ($data as $key=>$content)
+		if (request('page')=='login')
 			echo '
+	<commands>document.location = document.URL.replace(/\?.*/, \'\');</commands>
+	</commands>';
+		else
+			foreach ($data as $key=>$content)
+				echo '
 	<'.$key.'>'.implode('</'.$key.'><'.$key.'>', str_split(escape($content), 1024)).'</'.$key.'>';
 		echo '
 </content>';
