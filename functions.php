@@ -207,6 +207,16 @@ function _and($one, $two) {
 }
 
 
+function _xor($one, $two) {
+	$one = str_pad($one, 32, '0', STR_PAD_LEFT);
+	$two = str_pad($two, 32, '0', STR_PAD_LEFT);
+	$result = '';
+	for ($i=0; $i<32; $i++)
+		$result .= dechex(hexdec($one[$i]) ^ hexdec($two[$i]));
+	return $result;
+}
+
+
 function plus($one, $two) {
 	$one = str_pad($one, 32, '0', STR_PAD_LEFT);
 	$two = str_pad($two, 32, '0', STR_PAD_LEFT);

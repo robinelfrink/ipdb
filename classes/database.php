@@ -414,6 +414,9 @@ class Database {
 			return false;
 		}
 
+		/* Find change in address */
+		$change = _xor($entry['address'], $address);
+
 		/* Start transaction */
 		if (!$this->query('BEGIN'))
 			return false;
@@ -457,6 +460,7 @@ class Database {
 					((strcmp($address, $child['address'])>0) ||
 					 (strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))<0)))
 					if (!$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($entry['parent']).
+									  ", `address`='".$this->escape(_xor($child['address'], $change))."'".
 									  " WHERE `id`=".$this->escape($child['id']))) {
 						$error = $this->error;
 						$this->query('ROLLBACK');
