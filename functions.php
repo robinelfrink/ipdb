@@ -373,8 +373,11 @@ function send($data) {
 
 		if ($debugstr) {
 			$skin->setVar('debug', '<pre>'.$debugstr.'</pre>');
+			$skin->parse('debugdiv');
+		} else {
+			$skin->setVar('debugdiv', '');
+			$skin->hideBlock('debugdiv');
 		}
-		$skin->parse('debugdiv');
 
 		if (isset($data['commands']))
 			$data['content'] .= '

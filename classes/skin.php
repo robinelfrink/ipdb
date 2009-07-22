@@ -125,6 +125,16 @@ class Skin {
 
 	}
 
+
+	public function hideBlock($block) {
+
+		if ($this->blocks[$block]) {
+			$this->blocks['__hidden__'.$block] = $this->blocks[$block];
+			unset($this->blocks[$block]);
+		}
+
+	}
+
 }
 
 
