@@ -44,6 +44,12 @@ class Menu {
 								  $details['description'].'</a>');
 					$skin->parse('menuitem');
 				}
+			$skin->setVar('item', '<a href="'.me().'?page=account" remote=remote>My account</a>');
+			$skin->parse('menuitem');
+			if ($session->username=='admin') {
+				$skin->setVar('item', '<a href="'.me().'?page=users" remote=remote>Users</a>');
+				$skin->parse('menuitem');
+			}
 			$skin->setVar('item', '<a href="'.me().'?page=login&action=logout" remote=remote>Logout '.
 						  $session->username.'</a>');
 			$skin->parse('menuitem');

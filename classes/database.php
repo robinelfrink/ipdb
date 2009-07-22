@@ -149,11 +149,12 @@ class Database {
 			if (!$this->query("CREATE TABLE `".$this->prefix."admin` (".
 							  "`username` varchar(15) NOT NULL,".
 							  "`password` varchar(32) NOT NULL,".
+							  "`name` varchar(50) NOT NULL,".
 							  "PRIMARY KEY  (`username`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			if (!$this->query("INSERT INTO `".$this->prefix."admin` (`username`, `password`) VALUES('admin', '".
-							  md5('secret')."')"))
+			if (!$this->query("INSERT INTO `".$this->prefix."admin` (`username`, `password`, `name`) ".
+							  "VALUES('admin', '".md5('secret')."', 'Administrator')"))
 				return false;
 			$this->query("DROP TABLE `".$this->prefix."version`");
 			$this->error = null;
@@ -197,8 +198,11 @@ class Database {
 
 
 	public function getUser($username) {
-		return $this->query("SELECT `password` FROM `".$this->prefix."admin` WHERE `username` = '".
-							$this->escape($username)."'");
+		$user = $this->query("SELECT `password`, `name` FROM `".$this->prefix."admin` WHERE `username` = '".
+							 $this->escape($username)."'");
+		if (is_array($user) && (count($user)>0))
+			return $user[0];
+		return false;
 	}
 
 
@@ -593,6 +597,25 @@ class Database {
 						return false;
 		}
 		return true;
+	}
+
+
+	public function changeName($name) {
+		global $session;
+		if ($this->query("UPDATE `".$this->prefix."admin` SET `name`='".
+						 $this->escape($name)."' WHERE `username`='".
+						 $this->escape($session->username)."'"))
+			$session->changeName($name);
+		else
+			return false;
+	}
+
+
+	public function changePassword($password) {
+		global $session;
+		return $this->query("UPDATE `".$this->prefix."admin` SET `password`='".
+							md5($password)."' WHERE `username`='".
+							$this->escape($session->username)."'");
 	}
 
 

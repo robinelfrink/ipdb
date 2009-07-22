@@ -28,6 +28,7 @@ class Session {
 	public $error = null;
 	public $authenticated = false;
 	public $username = true;
+	public $name = '';
 	private $expire;
 
 
@@ -76,16 +77,16 @@ class Session {
 
 		if (request('action')=='login') {
 			global $database, $page;
-			$result = $database->getUser($username);
-			if ($result===false) {
+			if (!($result = $database->getUser($username))) {
 				$this->error = 'Login failed';
 				return false;
 			}
 
-			if (md5(trim(request('password')))!=$result[0]['password']) {
+			if (md5(trim(request('password')))!=$result['password']) {
 				$this->error = 'Login failed';
 				return false;
 			}
+			$_SESSION['name'] = $result['name'];
 			$page = 'main';
 		}
 
@@ -104,8 +105,15 @@ class Session {
 
 		$this->authenticated = true;
 		$this->username = $username;
+		$this->name = $_SESSION['name'];
 		return true;
 
+	}
+
+
+	public function changeName($name) {
+		$_SESSION['name'] = $name;
+		$this->name = $name;
 	}
 
 

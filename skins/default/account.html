@@ -1,0 +1,32 @@
+<form method="post" action="" remote="remote">
+	<table>
+		<tr>
+			<td>username:</td>
+			<!-- BEGIN admin -->
+			<td>{username}</td>
+			<!-- END admin -->
+			<!-- BEGIN noadmin -->
+			<td><input type="text" name="username" value="{username}" /></td>
+			<!-- END noadmin -->
+		</tr>
+		<tr>
+			<td>name:</td>
+			<td><input type="text" name="name" value="{name}" /></td>
+		</tr>
+		<tr>
+			<td>password:</td>
+			<td><input type="password" name="password1" /></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td><input type="password" name="password2" /></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td><input type="submit" value="change" /></td>
+		</tr>
+	</table>
+	<input type="hidden" name="oldusername" value="{username}" />
+	<input type="hidden" name="oldname" value="{name}" />
+	<input type="hidden" name="action" value="changeaccount" />
+</form>

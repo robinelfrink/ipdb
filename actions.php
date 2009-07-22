@@ -145,6 +145,29 @@ function acton($action) {
 			  $database->deleteExtra(request('table'), request('item')))
 			  request('page', 'extratable', true);
 		  break;
+	  case 'changeaccount':
+		  if ($session->authenticated) {
+			  if ((request('username')!=$session->username) &&
+				  !$database->changeUsername(request('username'))) {
+				  $error = $database->error;
+				  break;
+			  }
+			  if ((request('name')!=$session->name) &&
+				  !$database->changeName(request('name'))) {
+				  $error = $database->error;
+				  break;
+			  }
+			  if (request('password1')) {
+				  if (request('password1')!=request('password2')) {
+					  $error = 'Passwords do not match';
+					  break;
+				  } else if (!$database->changePassword(request('password1'))) {
+					  $error = $database->error;
+					  break;
+				  }
+			  }
+		  }
+		  break;
 	  default:
 		  debug('action: '.request('action'));
 		  $error = 'Unknown action requested';
