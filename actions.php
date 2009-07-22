@@ -30,14 +30,19 @@ function acton($action) {
 	  case 'login':
 		  if ($session->authenticated) {
 			  if (request('remote')=='remote')
-				  send(array('commands'=>'location.href=\''.me().'\''));
-		  	  else
-			  	request('page', 'main', true);
+				  send(array('commands'=>'location.href=\''.me().'\';'));
+		  	  else {
+				  request('page', 'main', true);
+				  header('Location: '.me());
+			  }
+			  exit;
 		  }
 		  break;
 	  case 'logout':
-		  if (request('remote')!='remote')
+		  if (request('remote')!='remote') {
 			  header('Location: '.me());
+			  exit;
+		  }
 		  break;
 	  case 'getsubtree':
 		  if ($session->authenticated)
