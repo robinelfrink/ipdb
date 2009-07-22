@@ -168,6 +168,11 @@ function acton($action) {
 			  }
 		  }
 		  break;
+	  case 'adduser':
+		  if ($session->authenticated && ($session->username=='admin'))
+			  if (!$database->addUser(request('username'), request('name'), request('password')))
+				  $error = $database->error;
+		  break;
 	  default:
 		  debug('action: '.request('action'));
 		  $error = 'Unknown action requested';

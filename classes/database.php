@@ -206,6 +206,12 @@ class Database {
 	}
 
 
+	public function getUsers() {
+		return $this->query("SELECT `username`, `name` FROM `".$this->prefix."admin` ".
+							"WHERE `username`!='admin' ORDER BY `username`");
+	}
+
+
 	public function getAddress($node) {
 		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
 							   $this->prefix."ip` WHERE ".
@@ -600,22 +606,34 @@ class Database {
 	}
 
 
-	public function changeName($name) {
+	public function changeName($name, $username = null) {
 		global $session;
+		if (!$username)
+			$username = $session->username;
 		if ($this->query("UPDATE `".$this->prefix."admin` SET `name`='".
 						 $this->escape($name)."' WHERE `username`='".
-						 $this->escape($session->username)."'"))
+						 $this->escape($username)."'"))
 			$session->changeName($name);
 		else
 			return false;
 	}
 
 
-	public function changePassword($password) {
+	public function changePassword($password, $username = null) {
 		global $session;
+		if (!$username)
+			$username = $session->username;
 		return $this->query("UPDATE `".$this->prefix."admin` SET `password`='".
 							md5($password)."' WHERE `username`='".
-							$this->escape($session->username)."'");
+							$this->escape($username)."'");
+	}
+
+
+	public function addUser($username, $name, $password) {
+		return $this->query("INSERT INTO `".$this->prefix."admin`(`username`, `name`, `password`) ".
+							"VALUES('".$this->escape($username).
+							"', '".$this->escape($name).
+							"', '".md5($password)."')");
 	}
 
 

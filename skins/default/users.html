@@ -1,0 +1,28 @@
+<table>
+	<tr><th>username</th><th>name</th><th>password</th><th colspan="2"></th></tr>
+	<!-- BEGIN user -->
+	<form method="post" action="" remote="remote">
+		<tr>
+			<td><input type="text" name="username" value="{username}" /></td>
+			<td><input type="text" name="name" value="{name}" /></td>
+			<td><input type="password" name="password" /></td>
+			<td><input type="submit" value="change" /></td>
+			<td><a href="{deletelink}">delete</a></td>
+		</tr>
+		<input type="hidden" name="oldusername" value="{username}" />
+		<input type="hidden" name="oldname" value="{name}" />
+		<input type="hidden" name="action" value="changeuser" />
+	</form>
+	<!-- END user -->
+	<tr><td colspan="5">&nbsp;</td></tr>
+	<form method="post" action="" remote="remote">
+		<tr>
+			<td><input type="text" name="username" /></td>
+			<td><input type="text" name="name" /></td>
+			<td><input type="password" name="password" /></td>
+			<td><input type="submit" value="add" /></td>
+			<td></td>
+		</tr>
+		<input type="hidden" name="action" value="adduser" />
+	</form>
+</table>
