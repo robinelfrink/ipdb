@@ -126,7 +126,8 @@ class main {
 		$base = ($node ? $node['address'] : '00000000000000000000000000000000');;
 		$networks = array();
 		foreach ($children as $child) {
-			if ((request('showunused')=='yes') &&
+			if ((request('action')!='search') &&
+				(request('showunused')=='yes') &&
 				(strcmp($base, $child['address'])<0)) {
 				$unused = findunused($base, $child['address']);
 				if (is_array($unused) && (count($unused)>0))
