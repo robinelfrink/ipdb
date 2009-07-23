@@ -58,7 +58,14 @@ class Tree {
 					$skin->parse('network');
 				}
 			}
-			return $skin->get();
+			if (!$id)
+				return '<form method="" action="" remote="remote">
+	<input type="text" size="16" name="search" value="'.htmlentities(request('search', '')).'" />
+	<input type="image" src="skins/'.$config->skin['skin'].'/images/search.png" />
+	<input type="hidden" name="action" value="search" />
+</form>'.$skin->get();
+			else
+				return $skin->get();
 		} else
 			return '';
 	}

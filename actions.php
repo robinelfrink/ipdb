@@ -117,12 +117,17 @@ function acton($action) {
 	  case 'search':
 		  if ($session->authenticated) {
 			  global $searchresult;
-			  $searchresult = $database->search(request('search'));
-			  if (count($searchresult)>0) {
-				  request('node', -1, true);
+			  if (trim(request('search'))=='') {
+				  request('node', 0, true);
 				  request('page', 'main', true);
-			  } else
-				  $error = 'Search result is empty.';
+			  } else {
+				  $searchresult = $database->search(request('search'));
+				  if (count($searchresult)>0) {
+					  request('node', -1, true);
+					  request('page', 'main', true);
+				  } else
+					  $error = 'Search result is empty.';
+			  }
 		  }
 		  break;
 	  case 'createdb':
