@@ -179,6 +179,12 @@ div#content td.extraitem a:hover span {
 	background-color: #ffc;
 	white-space: nowrap;
 }
+div#content tr.even td {
+	background-color: inherit;
+}
+div#content tr.odd td {
+	background-color: #f8f8ff;
+}
 
 
 

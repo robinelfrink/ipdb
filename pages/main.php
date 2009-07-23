@@ -98,11 +98,14 @@ class main {
 			if (count($tree)>0) {
 				$skin = new Skin($config->skin);
 				$skin->setFile('main.html');
+				$even = true;
 				foreach ($tree as $network) {
 					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
 					$skin->setVar('label', showip($network['address'], $network['bits']));
 					$skin->setVar('description', $network['description']);
+					$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
 					$skin->parse('network');
+					$even = !$even;
 				}
 				$skin->setVar('count', count($tree));
 				$content = $skin->get();
@@ -139,6 +142,7 @@ class main {
 				foreach ($unused as $network)
 					$networks[] = $network;
 		}
+		$even = true;
 		foreach ($networks as $network) {
 			$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=addnode&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits']).'&node='.$node['id']));
 			$skin->setVar('label', showip($network['address'], $network['bits']));
@@ -163,7 +167,10 @@ class main {
 
 			$skin->setVar('description', ($network['id'] ? htmlentities($network['description']) : 'unused'));
 			$skin->setVar('class', ($network['id'] ? '' : ' class="unused"'));
+			$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').
+						  ($network['id'] ? '' : ' unused').'"');
 			$skin->parse('child');
+			$even = !$even;
 		}
 		if (count($config->extrafields)>0)
 			foreach ($config->extrafields as $field=>$details)
