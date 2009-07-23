@@ -2,12 +2,7 @@
 	<table>
 		<tr>
 			<td>username:</td>
-			<!-- BEGIN admin -->
 			<td>{username}</td>
-			<!-- END admin -->
-			<!-- BEGIN noadmin -->
-			<td><input type="text" name="username" value="{username}" /></td>
-			<!-- END noadmin -->
 		</tr>
 		<tr>
 			<td>name:</td>
@@ -26,7 +21,7 @@
 			<td><input type="submit" value="change" /></td>
 		</tr>
 	</table>
-	<input type="hidden" name="oldusername" value="{username}" />
+	<input type="hidden" name="username" value="{username}" />
 	<input type="hidden" name="oldname" value="{name}" />
 	<input type="hidden" name="action" value="changeaccount" />
 </form>

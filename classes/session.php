@@ -111,6 +111,12 @@ class Session {
 	}
 
 
+	public function changeUsername($username) {
+		$_SESSION['username'] = $username;
+		$this->username = $username;
+	}
+
+
 	public function changeName($name) {
 		$_SESSION['name'] = $name;
 		$this->name = $name;

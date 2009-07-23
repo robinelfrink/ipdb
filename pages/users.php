@@ -35,6 +35,7 @@ class users {
 		foreach ($users as $user) {
 			$skin->setVar('username', htmlentities($user['username']));
 			$skin->setVar('name', htmlentities($user['name']));
+			$skin->setVar('deletelink', me().'?action=deleteuser&username='.htmlentities($user['username']));
 			$skin->parse('user');
 		}
 

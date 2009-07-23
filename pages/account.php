@@ -33,14 +33,6 @@ class account {
 		$skin->setVar('username', htmlentities($session->username));
 		$skin->setVar('name', htmlentities($session->name));
 
-		if ($session->username=='admin') {
-			$skin->hideBlock('noadmin');
-			$skin->parse('admin');
-		} else {
-			$skin->hideBlock('admin');
-			$skin->parse('noadmin');
-		}
-
 		$content = $skin->get();
 
 		return array('title'=>'IPDB :: My account',

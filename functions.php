@@ -371,7 +371,7 @@ function send($data) {
 			$skin->parse('treediv');
 		}
 
-		if ($debugstr) {
+		if ($config->debug['debug']) {
 			$skin->setVar('debug', '<pre>'.$debugstr.'</pre>');
 			$skin->parse('debugdiv');
 		} else {

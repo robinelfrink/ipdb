@@ -606,6 +606,13 @@ class Database {
 	}
 
 
+	public function changeUsername($username, $oldusername) {
+		return $this->query("UPDATE `".$this->prefix."admin` SET `username`='".
+							$this->escape($username)."' WHERE `username`='".
+							$this->escape($oldusername)."'");
+	}
+
+
 	public function changeName($name, $username = null) {
 		global $session;
 		if (!$username)

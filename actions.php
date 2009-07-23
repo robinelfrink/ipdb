@@ -147,11 +147,6 @@ function acton($action) {
 		  break;
 	  case 'changeaccount':
 		  if ($session->authenticated) {
-			  if ((request('username')!=$session->username) &&
-				  !$database->changeUsername(request('username'))) {
-				  $error = $database->error;
-				  break;
-			  }
 			  if ((request('name')!=$session->name) &&
 				  !$database->changeName(request('name'))) {
 				  $error = $database->error;
@@ -172,6 +167,31 @@ function acton($action) {
 		  if ($session->authenticated && ($session->username=='admin'))
 			  if (!$database->addUser(request('username'), request('name'), request('password')))
 				  $error = $database->error;
+		  break;
+	  case 'updateusers':
+		  if ($session->authenticated && ($session->username=='admin')) {
+			  $users = $database->getUsers();
+			  foreach ($users as $user) {
+				  if ((request('username__'.$user['username'])!=$user['username']) &&
+					  !$database->changeUsername(request('username__'.$user['username']),
+												 $user['username'])) {
+					  $error = $database->error;
+					  break;
+				  }
+				  if ((request('name__'.$user['username'])!=$user['name']) &&
+					  !$database->changeName(request('name__'.$user['username']),
+											 request('username__'.$user['username']))) {
+					  $error = $database->error;
+					  break;
+				  }
+				  if ((trim(request('password__'.$user['username']))!='') &&
+					  !$database->changePassword(request('password__'.$user['username']),
+												 request('username__'.$user['username']))) {
+					  $error = $database->error;
+					  break;
+				  }
+			  }
+		  }
 		  break;
 	  default:
 		  debug('action: '.request('action'));
