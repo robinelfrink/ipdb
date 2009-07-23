@@ -28,7 +28,7 @@ class Database {
 	private $db = null;
 	public $error = null;
 	private $provider = null;
-	private $dbversion = '1';
+	private $dbversion = '2';
 	private $prefix = '';
 
 	public function __construct($config) {
@@ -109,7 +109,7 @@ class Database {
 
 		$this->error = null;
 		$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`');
-		return ($version[0]['version']<1);
+		return ($version[0]['version']<$this->dbversion);
 
 	}
 
@@ -119,7 +119,7 @@ class Database {
 		$this->error = null;
 		if (in_array($this->provider, array('mysql', 'mysqli'))) {
 			/* Drop old tables, even though we're pretty sure they don't exist. */
-			$this->query("DROP TABLE `".$this->prefix."ip`");
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."ip`");
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."ip` (".
 							  "`id` INT UNSIGNED NOT NULL,".
@@ -144,7 +144,7 @@ class Database {
 							  "2, '000000000000000000000000C0A80300', 120, 0, ".
 							  "'Default IPv4 network.')"))
 				return false;
-			$this->query("DROP TABLE `".$this->prefix."admin`");
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."admin`");
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."admin` (".
 							  "`username` varchar(15) NOT NULL,".
@@ -156,7 +156,7 @@ class Database {
 			if (!$this->query("INSERT INTO `".$this->prefix."admin` (`username`, `password`, `name`) ".
 							  "VALUES('admin', '".md5('secret')."', 'Administrator')"))
 				return false;
-			$this->query("DROP TABLE `".$this->prefix."version`");
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."version`");
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."version` (".
 							  "`version` INT NOT NULL".
@@ -164,7 +164,7 @@ class Database {
 				return false;
 			if (!$this->query("INSERT INTO `".$this->prefix."version` (`version`) VALUES(1)"))
 				return false;
-			$this->query("DROP TABLE `".$this->prefix."extrafields`");
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."extrafields`");
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."extrafields` (".
 							  "`node` INT UNSIGNED NOT NULL,".
@@ -173,7 +173,7 @@ class Database {
 							  "PRIMARY KEY(`node`, `field`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			$this->query("DROP TABLE `".$this->prefix."extratables`");
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."extratables`");
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."extratables` (".
 							  "`table` varchar(15) NOT NULL,".
@@ -183,7 +183,7 @@ class Database {
 							  "PRIMARY KEY(`table`, `item`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			$this->query("DROP TABLE `".$this->prefix."tablenode`");
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."tablenode`");
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."tablenode` (".
 							  "`table` varchar(15) NOT NULL,".
@@ -194,6 +194,22 @@ class Database {
 				return false;
 		}
 
+	}
+
+
+	public function upgradeDb() {
+		if ($this->dbversion<2) {
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."log`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."log` (".
+							"`stamp` datetime NOT NULL,".
+							"`username` varchar(15) NOT NULL,".
+							"`action` varchar(255) NOT NULL".
+							") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+		}
+		return $this->query("UPDATE `".$this->prefix."version` SET version=".
+							$this->escape($this->dbversion));
 	}
 
 

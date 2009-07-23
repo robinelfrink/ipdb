@@ -130,6 +130,13 @@ function acton($action) {
 		  else
 			  request('action', false, true);
 		  break;
+	  case 'upgradedb':
+		  $database->upgradeDb();
+		  if ($database->error)
+			  $error = $database->error;
+		  else
+			  request('action', false, true);
+		  break;
 	  case 'addextra':
 		  if ($session->authenticated &&
 			  $database->addExtra(request('table'), request('item'), request('description'), request('comments')))
