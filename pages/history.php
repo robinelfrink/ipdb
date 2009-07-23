@@ -43,7 +43,14 @@ class history {
 
 		$navigation = '';
 		for ($p = 1; ($p-1)<($total/$max); $p++)
-			$navigation .= ($start==($p-1) ? $p : '<a href="'.me().'?pagenr='.$p.'">'.$p.'</a>').'&nbsp;';
+			if (($p==1) ||
+				(abs($start+1-$p)<4) ||
+				(($p-1)==floor($total/$max)) ||
+				(($p % (floor($total/$max)/10))==0))
+				$navigation .= ($start==($p-1) ? $p : '<a href="'.me().'?pagenr='.$p.'">'.$p.'</a>').'&nbsp;';
+			else
+				$navigation .= '&hellip;&nbsp;';
+		$navigation = preg_replace('/(&hellip;&nbsp;)+/', '&hellip;&nbsp;', $navigation);
 
 		foreach ($history as $entry) {
 			$skin->setVar('timestamp', $entry['stamp']);
