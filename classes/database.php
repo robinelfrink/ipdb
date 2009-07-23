@@ -677,6 +677,12 @@ class Database {
 	}
 
 
+	public function deleteUser($username) {
+		return $this->query("DELETE FROM `".$this->prefix."admin` WHERE `username`='".
+							$this->escape($username)."'");
+	}
+
+
 	public function getLog($search) {
 		$sql = "SELECT * FROM `".$this->prefix."log`";
 		if ($search && (trim($search)!=''))

@@ -29,6 +29,7 @@ function acton($action) {
 	switch ($action) {
 	  case 'login':
 		  if ($session->authenticated) {
+			  request('action', false, true);
 			  if (request('remote')=='remote')
 				  send(array('commands'=>'location.href=\''.me().'\';'));
 		  	  else {
@@ -39,6 +40,7 @@ function acton($action) {
 		  }
 		  break;
 	  case 'logout':
+		  request('action', false, true);
 		  if (request('remote')!='remote') {
 			  header('Location: '.me());
 			  exit;
@@ -169,6 +171,11 @@ function acton($action) {
 	  case 'adduser':
 		  if ($session->authenticated && ($session->username=='admin'))
 			  if (!$database->addUser(request('username'), request('name'), request('password')))
+				  $error = $database->error;
+		  break;
+	  case 'deleteuser':
+		  if ($session->authenticated && ($session->username=='admin'))
+			  if (!$database->deleteUser(request('username')))
 				  $error = $database->error;
 		  break;
 	  case 'updateusers':
