@@ -66,7 +66,7 @@ class changenode {
 					}
 			$skin->setVar('address', ip2address($data['address']));
 			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
-			$skin->setVar('description', $data['description']);
+			$skin->setVar('description', htmlentities($data['description']));
 			$skin->setVar('node', $node);
 		}
 		$skin->parse('changenode');
