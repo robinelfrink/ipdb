@@ -583,14 +583,14 @@ class Database {
 	}
 
 
-	public function deleteExtra($table, $olditem) {
+	public function deleteExtra($table, $item) {
 		$this->query("DELETE FROM `".$this->prefix."extratables` WHERE `item`='".
 					 $this->escape($item)."' AND `table`='".
 					 $this->escape($table)."'");
 		if ($this->error)
 			return false;
 		return $this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `item`='".
-							$this->escape($olditem)."' AND `table`='".
+							$this->escape($item)."' AND `table`='".
 							$this->escape($table)."'");
 	}
 
