@@ -381,7 +381,8 @@ class Database {
 						 " WHERE `id` IN (".implode(',', $ids).")");
 		}
 		$node = $max[0]['max']+1;
-		$this->log('Added node '.showip($address, $bits));
+		$this->log('Added node '.showip($address, $bits).
+				   (empty($description) ? '' : ' ('.$description.')'));
 		return $node;
 	}
 
@@ -416,6 +417,7 @@ class Database {
 			if (!$this->query("DELETE FROM `".$this->prefix."ip` WHERE `id`=".$this->escape($node)))
 				return false;
 		}
+		$this->log('Deleted node '.showip($address['address'], $address['bits']));
 		return true;
 	}
 
@@ -434,6 +436,12 @@ class Database {
 			$this->error = 'Node not found';
 			return false;
 		}
+
+		$changes = array();
+		if (($address!=$entry['address']) || ($bits!=$entry['bits']))
+			$changes[] = showip($entry['address'], $entry['bits']);
+		if ($description!=$entry['description'])
+			$changes[] = $entry['description'];
 
 		/* Prepare for stupidity */
 		if ($address=='00000000000000000000000000000000') {
@@ -532,17 +540,24 @@ class Database {
 			return false;
 		}
 
+		$this->log('Changed node '.showip($address, $bits).
+				   (count($changes)>0 ? ' (was: '.implode(', ', $changes).')' : ''));
 		return true;
 	}
 
 
 	public function setField($field, $node, $value) {
+		$address = $this->getAddress($node);
 		$old = $this->getField($field, $node);
-		if (strcmp($value, $old)!=0)
-			return $this->query("REPLACE INTO `".$this->prefix."extrafields` (`node`, `field`, `value`) VALUES (".
-								$this->escape($node).", '".
-								$this->escape($field)."', '".
-								$this->escape($value)."')");
+		if (strcmp($value, $old)!=0) {
+			return ($this->query("REPLACE INTO `".$this->prefix."extrafields` (`node`, `field`, `value`)".
+								 " VALUES (".$this->escape($node).", '".
+								 $this->escape($field)."', '".
+								 $this->escape($value)."')") &&
+					$this->log('Set field \''.$field.'\' for node '.
+							   showip($address['address'], $address['bits']).' to '.
+							   $value));
+		}
 		return true;
 	}
 
@@ -558,12 +573,14 @@ class Database {
 
 
 	public function addExtra($table, $item, $description, $comments) {
-		return $this->query("INSERT INTO `".$this->prefix.
-							"extratables` (`table`, `item`, `description`, `comments`) VALUES('".
-							$this->escape($table)."', '".
-							$this->escape($item)."', '".
-							$this->escape($description)."', '".
-							$this->escape($comments)."')");
+		return ($this->query("INSERT INTO `".$this->prefix.
+							 "extratables` (`table`, `item`, `description`, `comments`) VALUES('".
+							 $this->escape($table)."', '".
+							 $this->escape($item)."', '".
+							 $this->escape($description)."', '".
+							 $this->escape($comments)."')") &&
+				$this->log('Added \''.$table.'\' item '.$item.
+						   (empty($description) ? '' : ' ('.$description.')')));
 	}
 
 
@@ -574,12 +591,20 @@ class Database {
 					 $this->escape($comments)."' WHERE `item`='".
 					 $this->escape($olditem)."' AND `table`='".
 					 $this->escape($table)."'");
+		$entry = $this->getExtra($table, $olditem);
+		$changes = array();
+		if ($item!=$olditem)
+			$changes[] = $olditem;
+		if ($description!=$entry['description'])
+			$changes[] = $entry['description'];
 		if ($this->error)
 			return false;
-		return $this->query("UDPATE `".$this->prefix."tablenode` SET `item`='".
-							$this->escape($item)."' WHERE `item`='".
-							$this->escape($olditem)."' AND `table`='".
-							$this->escape($table)."'");
+		return ($this->query("UPDATE `".$this->prefix."tablenode` SET `item`='".
+							 $this->escape($item)."' WHERE `item`='".
+							 $this->escape($olditem)."' AND `table`='".
+							 $this->escape($table)."'") &&
+				$this->log('Changed \''.$table.'\' item '.$item.
+						   (count($changes)>0 ? ' (was: '.implode(', ', $changes).')' : '')));
 	}
 
 
@@ -589,9 +614,10 @@ class Database {
 					 $this->escape($table)."'");
 		if ($this->error)
 			return false;
-		return $this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `item`='".
-							$this->escape($item)."' AND `table`='".
-							$this->escape($table)."'");
+		return ($this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `item`='".
+							 $this->escape($item)."' AND `table`='".
+							 $this->escape($table)."'") &&
+				$this->log('Deleted \''.$table.'\' item '.$item));
 	}
 
 
@@ -634,14 +660,17 @@ class Database {
 					if (!$this->setItem($table, $item, $child['id'], $recursive ))
 						return false;
 		}
+		$address = $this->getAddress($node);
+		$this->log('Set \''.$table.'\' for '.showip($address['address'], $address['bits']).' to '.$item);
 		return true;
 	}
 
 
 	public function changeUsername($username, $oldusername) {
-		return $this->query("UPDATE `".$this->prefix."admin` SET `username`='".
-							$this->escape($username)."' WHERE `username`='".
-							$this->escape($oldusername)."'");
+		return ($this->query("UPDATE `".$this->prefix."admin` SET `username`='".
+							 $this->escape($username)."' WHERE `username`='".
+							 $this->escape($oldusername)."'") &&
+				$this->log('Changed username '.$oldusername.' to '.$username));
 	}
 
 
@@ -655,6 +684,7 @@ class Database {
 			$session->changeName($name);
 		else
 			return false;
+		$this->log('Changed name for '.$username.' to '.$name);
 		return true;
 	}
 
@@ -663,23 +693,26 @@ class Database {
 		global $session;
 		if (!$username)
 			$username = $session->username;
-		return $this->query("UPDATE `".$this->prefix."admin` SET `password`='".
-							md5($password)."' WHERE `username`='".
-							$this->escape($username)."'");
+		return ($this->query("UPDATE `".$this->prefix."admin` SET `password`='".
+							 md5($password)."' WHERE `username`='".
+							 $this->escape($username)."'") &&
+				$this->log('Changed password for '.$username));
 	}
 
 
 	public function addUser($username, $name, $password) {
-		return $this->query("INSERT INTO `".$this->prefix."admin`(`username`, `name`, `password`) ".
-							"VALUES('".$this->escape($username).
-							"', '".$this->escape($name).
-							"', '".md5($password)."')");
+		return ($this->query("INSERT INTO `".$this->prefix."admin`(`username`, `name`, `password`) ".
+							 "VALUES('".$this->escape($username).
+							 "', '".$this->escape($name).
+							 "', '".md5($password)."')") &&
+				$this->log('Added user '.$username. ' ('.$name.')'));
 	}
 
 
 	public function deleteUser($username) {
-		return $this->query("DELETE FROM `".$this->prefix."admin` WHERE `username`='".
-							$this->escape($username)."'");
+		return ($this->query("DELETE FROM `".$this->prefix."admin` WHERE `username`='".
+							 $this->escape($username)."'") &&
+				$this->log('Deleted user '.$username));
 	}
 
 
