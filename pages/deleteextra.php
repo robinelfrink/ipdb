@@ -40,7 +40,7 @@ class deleteextra {
 		$skin->setFile('deleteextra.html');
 		$skin->setVar('item', $item['item']);
 		$skin->setVar('description', $item['description']);
-		return array('title'=>$title,
+		return array('title'=>'IPDB :: Delete '.$config->extratables[request('table')]['description'],
 					 'content'=>$skin->get());
 	}
 

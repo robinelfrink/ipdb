@@ -42,7 +42,7 @@ class deletenode {
 			$skin->setVar('description', $data['description']);
 			$skin->setVar('node', $node);
 			$content = $skin->get();
-			return array('title'=>$title,
+			return array('title'=>'IPDB :: Delete node',
 						 'content'=>$content);
 		} else
 			return array('title'=>'Error',

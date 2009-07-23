@@ -37,7 +37,8 @@ class addextra {
 		$skin->setVar('comments', request('comments', ''));
 		$skin->setVar('table', $config->extratables[request('table')]['description']);
 		$skin->parse('add');
-		return array('content'=>$skin->get());
+		return array('title'=>'IPDB :: Add '.$config->extratables[request('table')]['description'],
+					 'content'=>$skin->get());
 
 	}
 

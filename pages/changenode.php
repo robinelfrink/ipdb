@@ -71,7 +71,7 @@ class changenode {
 		}
 		$skin->parse('changenode');
 		$content = $skin->get();
-		return array('title'=>$title,
+		return array('title'=>'IPDB :: Change node',
 					 'content'=>$content);
 	}
 

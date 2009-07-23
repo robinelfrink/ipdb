@@ -43,7 +43,8 @@ class changeextra {
 		$skin->setVar('comments', htmlentities($item['comments']));
 		$skin->setVar('table', htmlentities($config->extratables[request('table')]['description']));
 		$skin->parse('change');
-		return array('content'=>$skin->get());
+		return array('title'=>'IPDB :: Change '.$config->extratables[request('table')]['description'],
+					 'content'=>$skin->get());
 
 	}
 

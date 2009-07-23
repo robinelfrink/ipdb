@@ -48,7 +48,8 @@ class extratable {
 		}
 
 		$skin->setVar('table', $config->extratables[request('table')]['description']);
-		return array('content'=>$skin->get());
+		return array('title'=>'IPDB :: Table '.$config->extratables[request('table')]['description'],
+					 'content'=>$skin->get());
 
 	}
 

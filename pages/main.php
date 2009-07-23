@@ -111,7 +111,7 @@ class main {
 <p>You currently do not have any networks in your database.</p>';
 			}
 		}
-		return array('title'=>$title,
+		return array('title'=>'IPDB :: '.$title,
 					 'content'=>$content);
 	}
 

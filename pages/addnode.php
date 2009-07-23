@@ -68,7 +68,7 @@ class addnode {
 		$skin->setVar('bits', request('bits'));
 		$skin->parse('addnode');
 		$content = $skin->get();
-		return array('title'=>$title,
+		return array('title'=>'IPDB :: Add node',
 					 'content'=>$content);
 	}
 
