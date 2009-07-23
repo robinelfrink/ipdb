@@ -3,9 +3,11 @@
 require_once 'functions.php';
 require_once 'classes/config.php';
 require_once 'classes/database.php';
+require_once 'classes/session.php';
 
 $root = dirname(__FILE__);
 $config = new Config();
+$session = new Session($config->session);
 $database = new Database($config->database);
 
 $oldresult = $database->query("SELECT * FROM ipold ORDER BY address, netmask DESC");

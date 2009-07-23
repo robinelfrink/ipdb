@@ -44,6 +44,8 @@ class Menu {
 								  $details['description'].'</a>');
 					$skin->parse('menuitem');
 				}
+			$skin->setVar('item', '<a href="'.me().'?page=history" remote=remote>History</a>');
+			$skin->parse('menuitem');
 			$skin->setVar('item', '<a href="'.me().'?page=account" remote=remote>My account</a>');
 			$skin->parse('menuitem');
 			if ($session->username=='admin') {

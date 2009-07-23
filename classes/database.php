@@ -92,6 +92,14 @@ class Database {
 	}
 
 
+	public function log($action) {
+		global $session;
+		return $this->query("INSERT INTO `".$this->prefix."log` (`stamp`, `username`, `action`) ".
+							"VALUES(NOW(), '".$this->escape($session->username).
+							"', '".$this->escape($action)."')");
+	}
+
+
 	public function hasDatabase() {
 
 		$this->error = null;
@@ -193,12 +201,16 @@ class Database {
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
 		}
+		return $this->log('Initialized database');
 
 	}
 
 
 	public function upgradeDb() {
-		if ($this->dbversion<2) {
+		$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`');
+		$version = $version[0]['version'];
+		$this->error = null;
+		if ($version<2) {
 			$this->query("DROP TABLE IF EXISTS `".$this->prefix."log`");
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."log` (".
@@ -208,8 +220,10 @@ class Database {
 							") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
 		}
-		return $this->query("UPDATE `".$this->prefix."version` SET version=".
-							$this->escape($this->dbversion));
+		if (!$this->query("UPDATE `".$this->prefix."version` SET version=".
+						  $this->escape($this->dbversion)))
+			return false;
+		return $this->log('Upgraded database version '.$version.' to '.$this->dbversion);
 	}
 
 
@@ -366,7 +380,9 @@ class Database {
 			$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($max[0]['max']+1).
 						 " WHERE `id` IN (".implode(',', $ids).")");
 		}
-		return $max[0]['max']+1;
+		$node = $max[0]['max']+1;
+		$this->log('Added node '.showip($address, $bits));
+		return $node;
 	}
 
 
@@ -658,6 +674,16 @@ class Database {
 							"VALUES('".$this->escape($username).
 							"', '".$this->escape($name).
 							"', '".md5($password)."')");
+	}
+
+
+	public function getLog($search) {
+		$sql = "SELECT * FROM `".$this->prefix."log`";
+		if ($search && (trim($search)!=''))
+			$sql .= " WHERE `username` LIKE '%".$this->escape($search).
+				"%' OR `action` LIKE '%".$this->escape($search)."%'";
+		$sql .= " ORDER BY `stamp` DESC";
+		return $this->query($sql);
 	}
 
 

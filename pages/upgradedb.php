@@ -32,6 +32,8 @@ class upgradedb {
 		if (request('action')=='upgradedb') {
 			$content = '
 <p>Your database has been upgraded</p>';
+			request('page', 'main', true);
+			request('action', false, true);
 		} else {
 			$content = '
 <p>Your database needs an upgrade. Please click the \'upgrade\'-button below

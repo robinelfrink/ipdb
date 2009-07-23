@@ -27,7 +27,7 @@ class Session {
 
 	public $error = null;
 	public $authenticated = false;
-	public $username = true;
+	public $username = 'system';
 	public $name = '';
 	private $expire;
 

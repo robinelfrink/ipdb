@@ -127,15 +127,11 @@ function acton($action) {
 		  $database->initialize();
 		  if ($database->error)
 			  $error = $database->error;
-		  else
-			  request('action', false, true);
 		  break;
 	  case 'upgradedb':
 		  $database->upgradeDb();
 		  if ($database->error)
 			  $error = $database->error;
-		  else
-			  request('action', false, true);
 		  break;
 	  case 'addextra':
 		  if ($session->authenticated &&

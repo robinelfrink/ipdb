@@ -34,6 +34,8 @@ class initdb {
 <p>A default database has been created. You can now
 <a href="'.me().'?page=login" remote=remote">log in</a> with username \'admin\'
 and password \'secret\'.</p>';
+			request('page', 'main', true);
+			request('action', false, true);
 		} else {
 			$content = '
 <p>You do not yet have a database. Please click the \'create\'-button below
