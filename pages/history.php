@@ -41,7 +41,7 @@ class history {
 		}
 		$history = array_slice($history, $start*$max, $max);
 
-		$navigation = '';
+		$navigation = 'Jump to page ';
 		for ($p = 1; ($p-1)<($total/$max); $p++)
 			if (($p==1) ||
 				(abs($start+1-$p)<4) ||
