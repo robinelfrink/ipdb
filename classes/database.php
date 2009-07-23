@@ -623,6 +623,7 @@ class Database {
 			$session->changeName($name);
 		else
 			return false;
+		return true;
 	}
 
 
