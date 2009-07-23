@@ -338,8 +338,7 @@ function send($data) {
 		if (preg_match('/^(add|delete|change)/', request('action')) &&
 			!isset($data['tree']))
 			$data['tree'] = Tree::get(0, request('node', NULL));
-		if ($debugstr)
-			$data['debug'] = '<pre>'.$debugstr.'</pre>';
+		$data['debug'] = '<pre>'.$debugstr.'</pre>';
 		header('Content-type: text/xml; charset=utf-8');
 		header('Cache-Control: no-cache, must-revalidate');
 		header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
