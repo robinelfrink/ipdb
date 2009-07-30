@@ -316,10 +316,12 @@ class Database {
 
 	public function search($search) {
 		return $this->query("SELECT DISTINCT `id`, `address`, `bits`, `parent`, `description` FROM `".
-							$this->prefix."ip` LEFT JOIN ".
-							"`extrafields` ON `extrafields`.`node`=`ip`.`id` WHERE `address`='".
+							$this->prefix."ip` LEFT JOIN `".
+							$this->prefix."extrafields` ON `".
+							$this->prefix."extrafields`.`node`=`".
+							$this->prefix."ip`.`id` WHERE `address`='".
 							address2ip($search)."' OR `description` LIKE '%".
-							$this->escape($search)."%' OR `extrafields`.`value` LIKE '%".
+							$this->escape($search)."%' OR `".$this->prefix."extrafields`.`value` LIKE '%".
 							$this->escape($search)."%'");
 	}
 
