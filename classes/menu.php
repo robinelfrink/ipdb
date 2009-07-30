@@ -50,6 +50,7 @@ class Menu {
 			$skin->setVar('item', '<a href="'.me().'?page=login&action=logout" remote=remote>Logout '.
 						  $session->username.'</a>');
 			$skin->parse('menuitem');
+			$skin->setVar('search', request('search'));
 			return $skin->get();
 		}
 		return '';
