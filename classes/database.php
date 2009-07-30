@@ -170,7 +170,8 @@ class Database {
 							  "`version` INT NOT NULL".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			if (!$this->query("INSERT INTO `".$this->prefix."version` (`version`) VALUES(1)"))
+			if (!$this->query("INSERT INTO `".$this->prefix."version` (`version`) VALUES(".
+							  $this->dbversion.")"))
 				return false;
 			$this->query("DROP TABLE IF EXISTS `".$this->prefix."extrafields`");
 			$this->error = null;
@@ -198,6 +199,14 @@ class Database {
 							  "`item` varchar(50) NOT NULL,".
 							  "`node` INT UNSIGNED NOT NULL,".
 							  "PRIMARY KEY(`table`, `item`, `node`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."log`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."log` (".
+							  "`stamp` datetime NOT NULL,".
+							  "`username` varchar(15) NOT NULL,".
+							  "`action` varchar(255) NOT NULL".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
 		}
