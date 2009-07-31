@@ -39,7 +39,7 @@ div#debug {
 }
 
 
-div#debugwrapper a:hover div {
+div#debugwrapper:hover div, div#debugwrapper a:hover div {
 	display: block;
 }
 
