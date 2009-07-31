@@ -279,7 +279,12 @@ class Database {
 								   $this->prefix."ip` ON `id`=`node` WHERE `username`='".
 								   $this->escape($username)."' AND address<='".
 								   $address['address']."' ORDER BY address DESC, bits DESC LIMIT 1");
-			if (is_array($access) && (count($access)>0))
+			if (is_array($access))
+				foreach ($access as $key=>$entry)
+					if (strcmp(broadcast($address['address'], $address['bits']),
+							   broadcast($entry['address'], $entry['bits']))>0)
+						unset($access[$key]);
+			if (count($access)>0)
 				return $access[0];
 			else
 				return array('id'=>0,
