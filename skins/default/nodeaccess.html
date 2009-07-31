@@ -1,0 +1,34 @@
+<h4>Access list for {address}</h4>
+<form method="post" action="" remote="remote">
+	<table>
+		<tr><th>username</th><th>access</th><th></th></tr>
+		<!-- BEGIN user -->
+		<tr{oddeven}>
+			<td><a href="{userlink}">{username}</a></td>
+			<td>{access}</td>
+			<td>{deletelink}</td>
+		</tr>
+		<!-- END user -->
+	</table>
+	<input type="submit" value="change" />
+	<input type="hidden" name="action" value="changenodeaccess" />
+</form>
+
+<br />
+
+<form method="post" action="" remote="remote">
+	<table>
+		<tr><th>username</th><th>access</th></tr>
+		<tr>
+			<td>{users}</td>
+			<td>
+				<select name="access">
+					<option value="r">read-only</option>
+					<option value="w">write</option>
+				</select>
+			</td>
+		</tr>
+	</table>
+	<input type="hidden" name="action" value="addnodeaccess" />
+	<input type="submit" value="add" />
+</form>

@@ -1,18 +1,13 @@
-<form method="post" action="" remote="remote">
-	<table>
-		<tr><th>username</th><th>name</th><th>password</th><th></th></tr>
-		<!-- BEGIN user -->
-		<tr{oddeven}>
-			<td><input type="text" name="username__{username}" value="{username}" /></td>
-			<td><input type="text" name="name__{username}" value="{name}" /></td>
-			<td><input type="password" name="password__{username}" /></td>
-			<td><a href="{deletelink}">delete</a></td>
-		</tr>
-		<!-- END user -->
-	</table>
-	<input type="hidden" name="action" value="updateusers" />
-	<input type="submit" value="update" />
-</form>
+<table>
+	<tr><th>username</th><th>name</th><th></th></tr>
+	<!-- BEGIN user -->
+	<tr{oddeven}>
+		<td>{username}</td>
+		<td>{name}</td>
+		<td><a href="{editlink}" remote="remote">edit</a></td>
+	</tr>
+	<!-- END user -->
+</table>
 
 <br />
 
@@ -20,7 +15,7 @@
 	<table>
 		<tr><th>username</th><th>name</th><th>password</th><th></th></tr>
 		<tr>
-			<td><input type="text" name="username" /></td>
+			<td><input type="text" name="user" /></td>
 			<td><input type="text" name="name" /></td>
 			<td><input type="password" name="password" /></td>
 			<td></td>

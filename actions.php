@@ -175,7 +175,7 @@ function acton($action) {
 		  break;
 	  case 'adduser':
 		  if ($session->authenticated && ($session->username=='admin'))
-			  if (!$database->addUser(request('username'), request('name'), request('password')))
+			  if (!$database->addUser(request('user'), request('name'), request('password')))
 				  $error = $database->error;
 		  break;
 	  case 'deleteuser':
@@ -183,30 +183,60 @@ function acton($action) {
 			  if (!$database->deleteUser(request('username')))
 				  $error = $database->error;
 		  break;
-	  case 'updateusers':
+	  case 'changeuser':
 		  if ($session->authenticated && ($session->username=='admin')) {
-			  $users = $database->getUsers();
-			  foreach ($users as $user) {
-				  if ((request('username__'.$user['username'])!=$user['username']) &&
-					  !$database->changeUsername(request('username__'.$user['username']),
-												 $user['username'])) {
-					  $error = $database->error;
+			  if ((request('user')!=request('olduser')) &&
+				  !$database->changeUsername(request('user'), request('olduser'))) {
+				  $error = $database->error;
+				  break;
+			  }
+			  if ((request('name')!=request('oldname')) &&
+				  !$database->changeUsername(request('name'), request('olduser'))) {
+				  $error = $database->error;
+				  break;
+			  }
+			  if (request('password1')) {
+				  if (request('password1')!=request('password2')) {
+					  $error = 'Passwords do not match';
 					  break;
-				  }
-				  if ((request('name__'.$user['username'])!=$user['name']) &&
-					  !$database->changeName(request('name__'.$user['username']),
-											 request('username__'.$user['username']))) {
-					  $error = $database->error;
-					  break;
-				  }
-				  if ((trim(request('password__'.$user['username']))!='') &&
-					  !$database->changePassword(request('password__'.$user['username']),
-												 request('username__'.$user['username']))) {
+				  } else if (!$database->changePassword(request('password1'), request('olduser'))) {
 					  $error = $database->error;
 					  break;
 				  }
 			  }
 		  }
+		  break;
+	  case 'deleteaccess':
+		  if ($session->authenticated && ($session->username=='admin') &&
+			  !$database->deleteAccess(request('node'), request('user')))
+			  $error = $database->error;
+		  break;
+	  case 'changeuseraccess':
+		  if ($session->authenticated && ($session->username=='admin')) {
+			  $user = $database->getUser(request('user'));
+			  foreach ($user['access'] as $access)
+				  if ((request('access_'.$access['id'])!=$access['access']) &&
+					  !$database->changeAccess($access['id'], request('user'), request('access_'.$access['id']))) {
+					  $error = $database->error;
+					  break;
+				  }
+		  }
+		  break;
+	  case 'changenodeaccess':
+		  if ($session->authenticated && ($session->username=='admin')) {
+			  $access = $database->getAccess(request('node'));
+			  foreach ($access as $entry)
+				  if (($entry['access']!=request('access_'.$entry['username'])) &&
+					  !$database->changeAccess(request('node'), $entry['username'], request('access_'.$entry['username']))) {
+					  $error = $database->error;
+					  break;
+				  }
+		  }
+		  break;
+	  case 'addnodeaccess':
+		  if ($session->authenticated && ($session->username=='admin') &&
+			  !$database->addAccess(request('node'), request('user'), request('access')))
+			  $error = $database->error;
 		  break;
 	  default:
 		  debug('action: '.request('action'));

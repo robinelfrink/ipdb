@@ -29,7 +29,7 @@ class main {
 
 
 	public function get() {
-		global $config, $database;
+		global $config, $database, $session;
 		if (($node = request('node')) && ($node>0) && ($data = $database->getAddress($node))) {
 			$title = showip($data['address'], $data['bits']);
 			$skin = new Skin($config->skin);
@@ -86,6 +86,15 @@ class main {
 
 			$skin->setVar('address', ip2address($data['address']));
 			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
+
+			$links = '
+<a href="'.me().'?page=addnode&address='.htmlentities($data['address']).'&bits='.htmlentities($data['bits']).'" remote="remote">add</a> |
+<a href="'.me().'?page=deletenode&node='.$data['id'].'" remote="remote">delete</a> |
+<a href="'.me().'?page=changenode&node='.$data['id'].'" remote="remote">change</a>';
+			if ($session->username=='admin')
+				$links .= ' |
+<a href="'.me().'?page=nodeaccess&node='.$data['id'].'" remote="remote">access</a>';
+			$skin->setVar('links', $links);
 			$content = $skin->get();
 			if (count($children)>0)
 				$content .= $this->listchildren($data, $children);

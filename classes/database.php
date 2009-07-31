@@ -28,7 +28,7 @@ class Database {
 	private $db = null;
 	public $error = null;
 	private $provider = null;
-	private $dbversion = '2';
+	private $dbversion = '3';
 	private $prefix = '';
 
 	public function __construct($config) {
@@ -209,6 +209,15 @@ class Database {
 							  "`action` varchar(255) NOT NULL".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."access`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."access` (".
+							  "`node` INT UNSIGNED NOT NULL,".
+							  "`username` varchar(15) NOT NULL,".
+							  "`access` ENUM ('r', 'w'),".
+							  "PRIMARY KEY(`node`, `username`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
 		}
 		return $this->log('Initialized database');
 
@@ -229,6 +238,17 @@ class Database {
 							") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
 		}
+		if ($version<3) {
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."access`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."access` (".
+							  "`node` INT UNSIGNED NOT NULL,".
+							  "`username` varchar(15) NOT NULL,".
+							  "`access` ENUM ('r', 'w'),".
+							  "PRIMARY KEY(`node`, `username`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+		}
 		if (!$this->query("UPDATE `".$this->prefix."version` SET version=".
 						  $this->escape($this->dbversion)))
 			return false;
@@ -237,11 +257,39 @@ class Database {
 
 
 	public function getUser($username) {
-		$user = $this->query("SELECT `password`, `name` FROM `".$this->prefix."admin` WHERE `username` = '".
+		$user = $this->query("SELECT `username`, `password`, `name` FROM `".$this->prefix."admin` WHERE `username` = '".
 							 $this->escape($username)."'");
-		if (is_array($user) && (count($user)>0))
-			return $user[0];
-		return false;
+		if (!is_array($user) || (count($user)==0))
+			return false;
+		$user = $user[0];
+		$access = $this->query("SELECT `id`, `address`, `bits`, `access` FROM `".
+							   $this->prefix."access` LEFT JOIN `".
+							   $this->prefix."ip` ON `node`=`id` WHERE `username` = '".
+							   $this->escape($username)."' ORDER BY `address`, `bits`");
+		$user['access'] = $access;
+		return $user;
+	}
+
+
+	public function getAccess($node, $username = null) {
+		$address = $this->getAddress($node);
+		if ($username) {
+			$access = $this->query("SELECT `id`, `address`, `bits`, `access` FROM `".
+								   $this->prefix."access` LEFT JOIN `".
+								   $this->prefix."ip` ON `id`=`node` WHERE `username`='".
+								   $this->escape($username)."' AND address<='".
+								   $address['address']."' ORDER BY address DESC, bits DESC LIMIT 1");
+			if (is_array($access) && (count($access)>0))
+				return $access[0];
+			else
+				return array('id'=>0,
+							 'address'=>'00000000000000000000000000000000',
+							 'bits'=>0,
+							 'access'=>'r');
+		}
+		return $this->query("SELECT `username`, `access` FROM `".
+							$this->prefix."access` WHERE `node`=".
+							$this->escape($node)." ORDER BY `username`");
 	}
 
 
@@ -734,6 +782,38 @@ class Database {
 				"%' OR `action` LIKE '%".$this->escape($search)."%'";
 		$sql .= " ORDER BY `stamp` DESC";
 		return $this->query($sql);
+	}
+
+
+	public function changeAccess($node, $username, $access) {
+		$address = $this->getAddress($node);
+		return ($this->query("UPDATE `".$this->prefix."access` SET `access`='".
+							 ($access=='w' ? 'w' : 'r')."' WHERE `username`='".
+							 $this->escape($username)."' AND `node`=".
+							 $this->escape($node)) &&
+				$this->log('Set '.($access=='w' ? 'write' : 'read-only').' access to '.
+						   showip($address['address'], $address['bits']).' for '.$username));
+	}
+
+
+	public function deleteAccess($node, $username) {
+		$address = $this->getAddress($node);
+		return ($this->query("DELETE FROM `".$this->prefix."access` WHERE `username`='".
+							 $this->escape($username)."' AND `node`=".
+							 $this->escape($node)) &&
+				$this->log('Deleted access rule to '.
+						   showip($address['address'], $address['bits']).' for '.$username));
+	}
+
+
+	public function addAccess($node, $username, $access) {
+		$address = $this->getAddress($node);
+		return ($this->query("INSERT INTO `".$this->prefix."access` (`node`, `username`, `access`) VALUES(".
+							 $this->escape($node).", '".
+							 $this->escape($username)."', '".
+							 ($access=='w' ? 'w' : 'r')."')") &&
+				$this->log('Added '.($access=='w' ? 'write' : 'read-only').' access to '.
+						   showip($address['address'], $address['bits']).' for '.$username));
 	}
 
 

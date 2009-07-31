@@ -22,26 +22,34 @@ $Id$
 */
 
 
-class users {
+class user {
 
 
 	public function get() {
-		global $database, $config;
+		global $database, $session, $config;
 		$skin = new Skin($config->skin);
-		$skin->setFile('users.html');
+		$skin->setFile('user.html');
 
-		$users = $database->getUsers();
+		$user = $database->getUser(request('user'));
 
-		foreach ($users as $user) {
-			$skin->setVar('username', htmlentities($user['username']));
-			$skin->setVar('name', htmlentities($user['name']));
-			$skin->setVar('editlink', me().'?page=user&user='.htmlentities($user['username']));
-			$skin->parse('user');
+		$skin->setVar('username', htmlentities($user['username']));
+		$skin->setVar('name', htmlentities($user['name']));
+
+		foreach ($user['access'] as $access) {
+			$skin->setVar('address', showip($access['address'], $access['bits']));
+			$skin->setVar('nodelink', me().'?page=main&node='.$access['id']);
+			$dropdown = '<select name="access_'.$access['id'].'">
+	<option value="r"'.($access['access']=='r' ? ' selected' : '').'>read-only</option>
+	<option value="w"'.($access['access']=='w' ? ' selected' : '').'>write</option>
+</select>';
+			$skin->setVar('access', $dropdown);
+			$skin->setVar('deletelink', me().'?action=deleteaccess&node='.$access['id'].'&user='.htmlentities($user['username']));
+			$skin->parse('network');
 		}
 
 		$content = $skin->get();
 
-		return array('title'=>'IPDB :: Users',
+		return array('title'=>'IPDB :: User '.request('user'),
 					 'content'=>$content);
 	}
 
