@@ -26,12 +26,21 @@ class account {
 
 
 	public function get() {
-		global $session, $config;
+		global $database, $session, $config;
 		$skin = new Skin($config->skin);
 		$skin->setFile('account.html');
 
 		$skin->setVar('username', htmlentities($session->username));
 		$skin->setVar('name', htmlentities($session->name));
+
+		$user = $database->getUser($session->username);
+		foreach ($user['access'] as $access) {
+			$skin->setVar('address', showip($access['address'], $access['bits']));
+			$skin->setVar('nodelink', me().'?page=main&node='.$access['id']);
+			$skin->setVar('access', ($access['access']=='w' ? 'write' : 'read-only'));
+			$skin->parse('network');
+		}
+
 
 		$content = $skin->get();
 

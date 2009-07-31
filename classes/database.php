@@ -383,6 +383,8 @@ class Database {
 
 
 	public function addNode($address, $bits, $description) {
+		global $session;
+
 		/* Prepare for stupidity */
 		if ($address=='00000000000000000000000000000000') {
 			$this->error = 'The World already exists';
@@ -416,6 +418,15 @@ class Database {
 					break;
 				}
 
+		/* Check for access */
+		if ($session->username!='admin') {
+			$access = $this->getAccess($parent, $session->username);
+			if ($access['access']!='w') {
+				$this->error = 'Access denied';
+				return false;
+			}
+		}
+
 		/* Check possible children */
 		$children = $this->getTree($parent);
 		if (count($children)>0)
@@ -447,6 +458,17 @@ class Database {
 
 
 	public function deleteNode($node, $childaction = 'none') {
+		global $session;
+
+		/* Check for access */
+		if ($session->username!='admin') {
+			$access = $this->getAccess($node, $session->username);
+			if ($access['access']!='w') {
+				$this->error = 'Access denied';
+				return false;
+			}
+		}
+
 		$address = $this->getAddress($node);
 		if ($this->error)
 			return false;
@@ -490,11 +512,21 @@ class Database {
 
 
 	public function changeNode($node, $address, $bits, $description) {
-		global $config;
+		global $config, $session;
 		if (!($entry = $this->getAddress($node))) {
 			$this->error = 'Node not found';
 			return false;
 		}
+
+		/* Check for access */
+		if ($session->username!='admin') {
+			$access = $this->getAccess($node, $session->username);
+			if ($access['access']!='w') {
+				$this->error = 'Access denied';
+				return false;
+			}   
+		}
+
 
 		$changes = array();
 		if (($address!=$entry['address']) || ($bits!=$entry['bits']))
