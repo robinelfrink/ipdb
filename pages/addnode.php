@@ -65,7 +65,7 @@ class addnode {
 					$skin->parse('extratable');
 				}
 		$skin->setVar('address', ip2address(request('address')));
-		$skin->setVar('bits', request('bits'));
+		$skin->setVar('bits', (request('address')<'00000000000000000000000100000000' ? request('bits')-96 : request('bits')));
 		$skin->parse('addnode');
 		$content = $skin->get();
 		return array('title'=>'IPDB :: Add node',
