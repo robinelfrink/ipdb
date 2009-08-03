@@ -123,7 +123,7 @@ function address2ip($address) {
 
 
 function showip($address, $bits) {
-	if ($address=='00000000000000000000000000000000') {
+	if (!$address || ($address=='00000000000000000000000000000000')) {
 		/* The World */
 		return 'The World';
 	} else if (strcmp($address, '00000000000000000000000100000000')<0) {
