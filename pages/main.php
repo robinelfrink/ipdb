@@ -88,7 +88,7 @@ class main {
 			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
 
 			$access = $database->getAccess($data['id'], $session->username);
-			if ($access['access']=='w') {
+			if (($session->username=='admin') || ($access['access']=='w')) {
 				$links = '
 <a href="'.me().'?page=addnode&address='.htmlentities($data['address']).'&bits='.htmlentities($data['bits']).'" remote="remote">add</a> |
 <a href="'.me().'?page=deletenode&node='.$data['id'].'" remote="remote">delete</a> |
