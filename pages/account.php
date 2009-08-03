@@ -34,11 +34,14 @@ class account {
 		$skin->setVar('name', htmlentities($session->name));
 
 		$user = $database->getUser($session->username);
-		foreach ($user['access'] as $access) {
-			$skin->setVar('address', showip($access['address'], $access['bits']));
-			$skin->setVar('nodelink', me().'?page=main&node='.$access['id']);
-			$skin->setVar('access', ($access['access']=='w' ? 'write' : 'read-only'));
-			$skin->parse('network');
+		if (is_array($user) && (count($user)>0)) {
+			foreach ($user['access'] as $access) {
+				$skin->setVar('address', showip($access['address'], $access['bits']));
+				$skin->setVar('nodelink', me().'?page=main&node='.$access['id']);
+				$skin->setVar('access', ($access['access']=='w' ? 'write' : 'read-only'));
+				$skin->parse('network');
+			}
+			$skin->parse('access');
 		}
 
 
