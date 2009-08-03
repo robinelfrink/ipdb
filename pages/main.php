@@ -159,7 +159,7 @@ class main {
 		}
 		$even = true;
 		foreach ($networks as $network) {
-			$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=addnode&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits']).'&node='.$node['id']));
+			$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=addnode&address='.$network['address'].'&bits='.$network['bits'].'&node='.$node['id']));
 			$skin->setVar('label', showip($network['address'], $network['bits']));
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
