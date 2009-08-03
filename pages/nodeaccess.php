@@ -64,6 +64,7 @@ class nodeaccess {
 		$skin->setVar('users', $userselect);
 
 		$skin->setVar('address', showip($address['address'], $address['bits']));
+		$skin->setVar('addresslink', me().'?page=main');
 		$content = $skin->get();
 
 		return array('title'=>'IPDB :: Access',
