@@ -731,7 +731,7 @@ class Database {
 		else if (count($item)>0)
 			return $item[0];
 		else
-			return array($table=>'-', 'description'=>'');
+			return array('item'=>'-', 'description'=>'');
 	}
 
 

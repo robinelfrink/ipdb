@@ -80,7 +80,10 @@ class main {
 					if ($details['linkaddress']) {
 						$item = $database->getItem($table, $data['id']);
 						$skin->setVar('table', $table);
-						$skin->setVar('item', $item['item'].' '.($details['type']=='password' ? crypt($item['description'], randstr(2)) : $item['description']));
+						if (($item['item']=='-') || ($details['type']!='password'))
+							$skin->setVar('item', $item['item'].' '.$item['description']);
+						else
+							$skin->setVar('item', $item['item'].' '.crypt($item['description'], randstr(2)));
 						$skin->parse('extratable');
 					}
 
