@@ -349,21 +349,16 @@ class Database {
 	}
 
 
-	public function getParentTree($address) {
-		$tree = array();
-		$entry = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
-							  $this->prefix."ip` WHERE ".
-							  "STRCMP('".$this->escape($address)."', `address`)>=0 ".
-							  "ORDER BY `address` DESC, `bits` ASC LIMIT 1");
-		if (count($entry)>0) {
-			$entry = $entry[0];
-			array_unshift($tree, $entry);
-			while ($entry && ($entry['parent']>0)) {
-				$entry = $this->getAddress($entry['parent']);
-				array_unshift($tree, $entry);
-			}
-		}
-		return $tree;
+	public function getParent($address, $bits=128) {
+		$entries = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
+								$this->prefix."ip` WHERE ".
+								"STRCMP('".$this->escape($address)."', `address`)>=0 ".
+								"ORDER BY `address` DESC, `bits` ASC");
+		if (count($entries)>0)
+			foreach ($entries as $entry)
+				if (strcmp(broadcast($address, $bits), broadcast($entry['address'], $entry['bits']))<=0)
+					return $entry['id'];
+		return 0;
 	}
 
 

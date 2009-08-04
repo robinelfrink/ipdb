@@ -125,8 +125,14 @@ function acton($action) {
 				  if (count($searchresult)>0) {
 					  request('node', -1, true);
 					  request('page', 'main', true);
-				  } else
+				  } else {
 					  $error = 'Search result is empty.';
+					  $ip = address2ip(request('search'));
+					  if (strcmp($ip, request('search'))!=0) {
+						  request('node', $database->getParent($ip), true);
+						  request('page', 'main', true);
+					  }
+				  }
 			  }
 		  }
 		  break;
