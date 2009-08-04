@@ -38,6 +38,15 @@ class changeextra {
 		}
 		$skin = new Skin($config->skin);
 		$skin->setFile('extradetails.html');
+		foreach ($config->extratables[request('table')] as $key=>$type)
+			if (preg_match('/^column_([a-z0-9_]+)$/', $key, $matches)) {
+				$skin->setVar('name', $matches[1]);
+				if ($type=='password')
+					$skin->setVar('input', '<input type="password" name="'.htmlentities($key).'" />');
+				else
+					$skin->setVar('input', '<input type="text" name="'.htmlentities($key).'" value="'.htmlentities($item[$matches[1]]).'" />');
+				$skin->parse('column');
+			}
 		$skin->setVar('item', htmlentities(request('item')));
 		$skin->setVar('description', htmlentities($item['description']));
 		$skin->setVar('comments', htmlentities($item['comments']));

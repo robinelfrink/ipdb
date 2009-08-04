@@ -147,14 +147,26 @@ function acton($action) {
 			  $error = $database->error;
 		  break;
 	  case 'addextra':
-		  if ($session->authenticated &&
-			  $database->addExtra(request('table'), request('item'), request('description'), request('comments')))
-			  request('page', 'extratable', true);
+		  if ($session->authenticated) {
+			  $columndata = array();
+			  foreach ($config->extratables[request('table')] as $column=>$type)
+				  if (preg_match('/^column_([a-z0-9_]+)$/', $column, $matches) &&
+					  request($column))
+					  $columndata[$matches[1]] = request($column);
+			  if ($database->addExtra(request('table'), request('item'), request('description'), request('comments'), $columndata))
+				  request('page', 'extratable', true);
+		  }
 		  break;
 	  case 'changeextra':
-		  if ($session->authenticated &&
-			  $database->changeExtra(request('table'), request('olditem'), request('item'), request('description'), request('comments')))
+		  if ($session->authenticated) {
+			  $columndata = array();
+			  foreach ($config->extratables[request('table')] as $column=>$type)
+				  if (preg_match('/^column_([a-z0-9_]+)$/', $column, $matches) &&
+					  request($column))
+					  $columndata[$matches[1]] = request($column);
+			  $database->changeExtra(request('table'), request('olditem'), request('item'), request('description'), request('comments'), $columndata);
 			  request('page', 'extratable', true);
+		  }
 		  break;
 	  case 'deleteextra':
 		  if ($session->authenticated &&

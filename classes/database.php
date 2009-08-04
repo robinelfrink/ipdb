@@ -28,7 +28,7 @@ class Database {
 	private $db = null;
 	public $error = null;
 	private $provider = null;
-	private $dbversion = '3';
+	private $dbversion = '4';
 	private $prefix = '';
 
 	public function __construct($config) {
@@ -201,6 +201,16 @@ class Database {
 							  "PRIMARY KEY(`table`, `item`, `node`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."tablecolumn`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."tablecolumn` (".
+							  "`table` varchar(15) NOT NULL,".
+							  "`item` varchar(50) NOT NULL,".
+							  "`column` varchar(15) NOT NULL,".
+							  "`value` varchar(255) NOT NULL,".
+							  "PRIMARY KEY(`table`, `item`, `column`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
 			$this->query("DROP TABLE IF EXISTS `".$this->prefix."log`");
 			$this->error = null;
 			if (!$this->query("CREATE TABLE `".$this->prefix."log` (".
@@ -246,6 +256,18 @@ class Database {
 							  "`username` varchar(15) NOT NULL,".
 							  "`access` ENUM ('r', 'w'),".
 							  "PRIMARY KEY(`node`, `username`)".
+							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+				return false;
+		}
+		if ($version<4) {
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."tablecolumn`");
+			$this->error = null;
+			if (!$this->query("CREATE TABLE `".$this->prefix."tablecolumn` (".
+							  "`table` varchar(15) NOT NULL,".
+							  "`item` varchar(50) NOT NULL,".
+							  "`column` varchar(15) NOT NULL,".
+							  "`value` varchar(255) NOT NULL,".
+							  "PRIMARY KEY(`table`, `item`, `column`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
 		}
@@ -659,23 +681,42 @@ class Database {
 								$this->escape($table)."' ORDER BY `item`");
 		$items = $this->query("SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
 							  $this->escape($table)."' AND `item`='".$this->escape($item)."'");
-		return (count($items)>0?  $items[0] : false);
+		if (count($items)<1)
+			return false;
+		$columns = $this->query("SELECT * FROM `".$this->prefix."tablecolumn` WHERE `table`='".
+								$this->escape($table)."' AND `item`='".$this->escape($item)."'");
+		if (count($columns)>0)
+			foreach ($columns as $data)
+				$items[0][$data['column']] = $data['value'];
+		return $items[0];
 	}
 
 
-	public function addExtra($table, $item, $description, $comments) {
-		return ($this->query("INSERT INTO `".$this->prefix.
-							 "extratables` (`table`, `item`, `description`, `comments`) VALUES('".
-							 $this->escape($table)."', '".
-							 $this->escape($item)."', '".
-							 $this->escape($description)."', '".
-							 $this->escape($comments)."')") &&
-				$this->log('Added \''.$table.'\' item '.$item.
-						   (empty($description) ? '' : ' ('.$description.')')));
+	public function addExtra($table, $item, $description, $comments, $columndata = null) {
+		global $config;
+		if (!$this->query("INSERT INTO `".$this->prefix.
+						  "extratables` (`table`, `item`, `description`, `comments`) VALUES('".
+						  $this->escape($table)."', '".
+						  $this->escape($item)."', '".
+						  $this->escape($description)."', '".
+						  $this->escape($comments)."')"))
+			return false;
+		if (is_array($columndata) && (count($columndata)>0))
+			foreach ($columndata as $column=>$data)
+				if (!$this->query("INSERT INTO `".$this->prefix.
+								  "tablecolumn` (`table`, `item`, `column`, `value`) VALUES('".
+								  $this->escape($table)."', '".
+								  $this->escape($item)."', '".
+								  $this->escape($column)."', '".
+								  $this->escape($data)."')"))
+					return false;
+		return $this->log('Added \''.$table.'\' item '.$item.
+						  (empty($description) ? '' : ' ('.$description.')'));
 	}
 
 
-	public function changeExtra($table, $olditem, $item, $description, $comments) {
+	public function changeExtra($table, $olditem, $item, $description, $comments, $columndata) {
+		global $config;
 		$this->query("UPDATE `".$this->prefix."extratables` SET `item`='".
 					 $this->escape($item)."', `description`='".
 					 $this->escape($description)."', `comments`='".
@@ -690,17 +731,37 @@ class Database {
 			$changes[] = $entry['description'];
 		if ($this->error)
 			return false;
-		return ($this->query("UPDATE `".$this->prefix."tablenode` SET `item`='".
-							 $this->escape($item)."' WHERE `item`='".
-							 $this->escape($olditem)."' AND `table`='".
-							 $this->escape($table)."'") &&
-				$this->log('Changed \''.$table.'\' item '.$item.
-						   (count($changes)>0 ? ' (was: '.implode(', ', $changes).')' : '')));
+		if (!$this->query("UPDATE `".$this->prefix."tablenode` SET `item`='".
+						  $this->escape($item)."' WHERE `item`='".
+						  $this->escape($olditem)."' AND `table`='".
+						  $this->escape($table)."'"))
+			return false;
+		if (is_array($columndata) && (count($columndata)>0))
+			foreach ($columndata as $column=>$data)
+				if ($data!=$entry[$column])
+					if (!$this->query("REPLACE INTO `".$this->prefix.
+									  "tablecolumn` (`table`, `item`, `column`, `value`) VALUES('".
+									  $this->escape($table)."', '".
+									  $this->escape($item)."', '".
+									  $this->escape($column)."', '".
+									  $this->escape($data)."')"))
+						return false;
+					else if ($config->extratables[$table]['column_'.$column]=='password')
+						$changes[] = 'old password';
+					else
+						$changes[] = $column.'='.$entry[$column];
+		$this->log('Changed \''.$table.'\' item '.$item.
+				   (count($changes)>0 ? ' (was: '.implode(', ', $changes).')' : ''));
 	}
 
 
 	public function deleteExtra($table, $item) {
 		$this->query("DELETE FROM `".$this->prefix."extratables` WHERE `item`='".
+					 $this->escape($item)."' AND `table`='".
+					 $this->escape($table)."'");
+		if ($this->error)
+			return false;
+		$this->query("DELETE FROM `".$this->prefix."tablecolumn` WHERE `item`='".
 					 $this->escape($item)."' AND `table`='".
 					 $this->escape($table)."'");
 		if ($this->error)

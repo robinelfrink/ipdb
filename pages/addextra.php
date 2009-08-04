@@ -36,6 +36,15 @@ class addextra {
 		$skin->setVar('description', request('description', ''));
 		$skin->setVar('comments', request('comments', ''));
 		$skin->setVar('table', $config->extratables[request('table')]['description']);
+		foreach ($config->extratables[request('table')] as $name=>$type)
+			if (preg_match('/^column_([a-z0-9_]+)$/', $name, $matches)) {
+				$skin->setVar('name', $matches[1]);
+				if ($type=='password')
+					$skin->setVar('input', '<input type="password" name="'.htmlentities($name).'" />');
+				else
+					$skin->setVar('input', '<input type="text" name="'.htmlentities($name).'" />');
+				$skin->parse('column');
+			}
 		$skin->parse('add');
 		return array('title'=>'IPDB :: Add '.$config->extratables[request('table')]['description'],
 					 'content'=>$skin->get());
