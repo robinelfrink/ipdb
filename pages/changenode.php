@@ -59,7 +59,10 @@ class changenode {
 							foreach ($tableitems as $tableitem)
 								$options .= '<option value="'.$tableitem['item'].'"'.
 								($item['item']==$tableitem['item'] ? ' selected="selected"' : '').
-								'>'.$tableitem['item'].' '.$tableitem['description'].'</option>';
+								'>'.$tableitem['item'].' '.
+								($details['type']=='password' ?
+								 crypt($tableitem['description'], randstr(2)) :
+								 $tableitem['description']).'</option>';
 						$skin->setVar('table', $table);
 						$skin->setVar('tableoptions', $options);
 						$skin->parse('extratable');

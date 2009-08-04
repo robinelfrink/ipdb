@@ -390,5 +390,13 @@ function send($data) {
 }
 
 
+function randstr($length, $base = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789') {
+	if ($length>0)
+		return $base[rand(0, strlen($base)-1)].randstr($length-1, $base);
+	else
+		return '';
+}
+
+
 
 ?>

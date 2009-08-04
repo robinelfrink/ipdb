@@ -30,6 +30,7 @@ class extratable {
 
 	public function get() {
 		global $config, $database;
+		$type = $config->extratables[request('table')]['type'];
 		$items = $database->getExtra(request('table'));
 		$skin = new Skin($config->skin);
 		$skin->setFile('extratable.html');
@@ -38,7 +39,7 @@ class extratable {
 		if (count($items)>0) {
 			foreach ($items as $item) {
 				$skin->setVar('item', $item['item']);
-				$skin->setVar('description', $item['description']);
+				$skin->setVar('description', ($type=='password' ? crypt($item['description'], randstr(2)) : $item['description']));
 				$skin->setVar('comments', $item['comments']);
 				$skin->parse('itemrow');
 			}
