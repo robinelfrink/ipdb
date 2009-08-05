@@ -54,6 +54,13 @@ class Database {
 	}
 
 
+	public function __destruct() {
+
+		$this->close();
+
+	}
+
+
 	public function close() {
 
 		if ($this->provider=='mysql')
