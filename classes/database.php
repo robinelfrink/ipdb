@@ -306,8 +306,8 @@ class Database {
 			$access = $this->query("SELECT `id`, `address`, `bits`, `access` FROM `".
 								   $this->prefix."access` LEFT JOIN `".
 								   $this->prefix."ip` ON `id`=`node` WHERE `username`='".
-								   $this->escape($username)."' AND address<='".
-								   $address['address']."' ORDER BY address DESC, bits DESC LIMIT 1");
+								   $this->escape($username)."' AND `address`<='".
+								   $address['address']."' ORDER BY `address` DESC, `bits` DESC");
 			if (is_array($access))
 				foreach ($access as $key=>$entry)
 					if (strcmp(broadcast($address['address'], $address['bits']),
@@ -701,6 +701,10 @@ class Database {
 
 	public function addExtra($table, $item, $description, $comments, $columndata = null) {
 		global $config;
+		if (!isset($config->extratables[$table])) {
+			$this->error = 'Unknown table '.$table;
+			return false;
+		}
 		if (!$this->query("INSERT INTO `".$this->prefix.
 						  "extratables` (`table`, `item`, `description`, `comments`) VALUES('".
 						  $this->escape($table)."', '".
@@ -914,6 +918,30 @@ class Database {
 							 ($access=='w' ? 'w' : 'r')."')") &&
 				$this->log('Added '.($access=='w' ? 'write' : 'read-only').' access to '.
 						   showip($address['address'], $address['bits']).' for '.$username));
+	}
+
+
+	public function findFree($blocks, $bits) {
+		foreach ($blocks as $block) {
+			$parent = $this->findAddress($block['address'], $block['bits']);
+			$children = $this->getTree($parent['id']);
+			if (is_array($children) && (count($children)>0)) {
+				$address = $block['address'];
+				$children[] = array('address'=>plus(broadcast($block['address'], $block['bits']), 1), 'bits'=>128);
+				foreach ($children as $child) {
+					$unused = findunused($address, $child['address']);
+					if (is_array($unused) && (count($unused)>0)) {
+						foreach ($unused as $free)
+							if ($free['bits']<=$bits)
+								return array('address'=>$free['address'], 'bits'=>$bits);
+					}
+					$address = plus(broadcast($child['address'], $child['bits']), 1);
+				}
+			} else {
+				return array('address'=>$block['address'], 'bits'=>$bits);
+			}
+		}
+		return false;
 	}
 
 

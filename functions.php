@@ -400,5 +400,15 @@ function randstr($length, $base = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRS
 }
 
 
+function fatal($str) {
+	global $xml;
+	if ($xml) {
+		require_once 'classes/xml.php';
+		XML::fatal($str);
+	} else
+		exit('Error: '.$str);
+}
+
+
 
 ?>

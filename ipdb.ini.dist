@@ -54,3 +54,8 @@ skin = default
 ; linkaddress = true
 ; inoverview = yes
 
+
+; IP pools for XML requests
+; [pools]
+; pool_dialup = 192.168.2.0/23
+; pool_dsl = 192.168.4.0/24, fd00:d::/32

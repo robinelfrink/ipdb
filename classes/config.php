@@ -35,6 +35,7 @@ class Config {
 	public $session = array('expire'=>'10m');
 	public $debug = array('debug'=>'false');
 	public $skin = array('skin'=>'default');
+	public $pools = array('default_ipv4_prefix'=>30, 'default_ipv6_prefix'=>64);
 	public $extrafields = array();
 	public $extratables = array();
 
@@ -49,7 +50,7 @@ class Config {
 		foreach ($files as $file)
 			if (file_exists($file))
 				if ($ini = @parse_ini_file($file, true)) {
-					foreach (array('database', 'debug', 'session', 'skin') as $section)
+					foreach (array('database', 'debug', 'session', 'skin', 'pools') as $section)
 						if (isset($ini[$section]))
 							$this->$section = array_merge($this->$section, $ini[$section]);
 					foreach (array_keys($ini) as $section)

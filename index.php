@@ -48,22 +48,35 @@ $root = dirname(__FILE__);
 $version = 0.1;
 
 
+/* Check for incoming XML request */
+$xml = (isset($HTTP_RAW_POST_DATA) && preg_match('/^<\?xml version=/', $HTTP_RAW_POST_DATA) ?
+		$HTTP_RAW_POST_DATA :
+		null);
+
+
 /* Read configuration file */
 $config = new Config();
 if ($config->error)
-	exit('Error: '.$config->error);
+	fatal($config->error);
 
 
 /* Start the session */
 $session = new Session($config->session);
 if ($session->error)
-	exit('Error: '.$session->error);
+	fatal($session->error);
 
 
 /* Initialize the database */
 $database = new Database($config->database);
 if ($database->error)
-	exit('Error: '.$database->error);
+	fatal($database->error);
+
+if ($xml) {
+	require_once 'classes/xml.php';
+	XML::handle($xml);
+	exit;
+}
+
 if (!$database->hasDatabase())
 	request('page', 'initdb', true);
 else if (!$session->authenticate())
@@ -84,14 +97,14 @@ $page = request('page', 'main');
 /* Fetch the selected page */
 if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php')) {
 	$_SESSION['page'] = $oldpage;
-	exit('Error: No code defined for page '.$page);
+	fatal('No code defined for page '.$page);
 }
 require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php';
 $pageobj = new $page();
 if (method_exists($pageobj, 'get')) {
 	$pagedata = $pageobj->get();
 	if ($pageobj->error)
-		exit('Error: '.$pageobj->error);
+		fatal($pageobj->error);
 }
 
 
