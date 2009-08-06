@@ -314,7 +314,7 @@ class Database {
 							   broadcast($entry['address'], $entry['bits']))>0)
 						unset($access[$key]);
 			if (count($access)>0)
-				return $access[0];
+				return reset($access);
 			else
 				return array('id'=>0,
 							 'address'=>'00000000000000000000000000000000',
@@ -763,6 +763,7 @@ class Database {
 						$changes[] = $column.'='.$entry[$column];
 		$this->log('Changed \''.$table.'\' item '.$item.
 				   (count($changes)>0 ? ' (was: '.implode(', ', $changes).')' : ''));
+		return true;
 	}
 
 

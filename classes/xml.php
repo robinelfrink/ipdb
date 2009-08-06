@@ -57,111 +57,124 @@ class XML {
 			return;
 		}
 
-		if (!$xml->request) {
-			$this->fatal('No request');
-			return;
-		}
-
 		$pools = array();
 		foreach ($config->pools as $name=>$value)
 			if (preg_match('/^pool_([a-z0-9_]+)$/', $name, $matches))
 				$pools[$matches[1]] = preg_split('/,\s*/', $value);
 
-		switch ($xml->request->attributes()->name) {
-		  case 'create':
-			  if (!isset($pools[(string)$xml->request->pool->attributes()->name])) {
-				  $this->fatal('Unknown address pool '.(string)$xml->request->pool->attributes()->name);
-				  return;
-			  }
-			  $username = (string)$xml->request->pool->username;
-			  $password = ($xml->request->pool->password ? (string)$xml->request->pool->password : randstr(6));
-			  $customer = (string)$xml->request->pool->customer;
-			  $identifier = (string)$xml->request->pool->identifier;
-			  $ipv4 = false;
-			  $ipv6 = false;
-			  foreach ($xml->request->pool->children() as $name=>$value)
-				  if ($name=='ipv4bits')
-					  $ipv4 = (int)$value;
-				  else if ($name=='ipv6bits')
-					  $ipv6 = (int)$value;
-			  if (!$ipv4 && !$ipv6) {
-				  $this->fatal('No ipv4 and no ipv6 bits given');
-				  return;
-			  }
-			  if ($xml->request->pool->maxup && $xml->request->pool->maxdown)
-				  $columndata = array('maxup'=>(int)$xml->request->pool->maxup,
-									  'maxdown'=>(int)$xml->request->pool->maxdown);
-			  else
-				  $columndata = null;
-			  /*if (!$database->addExtra('radius', $username, $customer.'/'.$identifier, '', $columndata)) {
-				  $this->fatal($database->error);
-				  return;
-			  }*/
-			  if ($ipv4) {
-				  $ipv4blocks = array();
-				  foreach ($pools[(string)$xml->request->pool->attributes()->name] as $block)
-					  if ((($address = address2ip(preg_replace('/\/.*/', '', $block)))!=$block) &&
-						  (strcmp($address, '00000000000000000000000100000000')<0))
-						  $ipv4blocks[] = array('address'=>$address, 'bits'=>(preg_replace('/.*\//', '', $block)+96));
-			  }
-			  if ($ipv6) {
-				  $ipv6blocks = array();
-				  foreach ($pools[(string)$xml->request->pool->attributes()->name] as $block)
-					  if ((($address = address2ip(preg_replace('/\/.*/', '', $block)))!=$block) &&
-						  (strcmp($address, '00000000000000000000000100000000')>=0))
-						  $ipv6blocks[] = array('address'=>$address, 'bits'=>preg_replace('/.*\//', '', $block));
-			  }
-			  if ($ipv4 && (count($ipv4blocks)==0)) {
-				  if ($ipv6 && (count($ipv6blocks)==0)) {
-					  $this->fatal('No ipv4 block or ipv6 block defined');
-					  return false;
+		$result = '';
+		$ok = false;
+		foreach ($xml->children() as $name=>$request) {
+			$id = (int)$request->attributes()->id;
+			switch ($request->getName()) {
+			  case 'create':
+				  if ($request->user) {
+					  $username = (string)$request->user->username;
+					  $password = ($request->user->password ? (string)$request->user->password : randstr(6));
+					  $columns = array('password'=>$password);
+					  if ($request->user->maxup && $request->user->maxdown) {
+						  $columns['maxup'] = (int)$request->user->maxup;
+						  $columns['maxdown'] = (int)$request->user->maxdown;
+					  }
+					  if (!$database->addExtra('radius', $username, '', '', $columns)) {
+						  $result .= $this->error($name, $id,
+												  ($database->error ? $database->error : 'Unknown error in addExtra'));
+						  break;
+					  }
+					  $result .= $this->result($name, $id, '
+			<username>'.$username.'</username>
+			<password>'.$password.'</password>');
+					  $ok = true;
+				  } else if ($request->network) {
+					  $pool = (string)$request->network->pool;
+					  $bits = (string)$request->network->bits;
+					  $customer = (string)$request->network->customer;
+					  $description = (string)$request->network->description;
+					  if (!isset($pools[$pool])) {
+						  $result .= $this->error($name, $id,
+												  'Unknown address pool '.$pool);
+						  break;
+					  }
+					  if (!$database->getExtra('radius', (string)$request->network->username)) {
+						  $result .= $this->error($name, $id,
+												  'User '.(string)$request->network->username.' does not exist');
+						  break;
+					  }
+					  $blocks = array();
+					  foreach ($pools[$pool] as $block) {
+						  $address = preg_replace('/\/.*/', '', $block);
+						  $blockbits = preg_replace('/.*\//', '', $block);
+						  if (preg_match('/\./', $address))
+							  $blockbits += 96;
+						  $ip = address2ip($address);
+						  if ($address!=$ip)
+							  $blocks[] = array('address'=>$ip,
+												'bits'=>$blockbits);
+					  }
+					  if (count($blocks)<1) {
+						  $result .= $this->error($name, $id,
+												  'No usable network blocks in pool '.$pool);
+						  break;
+					  }
+					  if (!($free = $database->findFree($blocks, $bits))) {
+						  $result .= $this->error($name, $id,
+												  $database->error ? $database->error : 'No free network block in pool '.$pool);
+						  break;
+					  }
+					  if (!$database->addNode($free['address'], $bits, $description)) {
+						  $result .= $this->error($name, $id,
+												  $database->error ? $database->error : 'Unknown error in addNode');
+						  break;
+					  }
+					  if ($node = $database->findAddress($free['address'], $bits))
+						  $database->setField('customer', $node['id'], $customer);
+					  $result .= $this->result($name, $id, '
+			<network>'.showip($free['address'], $bits).'</network>');
+					  $ok = true;
 				  } else {
-					  $this->fatal('No ipv4 block defined');
-					  return false;
+					  $result .= $this->error($name, $id, 'Unknown request');
 				  }
-			  } else if ($ipv6 && (count($ipv6blocks)==0)) {
-				  $this->fatal('No ipv6 block defined');
-				  return false;
-			  }
-			  if ($ipv4) {
-				  if (!($ipv4 = $database->findFree($ipv4blocks, $ipv4+96))) {
-					  $this->fatal($database->error ? $database->error : 'No ipv4 block available');
-					  return;
+				  break;
+			  case 'remove':
+				  if ($request->user) {
+					  if (!$database->deleteExtra('radius', (string)$request->user)) {
+						  $result .= $this->error($name, $id,
+												  $database->error ? $database->error : 'Unknown error in deleteExtra');
+						  break;
+					  }
+					  $result .= $this->result($name, $id, '
+			<user>'.(string)$request->user.'</user>');
+					  $ok = true;
+				  } else if ($request->network) {
+					  $address = preg_replace('/\/.*/', '', (string)$request->network);
+					  $bits = preg_replace('/.*\//', '', (string)$request->network);
+					  if (preg_match('/\./', $address))
+						  $bits += 96;
+					  $ip = address2ip($address);
+					  if (!($node = $database->findAddress($ip, $bits))) {
+						  $result .= $this->error($name, $id,
+												  $database->error ? $database->error : 'Address not found');
+						  break;
+					  }
+					  if (!$database->deleteNode($node['id'])) {
+						  $result .= $this->error($name, $id,
+												  $database->error ? $database->error : 'Unknown error in deleteNode');
+						  break;
+					  }
+					  $result .= $this->result($name, $id, '
+			<network>'.(string)$request->network.'</network>');
+					  $ok = true;
 				  }
-				  /*if (!$database->addNode($ipv4['address'], $ipv4['bits'], $customer.'/'.$identifier)) {
-					  $this->fatal($database->error);
-					  return;
-				  }*/
-				  $ipv4 = ip2address($ipv4['bits']<128 ? plus($ipv4['address'], 1) : $ipv4['address']).'/'.($ipv4['bits']-96);
-			  }
-			  if ($ipv6) {
-				  if (!($ipv6 = $database->findFree($ipv6blocks, $ipv6))) {
-					  $this->fatal($database->error ? $database->error : 'No ipv6 block available');
-					  return;
-				  }
-				  /*if (!$database->addNode($ipv6['address'], $ipv6['bits'], $customer.'/'.$identifier)) {
-					  $this->fatal($database->error);
-					  return;
-				  }*/
-				  $ipv6 = ip2address($ipv6['address']).'/'.$ipv6['bits'];
-			  }
-			  $result ='
-		<username>'.$username.'</username>
-		<password>'.$password.'</password>'.($ipv4 ? '
-		<ipv4>'.$ipv4.'</ipv4>' : '').($ipv6 ? '
-		<ipv6>'.$ipv6.'</ipv6>' : '');
-			  break;
-		  case 'delete':
-			  $result = 'deleted';
-			  break;
-		  default:
-			  $this->fatal('Unkown request: '.$xml->request->attributes()->name);
-			  return;
+				  break;
+			  default:
+				  $result .= $this->error($name, $id, 'Unknown request '.$name);
+			}
 		}
 
 		echo '<?xml version="1.0" encoding="UTF-8"?>
-<ipdb>
-	<status>OK</status>
+<ipdb>'.($ok ? '
+	<status>OK</status>' : '
+	<status>Error</status>').'
 	<result>'.$result.'
 	</result>
 </ipdb>';
@@ -170,6 +183,25 @@ class XML {
 
 	public static function handle($data) {
 		$xml = new XML($data);
+	}
+
+
+	private function error($request, $id, $str, $details = null) {
+		return '
+		<'.$request.' id="'.$id.'">
+			<status>Error</status>
+			<error>'.htmlentities($str).'</error>'.($details ? '
+			<details>
+'.htmlentities($details).'
+			</details>' : '').'
+		</'.$request.'>';
+	}
+
+
+	private function result($request, $id, $result) {
+		return '
+		<'.$request.' id="'.$id.'">'.$result.'
+		</'.$request.'>';
 	}
 
 
