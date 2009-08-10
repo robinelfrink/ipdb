@@ -126,8 +126,10 @@ class XML {
 												  $database->error ? $database->error : 'Unknown error in addNode');
 						  break;
 					  }
-					  if ($node = $database->findAddress($free['address'], $bits))
+					  if ($node = $database->findAddress($free['address'], $bits)) {
 						  $database->setField('customer', $node['id'], $customer);
+						  $database->setItem('radius', $username, $node['id']);
+					  }
 					  $result .= $this->result($name, $id, '
 			<network>'.showip($free['address'], $bits).'</network>');
 					  $ok = true;
