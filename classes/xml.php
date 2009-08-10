@@ -116,7 +116,10 @@ class XML {
 												  'No usable network blocks in pool '.$pool);
 						  break;
 					  }
-					  if (!($free = $database->findFree($blocks, $bits))) {
+					  if ($request->network->address) {
+						  $free = array('address'=>address2ip((string)$request->network->address),
+										'bits'=>$bits);
+					  } else if (!($free = $database->findFree($blocks, $bits))) {
 						  $result .= $this->error($name, $id,
 												  $database->error ? $database->error : 'No free network block in pool '.$pool);
 						  break;

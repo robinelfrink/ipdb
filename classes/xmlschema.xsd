@@ -43,6 +43,7 @@
 			<xs:element name="username" type="xs:string" />
 			<xs:element name="customer" type="xs:string" />
 			<xs:element name="description" type="xs:string" />
+			<xs:element name="address" type="xs:string" minOccurs="0" maxOccurs="1" />
 			<xs:element name="bits" type="xs:int" />
 		</xs:sequence>
 	</xs:complexType>
