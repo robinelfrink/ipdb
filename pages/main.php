@@ -149,7 +149,10 @@ class main {
 				$unused = findunused($base, $child['address']);
 				if (is_array($unused) && (count($unused)>0))
 					foreach ($unused as $network)
-						$networks[] = $network;
+						if (!$node || ($network['bits']!=128) ||
+							(($network['address']!=$node['address']) &&
+							 ($network['address']!=broadcast($node['address'], $node['bits']))))
+							$networks[] = $network;
 			}
 			$networks[] = $child;
 			$base = plus(broadcast($child['address'], $child['bits']), '00000000000000000000000000000001');
