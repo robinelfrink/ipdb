@@ -699,6 +699,32 @@ class Database {
 	}
 
 
+	public function findExtra($table, $search = null) {
+		if (empty($search))
+			return $this->getExtra($table);
+		$items = $this->query("SELECT DISTINCT `".$this->prefix."extratables`.`item` FROM `".
+							  $this->prefix."extratables` LEFT JOIN `".
+							  $this->prefix."tablecolumn` ON `".
+							  $this->prefix."extratables`.`table`=`".
+							  $this->prefix."tablecolumn`.`table` AND `".
+							  $this->prefix."extratables`.`item`=`".
+							  $this->prefix."tablecolumn`.`item` WHERE `".
+							  $this->prefix."extratables`.`item` LIKE '%".
+							  $this->escape($search)."%' OR `".
+							  $this->prefix."extratables`.`description` LIKE '%".
+							  $this->escape($search)."%' OR `".
+							  $this->prefix."tablecolumn`.`value` LIKE '%".
+							  $this->escape($search)."%'");
+		if (count($items)>0) {
+			$allitems = array();
+			foreach ($items as $item)
+				$allitems[] = $this->getExtra($table, $item['item']);
+			return $allitems;
+		}
+		return false;
+	}
+
+
 	public function addExtra($table, $item, $description, $comments, $columndata = null) {
 		global $config;
 		if (!isset($config->extratables[$table])) {

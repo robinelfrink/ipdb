@@ -35,8 +35,26 @@ class extratable {
 		$skin = new Skin($config->skin);
 		$skin->setFile('extratable.html');
 
-		$items = $database->getExtra(request('table'));
-		if (count($items)>0) {
+		$items = $database->findExtra(request('table'), request('extrasearch'));
+		if (is_array($items) && (count($items)>0)) {
+			$total = count($items);
+			$start = request('pagenr', 1)-1;
+			$max = 20;
+			if ($total<($start*$max)) {
+				$start = 0;
+				request('pagenr', 1, true);
+			}
+			$items = array_slice($items, $start*$max, $max);
+			$navigation = 'Jump to page ';
+			for ($p = 1; ($p-1)<($total/$max); $p++)
+				if (($p==1) ||
+					(abs($start+1-$p)<4) ||
+					(($p-1)==floor($total/$max)) ||
+					(($p % (floor($total/$max)/10))==0))
+					$navigation .= ($start==($p-1) ? $p : '<a href="'.me().'?pagenr='.$p.'">'.$p.'</a>').'&nbsp;';
+				else
+					$navigation .= '&hellip;&nbsp;';
+			$navigation = preg_replace('/(&hellip;&nbsp;)+/', '&hellip;&nbsp;', $navigation);
 			foreach ($items as $item) {
 				$skin->setVar('item', $item['item']);
 				$skin->setVar('description', ($type=='password' ? crypt($item['description'], randstr(2)) : $item['description']));
@@ -44,10 +62,12 @@ class extratable {
 				$skin->parse('itemrow');
 			}
 			$skin->parse('items');
+			$skin->setVar('navigation', $navigation);
 		} else {
 			$skin->parse('noitems');
 		}
 
+		$skin->setVar('extrasearch', request('extrasearch'));
 		$skin->setVar('table', $config->extratables[request('table')]['description']);
 		return array('title'=>'IPDB :: Table '.$config->extratables[request('table')]['description'],
 					 'content'=>$skin->get());
