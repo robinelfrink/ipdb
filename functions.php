@@ -301,18 +301,14 @@ function unescape($string) {
 
 function findunused($base, $next) {
 	$unused = array();
-	if ($base=='0000000000000000000000005041618a')
-		debug($next);
 	if ((strcmp($base, $next)<0) &&
 		preg_match('/^([0]*)([1-9a-f]|$)/', minus($next, $base), $matches)) {
 		$bits = 1+(4*strlen($matches[1]))+(4-strlen(decbin(hexdec($matches[2]))));
-		if ($base=='0000000000000000000000005041618a')
-			debug($bits);
 		while (($bits<128) &&
 			   (strcmp($base, network($base, $bits))!=0))
 			$bits++;
 		if ((strcmp($base, '00000000000000000000000100000000')>=0) ||
-			($bits<128))
+			($bits<=128))
 			$unused[] = array('id'=>null,
 							  'address'=>$base,
 							  'bits'=>$bits);
