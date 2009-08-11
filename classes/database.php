@@ -816,6 +816,8 @@ class Database {
 
 
 	public function getItem($table, $node) {
+		if (empty($node))
+			return false;
 		$item = $this->query("SELECT `".$this->prefix."tablenode`.`item` AS `item`, `".
 							 $this->prefix."extratables`.`description` AS `description` FROM `".
 							 $this->prefix."tablenode` LEFT JOIN `".
