@@ -533,6 +533,8 @@ class Database {
 
 
 	public function getField($field, $node) {
+		if (empty($node))
+			return false;
 		$value = $this->query("SELECT `value` FROM `".$this->prefix."extrafields` WHERE `node`=".
 							  $this->escape($node)." AND `field`='".
 							  $this->escape($field)."'");
@@ -709,12 +711,14 @@ class Database {
 							  $this->prefix."tablecolumn`.`table` AND `".
 							  $this->prefix."extratables`.`item`=`".
 							  $this->prefix."tablecolumn`.`item` WHERE `".
+							  $this->prefix."extratables`.`table`='".
+							  $this->escape($table)."' AND (`".
 							  $this->prefix."extratables`.`item` LIKE '%".
 							  $this->escape($search)."%' OR `".
 							  $this->prefix."extratables`.`description` LIKE '%".
 							  $this->escape($search)."%' OR `".
 							  $this->prefix."tablecolumn`.`value` LIKE '%".
-							  $this->escape($search)."%'");
+							  $this->escape($search)."%')");
 		if (count($items)>0) {
 			$allitems = array();
 			foreach ($items as $item)
