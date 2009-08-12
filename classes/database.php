@@ -662,8 +662,8 @@ class Database {
 			return false;
 		}
 
-		$this->log('Changed node '.showip($address, $bits).
-				   (count($changes)>0 ? ' (was: '.implode(', ', $changes).')' : ''));
+		if (count($changes)>0)
+			$this->log('Changed node '.showip($address, $bits).' (was: '.implode(', ', $changes).')');
 		return true;
 	}
 
@@ -671,7 +671,7 @@ class Database {
 	public function setField($field, $node, $value) {
 		$address = $this->getAddress($node);
 		$old = $this->getField($field, $node);
-		if (strcmp($value, $old)!=0) {
+		if ($value!=$old) {
 			return ($this->query("REPLACE INTO `".$this->prefix."extrafields` (`node`, `field`, `value`)".
 								 " VALUES (".$this->escape($node).", '".
 								 $this->escape($field)."', '".
@@ -791,8 +791,8 @@ class Database {
 						$changes[] = 'old password';
 					else
 						$changes[] = $column.'='.$entry[$column];
-		$this->log('Changed \''.$table.'\' item '.$item.
-				   (count($changes)>0 ? ' (was: '.implode(', ', $changes).')' : ''));
+		if (count($changes)>0)
+			$this->log('Changed \''.$table.'\' item '.$item.' (was: '.implode(', ', $changes).')');
 		return true;
 	}
 
@@ -836,6 +836,11 @@ class Database {
 
 
 	public function setItem($table, $item, $node, $recursive = false) {
+		$olditem = $this->getItem($table, $node);
+		if (($olditem['item']==$item) ||
+			((empty($olditem['item']) || ($olditem['item']=='-')) &&
+			 (empty($item) || ($item=='-'))))
+			return true;
 		if (empty($item) || ($item=='-'))
 			$this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `table`='".
 						 $this->escape($table)."' AND `node`=".
@@ -863,10 +868,13 @@ class Database {
 
 
 	public function changeUsername($username, $oldusername) {
-		return ($this->query("UPDATE `".$this->prefix."admin` SET `username`='".
-							 $this->escape($username)."' WHERE `username`='".
-							 $this->escape($oldusername)."'") &&
-				$this->log('Changed username '.$oldusername.' to '.$username));
+		if ($username==$oldusername)
+			return true;
+		else
+			return ($this->query("UPDATE `".$this->prefix."admin` SET `username`='".
+								 $this->escape($username)."' WHERE `username`='".
+								 $this->escape($oldusername)."'") &&
+					$this->log('Changed username '.$oldusername.' to '.$username));
 	}
 
 
