@@ -57,11 +57,19 @@ class addnode {
 		if (count($config->extratables)>0)
 			foreach ($config->extratables as $table=>$details)
 				if ($details['linkaddress']) {
+					$tableitems = $database->getExtra($table);
+					$item = $database->getItem($table, $node);
+					$options = '<option value="">-</option>';
+					if (count($tableitems)>0)
+						foreach ($tableitems as $tableitem)
+							$options .= '<option value="'.$tableitem['item'].'"'.
+								($item['item']==$tableitem['item'] ? ' selected="selected"' : '').
+								'>'.$tableitem['item'].' '.
+								($details['type']=='password' ?
+								 crypt($tableitem['description'], randstr(2)) :
+								 $tableitem['description']).'</option>';
 					$skin->setVar('table', $table);
-					if ($data)
-						$skin->setVar('item', $database->getExtra($table, $node));
-					else
-						$skin->setVar('item', request('extratableitem'));
+					$skin->setVar('tableoptions', $options);
 					$skin->parse('extratable');
 				}
 		$skin->setVar('address', ip2address(request('address')));
