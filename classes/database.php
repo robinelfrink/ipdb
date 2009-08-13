@@ -448,7 +448,7 @@ class Database {
 				}
 
 		/* Check for access */
-		if ($session->username!='admin') {
+		if (!preg_match('/^(admin|system)$/', $session->username)) {
 			$access = $this->getAccess($parent, $session->username);
 			if ($access['access']!='w') {
 				$this->error = 'Access denied';
@@ -490,7 +490,7 @@ class Database {
 		global $session;
 
 		/* Check for access */
-		if ($session->username!='admin') {
+		if (!preg_match('/^(admin|system)$/', $session->username)) {
 			$access = $this->getAccess($node, $session->username);
 			if ($access['access']!='w') {
 				$this->error = 'Access denied';
@@ -550,7 +550,7 @@ class Database {
 		}
 
 		/* Check for access */
-		if ($session->username!='admin') {
+		if (!preg_match('/^(admin|system)$/', $session->username)) {
 			$access = $this->getAccess($node, $session->username);
 			if ($access['access']!='w') {
 				$this->error = 'Access denied';
