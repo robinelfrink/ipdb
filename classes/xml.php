@@ -86,7 +86,7 @@ class XML {
 			<password>'.$password.'</password>');
 					  $ok = true;
 				  } else if ($request->network) {
-					  $pool = (string)$request->network->pool;
+					  $pool = strtolower((string)$request->network->pool);
 					  $bits = (string)$request->network->bits;
 					  $customer = (string)$request->network->customer;
 					  $description = (string)$request->network->description;
