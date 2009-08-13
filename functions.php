@@ -133,7 +133,7 @@ function showip($address, $bits) {
 		return ip2address($address).($bits==128 ? '' : '/'.($bits-96));
 	} else {
 		/* IPv6 */
-		return ip2address($address).'/'.$bits;
+		return ip2address($address).($bits==128 ? '' : '/'.$bits);
 	}
 }
 
