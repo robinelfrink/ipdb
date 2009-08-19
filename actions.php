@@ -62,7 +62,6 @@ function acton($action) {
 				  foreach ($config->extrafields as $field=>$details) {
 					  if (!$database->setField($field, $newnode, request($field))) {
 						  $error = $database->error;
-						  break;
 					  }
 				  }
 			  }
@@ -71,7 +70,6 @@ function acton($action) {
 					  if ($details['linkaddress'] &&
 						  !$database->setItem($table, request($table), $newnode, (request($table.'-recursive')=='on' ? true : false))) {
 						  $error = $database->error;
-						  break;
 					  }
 			  request('node', $newnode, true);
 			  request('page', 'main', true);
