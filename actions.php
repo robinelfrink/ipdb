@@ -54,13 +54,27 @@ function acton($action) {
 		  if ($session->authenticated) {
 			  $address = address2ip(request('address'));
 			  $bits = (strcmp($address, '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'));
-			  $newnode = $database->addNode($address, $bits, request('description'));
-			  if ($database->error) {
+			  if (!($newnode = $database->addNode($address, $bits, request('description')))) {
 				  $error = $database->error;
-			  } else {
-				  request('node', $newnode, true);
-				  request('page', 'main', true);
+				  break;
 			  }
+			  if (count($config->extrafields)>0) {
+				  foreach ($config->extrafields as $field=>$details) {
+					  if (!$database->setField($field, $newnode, request($field))) {
+						  $error = $database->error;
+						  break;
+					  }
+				  }
+			  }
+			  if (count($config->extratables)>0)
+				  foreach ($config->extratables as $table=>$details)
+					  if ($details['linkaddress'] &&
+						  !$database->setItem($table, request($table), $newnode, (request($table.'-recursive')=='on' ? true : false))) {
+						  $error = $database->error;
+						  break;
+					  }
+			  request('node', $newnode, true);
+			  request('page', 'main', true);
 		  }
 		  break;
 	  case 'changenode':
