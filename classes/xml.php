@@ -117,6 +117,17 @@ class XML {
 						  break;
 					  }
 					  if ($request->network->address) {
+						  $aok = false;
+						  foreach ($blocks as $block)
+							  if ((strcmp($block['address'], address2ip((string)$request->network->address))<=0) &&
+								  (strcmp(broadcast($block['address'], $block['bits']),
+										  broadcast(address2ip((string)$request->network->address), $bits))>=0))
+								  $aok = true;
+						  if (!$aok) {
+							  $result .= $this->error($name, $id,
+													  'Address does not fit in pool '.$pool);
+							  break;
+						  }
 						  $free = array('address'=>address2ip((string)$request->network->address),
 										'bits'=>$bits);
 					  } else if (!($free = $database->findFree($blocks, $bits))) {
@@ -179,7 +190,8 @@ class XML {
 		echo '<?xml version="1.0" encoding="UTF-8"?>
 <ipdb>'.($ok ? '
 	<status>OK</status>' : '
-	<status>Error</status>').'
+	<status>Error</status>
+	<error>'.$result.'</error>').'
 	<result>'.$result.'
 	</result>
 </ipdb>';
