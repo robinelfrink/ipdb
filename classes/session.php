@@ -27,6 +27,7 @@ class Session {
 
 	public $error = null;
 	public $authenticated = false;
+	public $islocal = true;
 	public $username = 'system';
 	public $name = '';
 	private $expire;
@@ -79,42 +80,41 @@ class Session {
 
 		if (request('action')=='login') {
 			global $database, $page;
+			$pass = false;
 
-			switch ($config->session['auth']) {
-			  case 'ldap':
-				  if (($ldap = @ldap_connect($config->session['ldap_url']))===false) {
-					  $this->error = 'Unable to connect to LDAP';
-					  return false;
-				  }
-				  ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
-				  if (!@ldap_bind($ldap, $config->session['ldap_binddn'], $config->session['ldap_bindpw'])) {
-					  $this->error = ldap_error($ldap);
-					  return false;
-				  }
-				  if (!($rsc = @ldap_search($ldap, $config->session['ldap_basedn'],
+			if ($config->session['auth']=='ldap') {
+				if (($ldap = @ldap_connect($config->session['ldap_url']))===false) {
+					$this->error = 'Unable to connect to LDAP';
+					return false;
+				}
+				ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+				if (!@ldap_bind($ldap, $config->session['ldap_binddn'], $config->session['ldap_bindpw'])) {
+					$this->error = ldap_error($ldap);
+					return false;
+				}
+				if (!($rsc = @ldap_search($ldap, $config->session['ldap_basedn'],
 											'uid='.$username, array('dn')))) {
-					  $this->error = ldap_error($ldap);
-					  return false;
-				  }
-				  $entries = ldap_get_entries($ldap, $rsc);
-				  if (count($entries)==0) {
-					  $this->error = 'Login failed';
-					  return false;
-				  }
-				  if (!@ldap_bind($ldap, $entries[0]['dn'], trim(request('password')))) {
-					  $this->error = 'Login failed';
-					  return false;
-				  }
-				  break;
-			  default:
-				  if (!($result = $database->getUser($username))) {
-					  $this->error = 'Login failed';
-					  return false;
-				  }
-				  if (md5(trim(request('password')))!=$result['password']) {
-					  $this->error = 'Login failed';
-					  return false;
-				  }
+					$this->error = ldap_error($ldap);
+					return false;
+				}
+				$entries = ldap_get_entries($ldap, $rsc);
+				if ((count($entries)>0) &&
+					@ldap_bind($ldap, $entries[0]['dn'], trim(request('password')))) {
+					$pass = true;
+					$this->islocal = false;
+				}
+				@ldap_unbind($ldap);
+			}
+
+			if (!$pass) {
+				if (!($result = $database->getUser($username))) {
+					$this->error = 'Login failed';
+					return false;
+				}
+				if (md5(trim(request('password')))!=$result['password']) {
+					$this->error = 'Login failed';
+					return false;
+				}
 			}
 
 			$_SESSION['name'] = $result['name'];
@@ -137,6 +137,10 @@ class Session {
 		$this->authenticated = true;
 		$this->username = $username;
 		$this->name = $_SESSION['name'];
+
+		if (!$this->islocal && !$database->getUser($username))
+			$database->addUser($username, $username, trim(request('password')));
+
 		return true;
 
 	}
