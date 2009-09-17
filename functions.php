@@ -118,7 +118,7 @@ function address2ip($address) {
 			str_pad(dechex($matches[3]), 2, '0', STR_PAD_LEFT).
 			str_pad(dechex($matches[4]), 2, '0', STR_PAD_LEFT);
 	$ipv6 = ipv6uncompress($address);
-	if (preg_match('/^([0-9]{4}:){7}[0-9]{4}$/', $ipv6))
+	if (preg_match('/^([0-9a-f]{4}:){7}[0-9a-f]{4}$/', $ipv6))
 		return preg_replace('/:/', '', $ipv6);
 	return $address;
 }
