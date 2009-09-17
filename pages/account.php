@@ -33,6 +33,12 @@ class account {
 		$skin->setVar('username', htmlentities($session->username));
 		$skin->setVar('name', htmlentities($session->name));
 
+		debug($session);
+		if ($session->islocal)
+			$skin->parse('localuser');
+		else
+			$skin->hideBlock('localuser');
+
 		$user = $database->getUser($session->username);
 		if (is_array($user) && (count($user)>0)) {
 			foreach ($user['access'] as $access) {
@@ -43,7 +49,6 @@ class account {
 			}
 			$skin->parse('access');
 		}
-
 
 		$content = $skin->get();
 

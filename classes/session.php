@@ -45,7 +45,7 @@ class Session {
 
 	public function authenticate() {
 
-		global $config;
+		global $config, $database;
 
 		$this->error = null;
 		ini_set('session.use_cookies', '1');
@@ -79,8 +79,9 @@ class Session {
 		}
 
 		if (request('action')=='login') {
-			global $database, $page;
+			global $page;
 			$pass = false;
+			$_SESSION['islocal'] = true;
 
 			if ($config->session['auth']=='ldap') {
 				if (($ldap = @ldap_connect($config->session['ldap_url']))===false) {
@@ -104,7 +105,7 @@ class Session {
 						return false;
 					}
 					$pass = true;
-					$this->islocal = false;
+					$_SESSION['islocal'] = false;
 				}
 				@ldap_unbind($ldap);
 			}
@@ -140,6 +141,7 @@ class Session {
 		$this->authenticated = true;
 		$this->username = $username;
 		$this->name = $_SESSION['name'];
+		$this->islocal = $_SESSION['islocal'];
 
 		if (!$this->islocal && !$database->getUser($username))
 			$database->addUser($username, $username, trim(request('password')));
