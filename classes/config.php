@@ -32,7 +32,8 @@ class Config {
 							 'username'=>'ipuser',
 							 'password'=>'secret',
 							 'prefix'=>'_ipdb');
-	public $session = array('expire'=>'10m');
+	public $session = array('expire'=>'10m',
+							'auth'=>'ipdb');
 	public $debug = array('debug'=>'false');
 	public $skin = array('skin'=>'default');
 	public $pools = array('default_ipv4_prefix'=>30, 'default_ipv6_prefix'=>64);

@@ -25,6 +25,16 @@ prefix = ipdb_
 [session]
 expire = 10m
 
+; local authentication
+auth = ipdb
+
+; ldap authentication example
+; auth = ldap
+; ldap_url = ldap.server.org
+; ldap_basedn = "ou=users,dc=server.org"
+; ldap_binddn = "cn=root,dc=server.org"
+; ldap_bindpw = secret
+
 
 ; Debugging mode
 [debug]

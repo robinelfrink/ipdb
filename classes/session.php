@@ -44,6 +44,8 @@ class Session {
 
 	public function authenticate() {
 
+		global $config;
+
 		$this->error = null;
 		ini_set('session.use_cookies', '1');
 		ini_set('session.save_handler', 'files');
@@ -77,15 +79,44 @@ class Session {
 
 		if (request('action')=='login') {
 			global $database, $page;
-			if (!($result = $database->getUser($username))) {
-				$this->error = 'Login failed';
-				return false;
+
+			switch ($config->session['auth']) {
+			  case 'ldap':
+				  if (($ldap = @ldap_connect($config->session['ldap_url']))===false) {
+					  $this->error = 'Unable to connect to LDAP';
+					  return false;
+				  }
+				  ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+				  if (!@ldap_bind($ldap, $config->session['ldap_binddn'], $config->session['ldap_bindpw'])) {
+					  $this->error = ldap_error($ldap);
+					  return false;
+				  }
+				  if (!($rsc = @ldap_search($ldap, $config->session['ldap_basedn'],
+											'uid='.$username, array('dn')))) {
+					  $this->error = ldap_error($ldap);
+					  return false;
+				  }
+				  $entries = ldap_get_entries($ldap, $rsc);
+				  if (count($entries)==0) {
+					  $this->error = 'Login failed';
+					  return false;
+				  }
+				  if (!@ldap_bind($ldap, $entries[0]['dn'], trim(request('password')))) {
+					  $this->error = 'Login failed';
+					  return false;
+				  }
+				  break;
+			  default:
+				  if (!($result = $database->getUser($username))) {
+					  $this->error = 'Login failed';
+					  return false;
+				  }
+				  if (md5(trim(request('password')))!=$result['password']) {
+					  $this->error = 'Login failed';
+					  return false;
+				  }
 			}
 
-			if (md5(trim(request('password')))!=$result['password']) {
-				$this->error = 'Login failed';
-				return false;
-			}
 			$_SESSION['name'] = $result['name'];
 			$page = 'main';
 		}
