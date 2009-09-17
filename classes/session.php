@@ -98,8 +98,11 @@ class Session {
 					return false;
 				}
 				$entries = ldap_get_entries($ldap, $rsc);
-				if ((count($entries)>0) &&
-					@ldap_bind($ldap, $entries[0]['dn'], trim(request('password')))) {
+				if ($entries['count']>0) {
+					if (!@ldap_bind($ldap, $entries[0]['dn'], trim(request('password')))) {
+						$this->error = 'Login failed';
+						return false;
+					}
 					$pass = true;
 					$this->islocal = false;
 				}
