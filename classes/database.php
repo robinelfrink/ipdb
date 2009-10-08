@@ -974,7 +974,13 @@ class Database {
 					if (is_array($unused) && (count($unused)>0)) {
 						foreach ($unused as $free)
 							if ($free['bits']<=$bits)
-								return array('address'=>$free['address'], 'bits'=>$bits);
+								if (($bits==128) && ($free['bits']<128) &&
+									(preg_match('/00$/', $free['address'])))
+									return array('address'=>plus($free['address'], 1), 'bits'=>$bits);
+								else if (($bits==128) && !preg_match('/(00|ff)$/', $free['address']))
+									return array('address'=>$free['address'], 'bits'=>$bits);
+								else if ($bits!=128)
+									return array('address'=>$free['address'], 'bits'=>$bits);
 					}
 					$address = plus(broadcast($child['address'], $child['bits']), 1);
 				}
