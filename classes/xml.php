@@ -182,6 +182,55 @@ class XML {
 					  $ok = true;
 				  }
 				  break;
+			  case 'get':
+				  $ip = address2ip((string)$request->address);
+				  $bits = (string)$request->bits + (preg_match('/\./', (string)$request->address) ? 96 : 0);
+				  if (!($node = $database->findAddress($ip, $bits))) {
+					  $result .= $this->error($name, $id,
+											  $database->error ? $database->error : 'Address not found');
+					  break;
+				  }
+				  $xml = '<address>'.ip2address($node['address']).'</address>
+<bits>'.(strcmp('00000000000000000000000100000000', $ip)>0 ? $node['bits']-96 : $node['bits']).'</bits>
+<broadcast>'.ip2address(broadcast($node['address'], $node['bits'])).'</broadcast>
+<description>'.htmlentities($node['description']).'</description>';
+				  foreach ($config->extrafields as $field=>$details)
+					  if ($details['inoverview'] && ($extra = $database->getField($field, $node['id'])))
+						  $xml .= '
+<'.$field.'>'.$extra.'</'.$field.'>';
+				  foreach ($config->extratables as $table=>$details)
+					  if ($item = $database->getItem($table, $node['id']))
+						  $xml .= '
+<'.$table.'>'.$item['item'].'</'.$table.'>';
+				  if (((string)$request->children) &&
+					  $database->hasChildren($node['id'])) {
+					  $children = $database->getTree($node['id']);
+					  $xml .= '
+<children>';
+					  foreach ($children as $child) {
+						  $xml .= '
+	<child>
+		<address>'.ip2address($child['address']).'</address>
+		<bits>'.(strcmp('00000000000000000000000100000000', $child['address'])>0 ? $child['bits']-96 : $child['bits']).'</bits>
+		<broadcast>'.ip2address(broadcast($child['address'], $child['bits'])).'</broadcast>
+		<description>'.htmlentities($child['description']).'</description>';
+						  foreach ($config->extrafields as $field=>$details)
+							  if ($details['inoverview'] && ($extra = $database->getField($field, $child['id'])))
+								  $xml .= '
+		<'.$field.'>'.$extra.'</'.$field.'>';
+						  foreach ($config->extratables as $table=>$details)
+							  if ($item = $database->getItem($table, $child['id']))
+								  $xml .= '
+		<'.$table.'>'.$item['item'].'</'.$table.'>';
+						  $xml .= '
+	</child>';
+					  }
+					  $xml .= '
+</children>';
+				  }
+				  $result .= $this->result($name, $id, $xml);
+				  $ok = true;
+				  break;
 			  default:
 				  $result .= $this->error($name, $id, 'Unknown request '.$name);
 			}
