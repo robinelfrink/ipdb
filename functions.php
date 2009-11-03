@@ -323,7 +323,7 @@ function findunused($base, $next) {
 
 
 function send($data) {
-	global $debugstr, $error, $session, $config;
+	global $debugstr, $error, $session, $config, $version;
 
 	/* Check if we had an error */
 	if ($error) {

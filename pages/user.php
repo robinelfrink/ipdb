@@ -25,6 +25,9 @@ $Id$
 class user {
 
 
+	public $error;
+
+
 	public function get() {
 		global $database, $session, $config;
 		$skin = new Skin($config->skin);

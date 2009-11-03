@@ -29,6 +29,8 @@ class XML {
 		global $config, $database, $session;
 		libxml_use_internal_errors(true);
 		libxml_clear_errors();
+		if ($config->debug['debug'])
+			error_log("Incoming request: \n".$data);
 		if (!($xml = @simplexml_load_string($data))) {
 			$error = 'XML Parser Error';
 			$details = $this->parse_xml_errors(libxml_get_errors(), $data);
@@ -272,6 +274,12 @@ class XML {
 
 
 	public static function fatal($str, $details = null) {
+		global $config;
+		if ($config->debug['debug']) {
+			error_log($str);
+			if ($details)
+				error_log(var_export($details, true));
+		}
 		echo '<?xml version="1.0" encoding="UTF-8"?>
 <ipdb>
 	<status>Error</status>
