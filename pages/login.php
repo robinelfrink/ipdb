@@ -36,7 +36,7 @@ class login {
 			$skin->setVar('error', $session->error);
 			$skin->parse('errorheader');
 		}
-		$skin->setVar('username', request('username', $_SESSION['username']));
+		$skin->setVar('username', request('username', isset($_SESSION['username']) ? $_SESSION['username'] : ''));
 
 		$content = $skin->get();
 		$commands = "

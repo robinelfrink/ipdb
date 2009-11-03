@@ -81,6 +81,7 @@ class Session {
 		if (request('action')=='login') {
 			global $page;
 			$pass = false;
+			$name = '';
 			$_SESSION['islocal'] = true;
 
 			if ($config->session['auth']=='ldap') {
@@ -94,7 +95,7 @@ class Session {
 					return false;
 				}
 				if (!($rsc = @ldap_search($ldap, $config->session['ldap_basedn'],
-											'uid='.$username, array('dn')))) {
+											'uid='.$username, array('dn', 'gecos')))) {
 					$this->error = ldap_error($ldap);
 					return false;
 				}
@@ -104,6 +105,7 @@ class Session {
 						$this->error = 'Login failed';
 						return false;
 					}
+					$name = $entries[0]['gecos'][0];
 					$pass = true;
 					$_SESSION['islocal'] = false;
 				}
@@ -119,9 +121,10 @@ class Session {
 					$this->error = 'Login failed';
 					return false;
 				}
+				$name = $result['name'];
 			}
 
-			$_SESSION['name'] = $result['name'];
+			$_SESSION['name'] = $name;
 			$page = 'main';
 		}
 
