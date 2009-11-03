@@ -538,7 +538,10 @@ class Database {
 		$value = $this->query("SELECT `value` FROM `".$this->prefix."extrafields` WHERE `node`=".
 							  $this->escape($node)." AND `field`='".
 							  $this->escape($field)."'");
-		return ($value===false ? '' : $value[0]['value']);
+		if (is_array($value) && (count($value)>0))
+			return $value[0]['value'];
+		else
+			return '';
 	}
 
 

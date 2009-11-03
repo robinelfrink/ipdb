@@ -92,6 +92,7 @@ class XML {
 					  $bits = (string)$request->network->bits;
 					  $customer = (string)$request->network->customer;
 					  $description = (string)$request->network->description;
+					  $username = (string)$request->network->username;
 					  if (!isset($pools[$pool])) {
 						  $result .= $this->error($name, $id,
 												  'Unknown address pool '.$pool);
