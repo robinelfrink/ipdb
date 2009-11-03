@@ -36,6 +36,9 @@ require_once 'classes/tree.php';
 /* Set some settings */
 ini_set('session.bug_compat_warn', 0);
 ini_set('session.bug_compat_42', 0);
+ini_set('error_log', 'logs/errors');
+ini_set('log_errors', 'on');
+error_reporting(E_ALL);
 $error = false;
 $debugstr = '';
 
