@@ -399,7 +399,7 @@ class Database {
 							$this->prefix."ip`.`id` WHERE `address`='".
 							address2ip($search)."' OR `description` LIKE '%".
 							$this->escape($search)."%' OR `".$this->prefix."extrafields`.`value` LIKE '%".
-							$this->escape($search)."%'");
+							$this->escape($search)."%' ORDER BY `address`");
 	}
 
 	public function getNext($address) {
