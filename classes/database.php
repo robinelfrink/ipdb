@@ -844,14 +844,14 @@ class Database {
 			((empty($olditem['item']) || ($olditem['item']=='-')) &&
 			 (empty($item) || ($item=='-'))))
 			return true;
-		if (empty($item) || ($item=='-'))
-			$this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `table`='".
-						 $this->escape($table)."' AND `node`=".
-						 $this->escape($node));
-		else
-			$this->query("REPLACE INTO `".$this->prefix."tablenode` (`table`, `item`, `node`) VALUES('".
-						 $this->escape($table)."', '".$this->escape($item)."', ".
-						 $this->escape($node).")");
+		$this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `table`='".
+					 $this->escape($table)."' AND `node`=".
+					 $this->escape($node));
+		if ($this->error)
+			return false;
+		$this->query("INSERT INTO `".$this->prefix."tablenode` (`table`, `item`, `node`) VALUES('".
+					 $this->escape($table)."', '".$this->escape($item)."', ".
+					 $this->escape($node).")");
 		if ($this->error)
 			return false;
 		if ($recursive) {
