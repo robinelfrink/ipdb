@@ -56,9 +56,20 @@ class extratable {
 					$navigation .= '&hellip;&nbsp;';
 			$navigation = preg_replace('/(&hellip;&nbsp;)+/', '&hellip;&nbsp;', $navigation);
 			foreach ($items as $item) {
+				$comments = '';
+				if (strlen(trim($item['comments']))>0)
+					$comments .= 'Comments:<br /><blockquote>'.$item['comments'].'</blockquote><br />';
+				$nodes = $database->getItemNodes(request('table'), $item['item']);
+				if (count($nodes)>0) {
+					$comments .= 'Nodes:<br /><blockquote>';
+					foreach ($nodes as $node)
+						$comments .= '<a href="?page=main&node='.$node['id'].'" remote="remote">'.showip($node['address'], $node['bits']).'</a><br />';
+					$comments .= '</blockquote>';
+				}
+
 				$skin->setVar('item', $item['item']);
 				$skin->setVar('description', ($type=='password' ? crypt($item['description'], randstr(2)) : $item['description']));
-				$skin->setVar('comments', $item['comments']);
+				$skin->setVar('comments', $comments);
 				$skin->parse('itemrow');
 			}
 			$skin->parse('items');

@@ -838,6 +838,25 @@ class Database {
 	}
 
 
+	public function getItemNodes($table, $item) {
+		$nodes = $this->query("SELECT `".$this->prefix."tablenode`.`node` FROM `".
+							  $this->prefix."tablenode` WHERE `item`='".
+							  $this->escape($item)."' AND `".$this->prefix."tablenode`.`table`='".
+							  $this->escape($table)."'");
+		if ($this->error)
+			return false;
+		else if (count($nodes)>0) {
+			foreach ($nodes as $key=>$node)
+				if ($details = $this->getAddress($node['node']))
+					$nodes[$key] = $details;
+				else
+					unset($nodes[$key]);
+			return $nodes;
+		} else
+			return array();
+	}
+
+
 	public function setItem($table, $item, $node, $recursive = false) {
 		$olditem = $this->getItem($table, $node);
 		if (($olditem['item']==$item) ||
