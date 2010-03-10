@@ -256,6 +256,12 @@ class XML {
 
 
 	private function error($request, $id, $str, $details = null) {
+		global $config;
+		if ($config->debug['debug']) {
+			error_log($str);
+			if ($details)
+				error_log('Details: '.var_export($details, true));
+		}
 		return '
 		<'.$request.' id="'.$id.'">
 			<status>Error</status>
