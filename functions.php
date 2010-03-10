@@ -356,11 +356,7 @@ function send($data) {
 		echo '
 </content>';
 	} else if (request('page')=='login') {
-		$skin->setFile('login.html');
-		$skin->setVar('title', $data['title']);
-		$skin->setVar('version', $version);
-		$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
-		echo $skin->get();
+		echo $data['content'];
 	} else {
 		$skin->setFile('index.html');
 		$skin->setVar('title', $data['title']);

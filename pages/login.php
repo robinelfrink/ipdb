@@ -37,6 +37,7 @@ class login {
 			$skin->parse('errorheader');
 		}
 		$skin->setVar('username', request('username', isset($_SESSION['username']) ? $_SESSION['username'] : ''));
+		$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
 
 		$content = $skin->get();
 		$commands = "
@@ -45,6 +46,7 @@ if (getElement('username')) {
 	getElement('username').select();
 }";
 		return array('title'=>'IPDB :: Login',
+					 'content'=>$content,
 					 'commands'=>$commands);
 	}
 
