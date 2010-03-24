@@ -22,6 +22,13 @@ $Id$
 */
 
 
+/* Request for xsd schema */
+if (isset($_REQUEST['xsd'])) {
+	readfile('classes/xmlschema.xsd');
+	exit;
+}
+
+
 /* Include necessary files */
 require_once 'actions.php';
 require_once 'functions.php';
