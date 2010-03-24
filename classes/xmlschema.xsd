@@ -68,11 +68,17 @@
 	<xs:complexType name="network">
 		<xs:sequence>
 			<xs:element name="pool" type="xs:string" />
-			<xs:element name="username" type="xs:string" />
-			<xs:element name="customer" type="xs:string" />
-			<xs:element name="description" type="xs:string" />
 			<xs:element name="address" type="xs:string" minOccurs="0" maxOccurs="1" />
 			<xs:element name="bits" type="xs:int" />
+			<xs:element name="description" type="xs:string" />
+			<xs:element name="fielditem" type="fielditem" minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="fielditem">
+		<xs:sequence>
+			<xs:element name="field" type="xs:string" />
+			<xs:element name="value" type="xs:string" />
 		</xs:sequence>
 	</xs:complexType>
 
