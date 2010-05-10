@@ -39,7 +39,7 @@ class extratable {
 		if (is_array($items) && (count($items)>0)) {
 			$total = count($items);
 			$start = request('pagenr', 1)-1;
-			$max = 20;
+			$max = 40;
 			if ($total<($start*$max)) {
 				$start = 0;
 				request('pagenr', 1, true);
