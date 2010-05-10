@@ -688,9 +688,16 @@ class Database {
 
 
 	public function getExtra($table, $item = null) {
-		if ($item===null)
-			return $this->query("SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
-								$this->escape($table)."' ORDER BY `item`");
+		global $config;
+		if ($item===null) {
+			if ($config->extratables[$table]['type']=='integer')
+				$sql = "SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
+					$this->escape($table)."' ORDER BY CAST(`item` AS SIGNED)";
+			else
+				$sql = "SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
+					$this->escape($table)."' ORDER BY `".$this->prefix."tablecolumn`.`item`";
+			return $this->query($sql);
+		}
 		$items = $this->query("SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
 							  $this->escape($table)."' AND `item`='".$this->escape($item)."'");
 		if (count($items)<1)
@@ -705,23 +712,30 @@ class Database {
 
 
 	public function findExtra($table, $search = null) {
+		global $config;
 		if (empty($search))
 			return $this->getExtra($table);
-		$items = $this->query("SELECT DISTINCT `".$this->prefix."extratables`.`item` FROM `".
-							  $this->prefix."extratables` LEFT JOIN `".
-							  $this->prefix."tablecolumn` ON `".
-							  $this->prefix."extratables`.`table`=`".
-							  $this->prefix."tablecolumn`.`table` AND `".
-							  $this->prefix."extratables`.`item`=`".
-							  $this->prefix."tablecolumn`.`item` WHERE `".
-							  $this->prefix."extratables`.`table`='".
-							  $this->escape($table)."' AND (`".
-							  $this->prefix."extratables`.`item` LIKE '%".
-							  $this->escape($search)."%' OR `".
-							  $this->prefix."extratables`.`description` LIKE '%".
-							  $this->escape($search)."%' OR `".
-							  $this->prefix."tablecolumn`.`value` LIKE '%".
-							  $this->escape($search)."%')");
+		$sql = "SELECT DISTINCT `".$this->prefix."extratables`.`item` FROM `".
+			$this->prefix."extratables` LEFT JOIN `".
+			$this->prefix."tablecolumn` ON `".
+			$this->prefix."extratables`.`table`=`".
+			$this->prefix."tablecolumn`.`table` AND `".
+			$this->prefix."extratables`.`item`=`".
+			$this->prefix."tablecolumn`.`item` WHERE `".
+			$this->prefix."extratables`.`table`='".
+			$this->escape($table)."' AND (`".
+			$this->prefix."extratables`.`item` LIKE '%".
+			$this->escape($search)."%' OR `".
+			$this->prefix."extratables`.`description` LIKE '%".
+			$this->escape($search)."%' OR `".
+			$this->prefix."tablecolumn`.`value` LIKE '%".
+			$this->escape($search)."%') ORDER BY ";
+		if ($config->extratables[$table]['type']=='integer')
+			$sql .= "CAST(`".$this->prefix."tablecolumn`.`item` AS SIGNED)";
+		else
+			$sql .= $this->prefix."tablecolumn`.`item`";
+		debug($sql);
+		$items = $this->query($sql);
 		if (count($items)>0) {
 			$allitems = array();
 			foreach ($items as $item)
