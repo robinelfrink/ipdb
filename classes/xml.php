@@ -73,12 +73,13 @@ class XML {
 				  if ($request->user) {
 					  $username = (string)$request->user->username;
 					  $password = ($request->user->password ? (string)$request->user->password : randstr(6));
+					  $description = ($request->user-description ? (string)$request->user-description : '');
 					  $columns = array('password'=>$password);
 					  if ($request->user->maxup && $request->user->maxdown) {
 						  $columns['maxup'] = (int)$request->user->maxup;
 						  $columns['maxdown'] = (int)$request->user->maxdown;
 					  }
-					  if (!$database->addExtra('radius', $username, '', '', $columns)) {
+					  if (!$database->addExtra('radius', $username, $description, '', $columns)) {
 						  $result .= $this->error($name, $id,
 												  ($database->error ? $database->error : 'Unknown error in addExtra'));
 						  break;
