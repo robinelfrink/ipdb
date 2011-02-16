@@ -72,6 +72,7 @@
 			<xs:element name="bits" type="xs:int" />
 			<xs:element name="description" type="xs:string" />
 			<xs:element name="fielditem" type="fielditem" minOccurs="0" maxOccurs="unbounded" />
+			<xs:element name="tableitem" type="tablelinkitem" minOccurs="0" maxOccurs="unbounded" />
 		</xs:sequence>
 	</xs:complexType>
 
@@ -79,6 +80,13 @@
 		<xs:sequence>
 			<xs:element name="field" type="xs:string" />
 			<xs:element name="value" type="xs:string" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="tablelinkitem">
+		<xs:sequence>
+			<xs:element name="table" type="xs:string" />
+			<xs:element name="key" type="xs:string" />
 		</xs:sequence>
 	</xs:complexType>
 
