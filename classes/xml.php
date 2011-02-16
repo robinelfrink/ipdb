@@ -86,24 +86,6 @@ class XML {
 			<table>'.$table.'</table>
 			<key>'.$key.'</key>');
 					  $ok = true;
-				  } else if ($request->user) {
-					  $username = (string)$request->user->username;
-					  $password = ($request->user->password ? (string)$request->user->password : randstr(6));
-					  $description = ($request->user-description ? (string)$request->user-description : '');
-					  $columns = array('password'=>$password);
-					  if ($request->user->maxup && $request->user->maxdown) {
-						  $columns['maxup'] = (int)$request->user->maxup;
-						  $columns['maxdown'] = (int)$request->user->maxdown;
-					  }
-					  if (!$database->addExtra('radius', $username, $description, '', $columns)) {
-						  $result .= $this->error($name, $id,
-												  ($database->error ? $database->error : 'Unknown error in addExtra'));
-						  break;
-					  }
-					  $result .= $this->result($name, $id, '
-			<username>'.$username.'</username>
-			<password>'.$password.'</password>');
-					  $ok = true;
 				  } else if ($request->network) {
 					  $pool = strtolower((string)$request->network->pool);
 					  $bits = (string)$request->network->bits;
@@ -256,7 +238,7 @@ class XML {
 			}
 		}
 
-		echo '<?xml version="1.0" encoding="UTF-8"?>
+		$response = '<?xml version="1.0" encoding="UTF-8"?>
 <ipdb>'.($ok ? '
 	<status>OK</status>' : '
 	<status>Error</status>
@@ -264,6 +246,9 @@ class XML {
 	<result>'.$result.'
 	</result>
 </ipdb>';
+		echo $response;
+		if ($config->debug['debug'])
+			error_log("Response: \n".$response);
 	}
 
 
