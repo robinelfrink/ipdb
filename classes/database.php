@@ -695,7 +695,7 @@ class Database {
 					$this->escape($table)."' ORDER BY CAST(`item` AS SIGNED)";
 			else
 				$sql = "SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
-					$this->escape($table)."' ORDER BY `".$this->prefix."tablecolumn`.`item`";
+					$this->escape($table)."' ORDER BY `".$this->prefix."extratables`.`item`";
 			return $this->query($sql);
 		}
 		$items = $this->query("SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
@@ -733,7 +733,7 @@ class Database {
 		if ($config->extratables[$table]['type']=='integer')
 			$sql .= "CAST(`".$this->prefix."tablecolumn`.`item` AS SIGNED)";
 		else
-			$sql .= $this->prefix."tablecolumn`.`item`";
+			$sql .= "`".$this->prefix."tablecolumn`.`item`";
 		debug($sql);
 		$items = $this->query($sql);
 		if (count($items)>0) {
