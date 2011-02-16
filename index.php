@@ -24,6 +24,7 @@ $Id$
 
 /* Request for xsd schema */
 if (isset($_REQUEST['xsd'])) {
+	header('Content-type: text/xml');
 	readfile('classes/xmlschema.xsd');
 	exit;
 }
