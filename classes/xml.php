@@ -70,7 +70,23 @@ class XML {
 			$id = (int)$request->attributes()->id;
 			switch ($request->getName()) {
 			  case 'create':
-				  if ($request->user) {
+				  if ($request->tableitem) {
+					  $table = (string)$request->tableitem->table;
+					  $key = (string)$request->tableitem->key;
+					  $description = (string)$request->tableitem->description;
+					  $columns = array();
+					  if ($request->tableitem->column)
+						  foreach ($request->tableitem->column as $column)
+							  $columns[(string)$column->column] = (string)$column->value;
+					  if (!$database->addExtra($table, $key, $description, '', $columns)) {
+						  $result .= $this->error($name, $id, ($database->error ? $database->error : 'Unknown error in addExtra'));
+						  break;
+					  }
+					  $result .= $this->result($name, $id, '
+			<table>'.$table.'</table>
+			<key>'.$key.'</key>');
+					  $ok = true;
+				  } else if ($request->user) {
 					  $username = (string)$request->user->username;
 					  $password = ($request->user->password ? (string)$request->user->password : randstr(6));
 					  $description = ($request->user-description ? (string)$request->user-description : '');
