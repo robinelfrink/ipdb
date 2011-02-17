@@ -78,28 +78,30 @@ class XML {
 					  if ($request->tableitem->column)
 						  foreach ($request->tableitem->column as $column)
 							  $columns[(string)$column->column] = (string)$column->value;
-					  if (!$database->addExtra($table, $key, $description, '', $columns)) {
-						  $result .= $this->error($name, $id, ($database->error ? $database->error : 'Unknown error in addExtra'));
-						  break;
-					  }
-					  $result .= $this->result($name, $id, '
+					  if ($database->addExtra($table, $key, $description, '', $columns)) {
+						  $result .= $this->result($name, $id, '
 			<table>'.$table.'</table>
 			<key>'.$key.'</key>');
-					  $ok = true;
+						  $ok = true;
+					  } else {
+						  $result .= $this->error($name, $id, ($database->error ? $database->error : 'Unknown error in addExtra'));
+					  }
 				  } else if ($request->network) {
 					  $pool = strtolower((string)$request->network->pool);
 					  $bits = (string)$request->network->bits;
-					  $customer = (string)$request->network->customer;
 					  $description = (string)$request->network->description;
-					  $username = (string)$request->network->username;
+					  $fields = array();
+					  if ($request->field) {
+						  if (isset($request->field[0])) {
+							  foreach ($request->field as $field)
+								  $fields[(string)$field->field] = (string)$field->value;
+						  } else {
+							  $fields[(string)$request->field->field] = (string)$request->field->value;
+						  }
+					  }
 					  if (!isset($pools[$pool])) {
 						  $result .= $this->error($name, $id,
 												  'Unknown address pool '.$pool);
-						  break;
-					  }
-					  if (!$database->getExtra('radius', (string)$request->network->username)) {
-						  $result .= $this->error($name, $id,
-												  'User '.(string)$request->network->username.' does not exist');
 						  break;
 					  }
 					  $blocks = array();
@@ -137,14 +139,42 @@ class XML {
 												  $database->error ? $database->error : 'No free network block in pool '.$pool);
 						  break;
 					  }
-					  if (!$database->addNode($free['address'], $bits, $description)) {
+					  if (!($node = $database->addNode($free['address'], $bits, $description))) {
 						  $result .= $this->error($name, $id,
 												  $database->error ? $database->error : 'Unknown error in addNode');
 						  break;
 					  }
-					  if ($node = $database->findAddress($free['address'], $bits)) {
-						  $database->setField('customer', $node['id'], $customer);
-						  $database->setItem('radius', $username, $node['id']);
+					  if ($request->network->fielditem) {
+						  if (isset($request->network->fielditem[0])) {
+							  $fielditems = array();
+							  for ($i=0; $i<count($request->network->fielditem); $i++)
+								  $fielditems[] = $request->network->fielditem[$i];
+						  } else {
+							  $fielditems = array($request->network->fielditem);
+						  }
+						  foreach ($fielditems as $fielditem) {
+							  if (!$database->setField($fielditem->field, $node, $fielditem->value)) {
+								  $result .= $this->error($name, $id,
+														  $database->error ? $database->error : 'Unknown error in setField');
+								  break 2;
+							  }
+						  }
+					  }
+					  if ($request->network->tableitem) {
+						  if (isset($request->network->tableitem[0])) {
+							  $tableitems = array();
+							  for ($i=0; $i<count($request->network->tableitem); $i++)
+								  $tableitems[] = $request->network->tableitem[$i];
+						  } else {
+							  $tableitems = array($request->network->tableitem);
+						  }
+						  foreach ($tableitems as $tableitem) {
+							  if (!$database->setItem($tableitem->table, $tableitem->key, $node)) {
+								  $result .= $this->error($name, $id,
+														  $database->error ? $database->error : 'Unknown error in setItem');
+								  break 2;
+							  }
+						  }
 					  }
 					  $result .= $this->result($name, $id, '
 			<network>'.showip($free['address'], $bits).'</network>');
@@ -154,15 +184,15 @@ class XML {
 				  }
 				  break;
 			  case 'remove':
-				  if ($request->user) {
-					  if (!$database->deleteExtra('radius', (string)$request->user)) {
-						  $result .= $this->error($name, $id,
-												  $database->error ? $database->error : 'Unknown error in deleteExtra');
-						  break;
+				  if ($request->tableitem) {
+					  $table = (string)$request->tableitem->table;
+					  $key = (string)$request->tableitem->key;
+					  if ($database->deleteExtra($table, $key)) {
+						  $result .= $this->result($name, $id, '
+			<table>'.$table.'</table>
+			<key>'.$key.'</key>');
+						  $ok = true;
 					  }
-					  $result .= $this->result($name, $id, '
-			<user>'.(string)$request->user.'</user>');
-					  $ok = true;
 				  } else if ($request->network) {
 					  $address = preg_replace('/\/.*/', '', (string)$request->network);
 					  $bits = preg_replace('/.*\//', '', (string)$request->network);
