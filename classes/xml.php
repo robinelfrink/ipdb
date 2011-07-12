@@ -69,6 +69,27 @@ class XML {
 		foreach ($xml->children() as $name=>$request) {
 			$id = (int)$request->attributes()->id;
 			switch ($request->getName()) {
+			  case 'change':
+				  if ($request->tableitem) {
+					  $table = (string)$request->tableitem->table;
+					  $key = (string)$request->tableitem->key;
+					  $description = (string)$request->tableitem->description;
+					  $columns = array();
+					  if ($request->tableitem->column)
+						  foreach ($request->tableitem->column as $column)
+							  $columns[(string)$column->column] = (string)$column->value;
+					  if ($database->changeExtra($table, $key, $key, $description, '', $columns)) {
+						  $result .= $this->result($name, $id, '
+			<table>'.$table.'</table>
+			<key>'.$key.'</key>');
+						  $ok = true;
+					  } else {
+						  $result .= $this->error($name, $id, ($database->error ? $database->error : 'Unknown error in addExtra'));
+					  }
+				  } else {
+					  $result .= $this->error($name, $id, 'Unknown request');
+				  }
+				  break;
 			  case 'create':
 				  if ($request->tableitem) {
 					  $table = (string)$request->tableitem->table;

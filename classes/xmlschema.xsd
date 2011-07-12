@@ -6,6 +6,7 @@
 	<xs:complexType name="ipdb">
 		<xs:sequence>
 			<xs:element name="create" type="create" minOccurs="0" maxOccurs="unbounded" />
+			<xs:element name="change" type="change" minOccurs="0" maxOccurs="unbounded" />
 			<xs:element name="remove" type="remove" minOccurs="0" maxOccurs="unbounded" />
 			<xs:element name="get" type="get" minOccurs="0" maxOccurs="unbounded" />
 			<xs:element name="link" type="link" minOccurs="0" maxOccurs="unbounded" />
@@ -19,6 +20,13 @@
 		<xs:choice>
 			<xs:element name="tableitem" type="tableitem" />
 			<xs:element name="network" type="network" />
+		</xs:choice>
+		<xs:attribute name="id" type="xs:int" use="required" />
+	</xs:complexType>
+
+	<xs:complexType name="change">
+		<xs:choice>
+			<xs:element name="tableitem" type="tableitem" />
 		</xs:choice>
 		<xs:attribute name="id" type="xs:int" use="required" />
 	</xs:complexType>
