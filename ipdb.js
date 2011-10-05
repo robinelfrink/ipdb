@@ -1,5 +1,5 @@
 /*
-Copyright 2009 Introweb Nederland bv
+Copyright 2011 Previder bv (http://www.previder.nl)
 Author: Robin Elfrink <robin@15augustus.nl>
 
 This program is free software; you can redistribute it and/or modify
