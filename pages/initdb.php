@@ -32,7 +32,7 @@ class initdb {
 		if (request('action')=='createdb') {
 			$content = '
 <p>A default database has been created. You can now
-<a href="'.me().'?page=login" remote=remote">log in</a> with username \'admin\'
+<a href="'.me().'?page=login" remote="remote">log in</a> with username \'admin\'
 and password \'secret\'.</p>';
 			request('page', 'main', true);
 			request('action', false, true);

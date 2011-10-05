@@ -2,29 +2,29 @@
 	<table>
 		<tbody>
 			<tr>
-				<td>address:</td>
+				<td class="label">address:</td>
 				<td><input type="text" name="address" value="{address}" /> / <input type="text" name="bits" size="4" value="{bits}" /></td>
 			</tr>
 			<!-- BEGIN parent -->
 			<tr>
-				<td>parent:</td>
+				<td class="label">parent:</td>
 				<td><a href="{parentlink}" remote="remote">{parentaddress}</a></td>
 			</tr>
 			<!-- END parent -->
 			<!-- BEGIN extrafield -->
 			<tr>
-				<td>{name}</td>
+				<td class="label">{name}</td>
 				<td><input type="text" name="{name}" value="{value}" /></td>
 			</tr>
 			<!-- END extrafield -->
 			<!-- BEGIN extratable -->
 			<tr>
-				<td>{table}</td>
+				<td class="label">{table}</td>
 				<td><select name="{table}">{tableoptions}</select><input type="checkbox" name="{table}-recursive" id="{table}-recursive" /><label for="{table}-recursive">recursive</label></td>
 			</tr>
 			<!-- END extratable -->
 			<tr>
-				<td>description:</td>
+				<td class="label">description:</td>
 				<td><textarea name="description">{description}</textarea></td>
 			</tr>
 			<!-- BEGIN addnode -->

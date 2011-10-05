@@ -10,6 +10,14 @@
 	</head>
 	<body>
 		<div id="wrapper">
+			<!-- BEGIN debugdiv -->
+			<div id="debugwrapper">
+				<a href="#">debug<div id="debug">{debug}</div></a>
+			</div>
+			<!-- END debugdiv -->
+			<div id="header">
+				<div><h2>IP Database</h2></div>
+			</div>
 			<div id="login">
 				<form method="post" action="" remote="remote">
 					<input type="hidden" name="action" value="login" />
@@ -20,11 +28,11 @@
 							<tr><td class="error" colspan="2">{error}</td></tr>
 							<!-- END errorheader -->
 							<tr>
-								<td>Username:</td>
+								<td class="label">Username:</td>
 								<td><input id="username" size="20" type="text" name="username" value="{username}" /></td>
 							</tr>
 							<tr>
-								<td>Password:</td>
+								<td class="label">Password:</td>
 								<td><input size="20" type="password" name="password" /></td>
 							</tr>
 							<tr><td></td><td><input type="submit" value="login" /></td></tr>
@@ -32,12 +40,17 @@
 					</table>
 				</form>
 			</div>
+			<script type="text/javascript">
+			<!--
+				if (getElement('username')) {
+					getElement('username').focus();
+					getElement('username').select();
+				}
+			//-->
+			</script>
 		</div>
-		<script type="text/javascript">
-			if (getElement('username')) {
-				getElement('username').focus();
-				getElement('username').select();
-			}
-		</script>
+		<div id="footer">
+			<a href="http://15augustus.nl/ip-database/">IP Database</a> {version} &copy;2011 Previder bv (http://www.previder.nl)
+		</div>
 	</body>
 </html>

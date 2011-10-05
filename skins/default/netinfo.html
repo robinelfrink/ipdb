@@ -1,20 +1,20 @@
-<h2>{label}</h2>
-<h4>{description}</h4>
+<h2 class="label">{label}</h2>
+<h4 class="label">{description}</h4>
 <table>
 	<tbody>
-		<tr><td>address:</td><td>{address}</td></tr>
+		<tr><td class="label">address:</td><td>{address}</td></tr>
 		<!-- BEGIN ipv4 -->
-		<tr><td>netmask:</td><td>{netmask}</td></tr>
-		<tr><td>broadcast:</td><td>{broadcast}</td></tr>
+		<tr><td class="label">netmask:</td><td>{netmask}</td></tr>
+		<tr><td class="label">broadcast:</td><td>{broadcast}</td></tr>
 		<!-- END ipv4 -->
 		<!-- BEGIN extrafield -->
-		<tr><td>{field}:</td><td>{value}</td></tr>
+		<tr><td class="label">{field}:</td><td>{value}</td></tr>
 		<!-- END extrafield -->
 		<!-- BEGIN extratable -->
-		<tr><td>{table}:</td><td>{item}</td></tr>
+		<tr><td class="label">{table}:</td><td>{item}</td></tr>
 		<!-- END extratable -->
 		<!-- BEGIN parent -->
-		<tr><td>parent:</td><td><a href="{link}" remote="remote">{label}</a></td></tr>
+		<tr><td class="label">parent:</td><td><a href="{link}" remote="remote">{label}</a></td></tr>
 		<!-- END parent -->
 	</tbody>
 </table>

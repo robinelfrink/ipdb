@@ -1,13 +1,16 @@
 <p>{navigation}</p>
 
 <form method="post" action="" remote="remote">
-	<input type="text" name="historysearch" value="{historysearch}" />
-	<input type="image" src="skins/default/images/search.png" />
+	<input type="text" class="search" name="historysearch" value="{historysearch}" />
 	<table>
-		<tr><th>timestamp</th><th>username</th><th>action</th></tr>
-		<!-- BEGIN entry -->
-		<tr{oddeven}><td>{timestamp}</td><td>{username}</td><td>{action}</td></tr>
-		<!-- END entry -->
+		<thead>
+			<tr><th>timestamp</th><th>username</th><th>action</th></tr>
+		</thead>
+		<tbody>
+			<!-- BEGIN entry -->
+			<tr{oddeven}><td>{timestamp}</td><td>{username}</td><td>{action}</td></tr>
+			<!-- END entry -->
+		</tbody>
 	</table>
 </form>
 

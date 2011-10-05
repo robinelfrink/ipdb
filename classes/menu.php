@@ -31,23 +31,26 @@ class Menu {
 		if ($session->authenticated) {
 			$skin = new Skin($config->skin);
 			$skin->setFile('menu.html');
-			$skin->setVar('item', '<a href="'.me().'?page=main&node=0" remote=remote>The World</a>');
+			$skin->setVar('item', '<a href="'.me().'?page=main&node=0" remote="remote">The World</a>');
 			$skin->parse('menuitem');
-			if (count($config->extratables)>0)
-				foreach ($config->extratables as $table=>$details) {
-					$skin->setVar('item', '<a href="'.me().'?page=extratable&table='.$table.'" remote=remote>'.
-								  $details['description'].'</a>');
-					$skin->parse('menuitem');
-				}
-			$skin->setVar('item', '<a href="'.me().'?page=history" remote=remote>History</a>');
-			$skin->parse('menuitem');
-			$skin->setVar('item', '<a href="'.me().'?page=account" remote=remote>My account</a>');
-			$skin->parse('menuitem');
-			if ($session->username=='admin') {
-				$skin->setVar('item', '<a href="'.me().'?page=users" remote=remote>Users</a>');
+			if (count($config->extratables)>0) {
+				$submenu = '<a href="">Tables<ul>';
+				foreach ($config->extratables as $table=>$details)
+					$submenu .= '<li><a href="'.me().'?page=extratable&table='.$table.
+						'" remote="remote">'.$details['description'].'</a></li>';
+				$submenu .= '</a></ul>';
+				$skin->setVar('item', $submenu);
 				$skin->parse('menuitem');
 			}
-			$skin->setVar('item', '<a href="'.me().'?page=login&action=logout" remote=remote>Logout '.
+			$skin->setVar('item', '<a href="'.me().'?page=history" remote="remote">History</a>');
+			$skin->parse('menuitem');
+			$skin->setVar('item', '<a href="'.me().'?page=account" remote="remote">My account</a>');
+			$skin->parse('menuitem');
+			if ($session->username=='admin') {
+				$skin->setVar('item', '<a href="'.me().'?page=users" remote="remote">Users</a>');
+				$skin->parse('menuitem');
+			}
+			$skin->setVar('item', '<a href="'.me().'?page=login&action=logout" remote="remote">Logout '.
 						  $session->username.'</a>');
 			$skin->parse('menuitem');
 			$skin->setVar('search', request('search'));

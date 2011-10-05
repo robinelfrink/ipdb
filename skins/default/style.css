@@ -2,85 +2,142 @@
 
 
 body {
-	font-family: verdana, 'lucida sans', helvetica, sans-serif;
-	color: #220044;
+	font-family: 'trebuchet ms', 'lucida sans', 'lucida sans unicode', verdana, tahoma, helvetica, sans-serif;
+	color: #000;
 	font-size: 9pt;
-	background-color: #fff;
+	background-color: #ddd;
+}
+html, body {
+	height: 100%;
+}
+
+
+a, a:link, a:hover, a:active {
+	color: #600060;
+	text-decoration: none;
+}
+input, textarea, select {
+	background: #fff;
+	border: 1px solid #800080;
+	padding: 0.2em 0.5em;
+}
+input[type=submit], input[type=button] {
+	background-color: #800080;
+	color: #fff;
+}
+input[type=text].search {
+	background-image: url('images/search.png');
+	background-repeat: no-repeat;
+	padding-left: 25px;
 }
 
 
 div#wrapper {
-	margin: 4px auto;
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+	clear: both;
+	margin: 0px auto -3em;
+	padding-bottom: 1em;
+	background-color: #fff;
+	width: 870px;
 }
 
 
 div#debugwrapper {
-	background-color: #fef;
+	background-color: #eee;
 	position: absolute;
-	left: 1em;
-	top: 1em;
+	left: 2em;
+	top: 2em;
 	font-family: mono;
 	font-size: 80%;
 	padding: 0.5em;
-	border: 1px solid #44a;
+	border: 1px solid #000;
 	z-index: 2000;
 }
-
-
 div#debugwrapper a, div#debugwrapper a:hover, div#debugwrapper a:link, div#debugwrapper a:active {
-	color: #220044;
+	color: #000;
 	text-decoration: none;
 }
-
-
 div#debug {
 	display: none;
 	margin-top: 1em;
 }
-
-
 div#debugwrapper:hover div, div#debugwrapper a:hover div {
 	display: block;
 }
 
 
 div#header {
-	border: 1px solid #a0a0a0;
-	padding: 0.5em;
-	text-align: center;
+	padding: 0.5em 1em;
 	margin-bottom: 1em;
+	background-color: #800080;
+	color: #fff;
 }
 
 
 div#menu {
+	float: right;
+	text-align: right;
 	margin-bottom: 1em;
+	padding-top: 1em;
 }
-
 div#menu ul {
 	list-style-type: none;
 	padding: 0px;
-	text-align: right;
+	display: inline;
+	line-height: 2em;
 }
-
 div#menu li {
-	margin-right: 1em;
 	display: inline;
+	float: left;
 }
-
-div#menu form {
-	display: inline;
+div#menu a {
+	display: block;
+	padding: 0px 0.4em;
+}
+div#menu ul ul {
+	display: none;
+	border: 1px solid #800080;
+}
+div#menu li li {
+	float: none;
+	white-space: nowrap !important;
+	width: 100%;
+}
+div#menu li:hover a,
+div#menu li a:hover {
+	background-color: #fff;
+	color: #800080;
+}
+div#menu li:hover ul,
+div#menu li a:hover ul {
+	display: block;
+	background-color: #fff;
+	position: absolute;
+	z-index: 20;
+	margin: 0px;
+	padding: 0px;
+	text-align: left;
+}
+div#menu a, div#menu a:link, div#menu a:hover, div#menu a:active {
+	color: #fff;
+	text-decoration: none;
+}
+div#menu li:hover ul a:hover,
+div#menu li a:hover ul a:hover {
+	background-color: #800080;
+	color: #fff;
 }
 
 
 div#tree {
-	border: 1px solid #a0a0a0;
+	border: 1px solid #800080;
 	width: 200px;
 	font-size: 8pt;
 	float: left;
-	margin-right: 1em;
+	margin: 0px 1em;
 }
-
-
 div#tree ul {
 	list-style-type: none;
 	padding-left: 1em;
@@ -125,34 +182,40 @@ div#tree a:hover span {
 
 
 div#content {
-	padding: 1em;
+	padding: 0px 1em;
 	clear: right;
 	margin-left: 210px;
 }
-
-div#content table {
-	border: 1px solid #a0a0a0;
+div#content .label {
+	color: #800080;
 }
-
-
-div#content table#children {
-	margin-top: 0.5em;
-	border: 1px solid;
+div#content table {
+	border: 1px solid #800080;
+	margin: 1em 0px;
 	border-collapse: collapse;
 }
-div#content table#children thead tr {
-	border-bottom: 1px solid;
+div#content table thead tr {
+	border-bottom: 1px solid #800080;
+	background-color: #800080;
+	color: #fff;
 }
-div#content table#children tbody tr.unused td,
-div#content table#children tbody tr.unused a {
+div#content table th {
+	font-weight: normal;
+	padding: 0.2px 0.5em;
+}
+div#content table td {
+	padding: 0.1px 0.5em;
+}
+div#content table tbody tr.unused td,
+div#content table tbody tr.unused a {
 	color: #2a2;
 }
 div#content p.error {
-	border: 1px solid #a0a0a0;
-	color: #cc4040;
-	padding: 0px 0.2em;
+	border: 1px solid #800080;
+	background-color: #de0245;
+	color: #fff;
+	padding: 0.2em 1em;
 	font-weight: bold;
-	display: inline;
 }
 div#content td.extraitem a {
 	position: relative;
@@ -190,22 +253,26 @@ div#content tr.odd td {
 
 div#login {
 	width: 300px;
-	margin: 0px auto;
+	margin: 8em auto;
 }
 
 
 div#login table {
 	border-collapse: collapse;
-	border: 1px solid #a0a0a0;
+	border: 1px solid #800080;
 }
 div#login th,
 div#login td {
 	padding: 0.2em 0.5em;
 }
-div#login th,
+div#login th {
+	border: 1px solid #800080;
+	background-color: #800080;
+	color: #fff;
+}
 div#login td.error {
-	border: 1px solid #a0a0a0;
-	background-color: #ff4040;
+	border: 1px solid #800080;
+	background-color: #de0245;
 	color: #fff;
 	text-align: center;
 }
@@ -213,7 +280,11 @@ div#login td.error {
 
 div#footer {
 	clear: both;
-	font-size: 7pt;
+	font-size: 75%;
 	text-align: center;
-	padding: 3px;
+	padding: 0.5em 0px;
+	height: 2em;
+	margin: 0px auto -2em;
+	background-color: #fff;
+	width: 870px;
 }
