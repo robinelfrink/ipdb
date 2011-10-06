@@ -27,8 +27,9 @@ input[type=submit], input[type=button] {
 }
 input[type=text].search {
 	background-image: url('images/search.png');
+	background-position: 0.2em center;
 	background-repeat: no-repeat;
-	padding-left: 25px;
+	padding-left: 17px;
 }
 
 
