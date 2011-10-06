@@ -136,7 +136,6 @@ div#menu li a:hover ul a:hover {
 	color: #fff;
 }
 
-
 div#tree {
 	border: 1px solid #334253;
 	background-color: #ecf5ff;
@@ -260,6 +259,10 @@ div#content tr.even:hover td {
 	background-color: #ade0fb;
 }
 
+
+div#break {
+	clear: both;
+}
 
 
 div#login {
