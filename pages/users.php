@@ -39,7 +39,7 @@ class users {
 		foreach ($users as $user) {
 			$skin->setVar('username', htmlentities($user['username']));
 			$skin->setVar('name', htmlentities($user['name']));
-			$skin->setVar('editlink', me().'?page=user&user='.htmlentities($user['username']));
+			$skin->setVar('editlink', me().'?page=user&amp;user='.htmlentities($user['username']));
 			$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
 			$skin->parse('user');
 			$even = !$even;

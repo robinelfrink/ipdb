@@ -50,7 +50,7 @@ class Tree {
 						$class = '';
 					}
 					$skin->setVar('node', $network['id']);
-					$skin->setVar('link', '?page=main&node='.$network['id']);
+					$skin->setVar('link', '?page=main&amp;node='.$network['id']);
 					$skin->setVar('label', showip($network['address'], $network['bits']));
 					$skin->setVar('description', htmlentities($network['description']));
 					$skin->setVar('subtree', $subtree);

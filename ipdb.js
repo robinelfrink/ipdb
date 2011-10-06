@@ -89,7 +89,7 @@ function clicka(event) {
 		target = target.parentNode;
 	var href = target.href;
 	if (href.match(/\?/))
-		href = href.replace(/\?/, '?remote=remote&');
+		href = href.replace(/\?/, '?remote=remote&amp;');
 	else
 		href = href+'?remote=remote';
 	ajaxrequest(href.replace(/.*\?/, ''));
@@ -127,16 +127,16 @@ function submitform(event) {
 		for (var i = 0; i < form.elements.length; i++) {
 			if (form.elements[i].name) {
 				if (form.elements[i].type == 'checkbox') 
-					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + (form.elements[i].checked ? 'on' : 'off');
+					vars = vars + '&amp;' + escapeplus(form.elements[i].name) + '=' + (form.elements[i].checked ? 'on' : 'off');
 				else if (form.elements[i].type == 'radio') 
-					vars = vars + (form.elements[i].checked ? '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value) : '');
+					vars = vars + (form.elements[i].checked ? '&amp;' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value) : '');
 				else if (form.elements[i].type == 'submit') {
 					if (form.elements[i].name == submit) 
-						vars = vars + '&submit=' + escapeplus(form.elements[i].name);
+						vars = vars + '&amp;submit=' + escapeplus(form.elements[i].name);
 				} else if (form.elements[i].type == 'select-one') {
-					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].options[form.elements[i].selectedIndex].value);
+					vars = vars + '&amp;' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].options[form.elements[i].selectedIndex].value);
 				} else
-					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value);
+					vars = vars + '&amp;' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value);
 				if (form.elements[i].type == 'password') 
 					form.elements[i].value = '';
 			}
@@ -185,7 +185,7 @@ function clicktree(event) {
 
 /* Expand a tree node */
 function expand(address) {
-	ajaxrequest('action=getsubtree&leaf='+address);
+	ajaxrequest('action=getsubtree&amp;leaf='+address);
 	return false;
 }
 function expandtree(address, content) {
@@ -270,7 +270,7 @@ function ajaxrequest(args) {
 				unfade();
 			}
 		}
-		request.open('GET', document.URL.replace(/\?.*$/, '')+'?remote=remote&'+args);
+		request.open('GET', document.URL.replace(/\?.*$/, '')+'?remote=remote&amp;'+args);
 		request.send(null);
 	} else
 		unfade();

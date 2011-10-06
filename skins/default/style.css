@@ -63,11 +63,13 @@ div#debugwrapper a, div#debugwrapper a:hover, div#debugwrapper a:link, div#debug
 	color: #000;
 	text-decoration: none;
 }
-div#debug {
+span#debug {
 	display: none;
 	margin-top: 1em;
+	font-family: monospace;
+	white-space: pre;
 }
-div#debugwrapper:hover div, div#debugwrapper a:hover div {
+div#debugwrapper:hover span, div#debugwrapper a:hover span {
 	display: block;
 }
 

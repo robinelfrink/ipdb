@@ -68,7 +68,7 @@ class extratable {
 				if (count($nodes)>0) {
 					$comments .= 'Nodes:<br /><blockquote>';
 					foreach ($nodes as $node)
-						$comments .= '<a href="?page=main&node='.$node['id'].'">'.showip($node['address'], $node['bits']).'</a><br />';
+						$comments .= '<a href="?page=main&amp;node='.$node['id'].'">'.showip($node['address'], $node['bits']).'</a><br />';
 					$comments .= '</blockquote>';
 				}
 

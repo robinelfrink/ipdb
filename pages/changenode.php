@@ -36,10 +36,10 @@ class changenode {
 			$data = $database->getAddress($node);
 			if ($parent = $database->getAddress($data['parent'])) {
 				$skin->setVar('parentaddress', showip($parent['address'], $parent['bits']));
-				$skin->setVar('parentlink', me().'?page=main&node='.$parent['id']);
+				$skin->setVar('parentlink', me().'?page=main&amp;node='.$parent['id']);
 			} else {
 				$skin->setVar('parentaddress', showip('00000000000000000000000000000000', 0));
-				$skin->setVar('parentlink', me().'?page=main&node=0');
+				$skin->setVar('parentlink', me().'?page=main&amp;node=0');
 			}
 			$skin->parse('parent');
 			if (count($config->extrafields)>0)

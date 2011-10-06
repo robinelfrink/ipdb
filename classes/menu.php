@@ -31,14 +31,14 @@ class Menu {
 		if ($session->authenticated) {
 			$skin = new Skin($config->skin);
 			$skin->setFile('menu.html');
-			$skin->setVar('item', '<a href="'.me().'?page=main&node=0">The World</a>');
+			$skin->setVar('item', '<a href="'.me().'?page=main&amp;node=0">The World</a>');
 			$skin->parse('menuitem');
 			if (count($config->extratables)>0) {
 				$submenu = '<a href="">Tables<ul>';
 				foreach ($config->extratables as $table=>$details)
-					$submenu .= '<li><a href="'.me().'?page=extratable&table='.$table.
+					$submenu .= '<li><a href="'.me().'?page=extratable&amp;table='.$table.
 						'">'.$details['description'].'</a></li>';
-				$submenu .= '</a></ul>';
+				$submenu .= '</ul></a>';
 				$skin->setVar('item', $submenu);
 				$skin->parse('menuitem');
 			}
@@ -50,7 +50,7 @@ class Menu {
 				$skin->setVar('item', '<a href="'.me().'?page=users">Users</a>');
 				$skin->parse('menuitem');
 			}
-			$skin->setVar('item', '<a href="'.me().'?page=login&action=logout" remote="remote">Logout '.
+			$skin->setVar('item', '<a href="'.me().'?page=login&amp;action=logout" remote="remote">Logout '.
 						  $session->username.'</a>');
 			$skin->parse('menuitem');
 			$skin->setVar('search', request('search'));

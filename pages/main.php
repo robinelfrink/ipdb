@@ -54,10 +54,10 @@ class main {
 				$skin->setVar('label', 'network '.showip($data['address'], $data['bits']));
 				if (count($children)>0) {
 					if (request('showunused')=='yes') {
-						$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=no');
+						$skin->setVar('unusedlink', me().'?page=main&amp;node='.$data['id'].'&amp;showunused=no');
 						$skin->setVar('unusedlabel', 'hide unused blocks');
 					} else {
-						$skin->setVar('unusedlink', me().'?page=main&node='.$data['id'].'&showunused=yes');
+						$skin->setVar('unusedlink', me().'?page=main&amp;node='.$data['id'].'&amp;showunused=yes');
 						$skin->setVar('unusedlabel', 'show unused blocks');
 					}
 					$skin->parse('showunused');
@@ -93,12 +93,12 @@ class main {
 			$access = $database->getAccess($data['id'], $session->username);
 			if (($session->username=='admin') || ($access['access']=='w')) {
 				$links = '
-<a href="'.me().'?page=addnode&address='.htmlentities($data['address']).'&bits='.htmlentities($data['bits']).'" remote="remote">add</a> |
-<a href="'.me().'?page=deletenode&node='.$data['id'].'" remote="remote">delete</a> |
-<a href="'.me().'?page=changenode&node='.$data['id'].'" remote="remote">change</a>';
+<a href="'.me().'?page=addnode&amp;address='.htmlentities($data['address']).'&amp;bits='.htmlentities($data['bits']).'" remote="remote">add</a> |
+<a href="'.me().'?page=deletenode&amp;node='.$data['id'].'" remote="remote">delete</a> |
+<a href="'.me().'?page=changenode&amp;node='.$data['id'].'" remote="remote">change</a>';
 				if ($session->username=='admin')
 					$links .= ' |
-	<a href="'.me().'?page=nodeaccess&node='.$data['id'].'" remote="remote">access</a>';
+	<a href="'.me().'?page=nodeaccess&amp;node='.$data['id'].'" remote="remote">access</a>';
 			} else {
 				$links = '';
 			}
@@ -117,7 +117,7 @@ class main {
 				$skin->setFile('main.html');
 				$even = true;
 				foreach ($tree as $network) {
-					$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=modify&action=add&address='.$network['address'].'&bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
+					$skin->setVar('link', ($network['id'] ? '?page=main&amp;node='.$network['id'] : '?page=modify&amp;action=add&amp;address='.$network['address'].'&amp;bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
 					$skin->setVar('label', showip($network['address'], $network['bits']));
 					$skin->setVar('description', $network['description']);
 					$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
@@ -165,7 +165,7 @@ class main {
 		}
 		$even = true;
 		foreach ($networks as $network) {
-			$skin->setVar('link', ($network['id'] ? '?page=main&node='.$network['id'] : '?page=addnode&address='.$network['address'].'&bits='.$network['bits'].'&node='.$node['id']));
+			$skin->setVar('link', ($network['id'] ? '?page=main&amp;node='.$network['id'] : '?page=addnode&amp;address='.$network['address'].'&amp;bits='.$network['bits'].'&amp;node='.$node['id']));
 			$skin->setVar('label', showip($network['address'], $network['bits']));
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {

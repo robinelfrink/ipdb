@@ -37,7 +37,7 @@ class nodeaccess {
 		$userselect = '<select name="user">';
 
 		foreach ($users as $user) {
-			$skin->setVar('userlink', me().'?page=user&user='.$user['username']);
+			$skin->setVar('userlink', me().'?page=user&amp;user='.$user['username']);
 			$skin->setVar('username', $user['username']);
 			$useraccess = $database->getAccess(request('node'), $user['username']);
 			if ($useraccess['id']==request('node')) {
@@ -46,11 +46,11 @@ class nodeaccess {
 	<option value="w"'.($useraccess['access']=='w' ? ' selected' : '').'>write</option>
 </select>';
 				$skin->setVar('access', $access);
-				$skin->setVar('deletelink', '<a href="'.me().'?action=deleteaccess&node='.
-							  request('node').'&user='.htmlentities($user['username']).'">delete</a>');
+				$skin->setVar('deletelink', '<a href="'.me().'?action=deleteaccess&amp;node='.
+							  request('node').'&amp;user='.htmlentities($user['username']).'">delete</a>');
 			} else {
 				$skin->setVar('access', ($useraccess['access']=='w' ? 'write' : 'read-only').
-							  ', inherited from <a href="'.me().'?page=main&node='.
+							  ', inherited from <a href="'.me().'?page=main&amp;node='.
 							  $useraccess['id'].'">'.showip($useraccess['address'], $useraccess['bits']).'</a>');
 				$skin->setVar('deletelink', '');
 				$userselect .= '

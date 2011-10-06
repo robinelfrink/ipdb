@@ -43,7 +43,7 @@ class account {
 		if (is_array($user['access']) && (count($user['access'])>0)) {
 			foreach ($user['access'] as $access) {
 				$skin->setVar('address', showip($access['address'], $access['bits']));
-				$skin->setVar('nodelink', me().'?page=main&node='.$access['id']);
+				$skin->setVar('nodelink', me().'?page=main&amp;node='.$access['id']);
 				$skin->setVar('access', ($access['access']=='w' ? 'write' : 'read-only'));
 				$skin->parse('network');
 			}

@@ -35,10 +35,10 @@ class addnode {
 		if ($data = $database->findAddress(address2ip(request('address')), strcmp(address2ip(request('address')), '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'))) {
 			if ($parent = $database->getAddress($data['parent'])) {
 				$skin->setVar('parentaddress', showip($parent['address'], $parent['bits']));
-				$skin->setVar('parentlink', me().'?page=main&node='.$parent['id']);
+				$skin->setVar('parentlink', me().'?page=main&amp;node='.$parent['id']);
 			} else {
 				$skin->setVar('parentaddress', showip('00000000000000000000000000000000', 0));
-				$skin->setVar('parentlink', me().'?page=main&node=0');
+				$skin->setVar('parentlink', me().'?page=main&amp;node=0');
 			}
 			$skin->parse('parent');
 			$skin->setVar('description', request('description', $data['description']));

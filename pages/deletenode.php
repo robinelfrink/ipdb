@@ -36,7 +36,7 @@ class deletenode {
 			$skin->setFile('deletenode.html');
 			if ($database->hasChildren($node))
 				$skin->parse('children');
-			$skin->setVar('link', me().'?page=main&node='.$node);
+			$skin->setVar('link', me().'?page=main&amp;node='.$node);
 			$skin->setVar('address', ip2address($data['address']));
 			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
 			$skin->setVar('description', $data['description']);

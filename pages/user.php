@@ -41,13 +41,13 @@ class user {
 		if (is_array($user['access']) and (count($user['access'])>0)) {
 			foreach ($user['access'] as $access) {
 				$skin->setVar('address', showip($access['address'], $access['bits']));
-				$skin->setVar('nodelink', me().'?page=main&node='.$access['id']);
+				$skin->setVar('nodelink', me().'?page=main&amp;node='.$access['id']);
 				$dropdown = '<select name="access_'.$access['id'].'">
 	<option value="r"'.($access['access']=='r' ? ' selected' : '').'>read-only</option>
 	<option value="w"'.($access['access']=='w' ? ' selected' : '').'>write</option>
 </select>';
 				$skin->setVar('access', $dropdown);
-				$skin->setVar('deletelink', me().'?action=deleteaccess&node='.$access['id'].'&user='.htmlentities($user['username']));
+				$skin->setVar('deletelink', me().'?action=deleteaccess&amp;node='.$access['id'].'&amp;user='.htmlentities($user['username']));
 				$skin->parse('network');
 			}
 			$skin->parse('access');
