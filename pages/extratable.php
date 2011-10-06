@@ -45,16 +45,21 @@ class extratable {
 				request('pagenr', 1, true);
 			}
 			$items = array_slice($items, $start*$max, $max);
-			$navigation = 'Jump to page ';
-			for ($p = 1; ($p-1)<($total/$max); $p++)
-				if (($p==1) ||
-					(abs($start+1-$p)<4) ||
-					(($p-1)==floor($total/$max)) ||
-					(($p % (floor($total/$max)/10))==0))
-					$navigation .= ($start==($p-1) ? $p : '<a href="'.me().'?pagenr='.$p.'">'.$p.'</a>').'&nbsp;';
-				else
-					$navigation .= '&hellip;&nbsp;';
-			$navigation = preg_replace('/(&hellip;&nbsp;)+/', '&hellip;&nbsp;', $navigation);
+			if (($total/$max)<=1) {
+				$navigation = '';
+			} else {
+				$navigation = 'Jump to page ';
+				for ($p = 1; ($p-1)<($total/$max); $p++)
+					if (($p==1) ||
+						(abs($start+1-$p)<4) ||
+						(($p-1)==floor($total/$max)) ||
+						(($p % (floor($total/$max)/10))==0))
+						$navigation .= ($start==($p-1) ? $p : '<a href="'.me().'?pagenr='.$p.'">'.$p.'</a>').'&nbsp;';
+					else
+						$navigation .= '&hellip;&nbsp;';
+				$navigation = preg_replace('/(&hellip;&nbsp;)+/', '&hellip;&nbsp;', $navigation);
+			}
+			$even = true;
 			foreach ($items as $item) {
 				$comments = '';
 				if (strlen(trim($item['comments']))>0)
@@ -70,7 +75,9 @@ class extratable {
 				$skin->setVar('item', $item['item']);
 				$skin->setVar('description', ($type=='password' ? crypt($item['description'], randstr(2)) : $item['description']));
 				$skin->setVar('comments', $comments);
+				$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
 				$skin->parse('itemrow');
+				$even = !$even;
 			}
 			$skin->parse('items');
 			$skin->setVar('navigation', $navigation);

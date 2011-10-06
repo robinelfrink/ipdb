@@ -35,11 +35,14 @@ class users {
 
 		$users = $database->getUsers();
 
+		$even = true;
 		foreach ($users as $user) {
 			$skin->setVar('username', htmlentities($user['username']));
 			$skin->setVar('name', htmlentities($user['name']));
 			$skin->setVar('editlink', me().'?page=user&user='.htmlentities($user['username']));
+			$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
 			$skin->parse('user');
+			$even = !$even;
 		}
 
 		$content = $skin->get();

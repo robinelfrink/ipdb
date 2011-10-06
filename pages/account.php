@@ -40,7 +40,7 @@ class account {
 			$skin->hideBlock('localuser');
 
 		$user = $database->getUser($session->username);
-		if (is_array($user) && (count($user)>0)) {
+		if (is_array($user['access']) && (count($user['access'])>0)) {
 			foreach ($user['access'] as $access) {
 				$skin->setVar('address', showip($access['address'], $access['bits']));
 				$skin->setVar('nodelink', me().'?page=main&node='.$access['id']);

@@ -56,11 +56,14 @@ class history {
 			$navigation = preg_replace('/(&hellip;&nbsp;)+/', '&hellip;&nbsp;', $navigation);
 		}
 
+		$even = true;
 		foreach ($history as $entry) {
 			$skin->setVar('timestamp', $entry['stamp']);
 			$skin->setVar('username', $entry['username']);
 			$skin->setVar('action', $entry['action']);
+			$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
 			$skin->parse('entry');
+			$even = !$even;
 		}
 
 		$skin->setVar('historysearch', request('historysearch'));

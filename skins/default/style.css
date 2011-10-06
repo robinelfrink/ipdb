@@ -13,16 +13,19 @@ html, body {
 
 
 a, a:link, a:hover, a:active {
-	color: #600060;
+	color: #0084ad;
 	text-decoration: none;
+}
+a:hover {
+	color: #0084ad;
 }
 input, textarea, select {
 	background: #fff;
-	border: 1px solid #800080;
+	border: 1px solid #334253;
 	padding: 0.2em 0.5em;
 }
 input[type=submit], input[type=button] {
-	background-color: #800080;
+	background-color: #334253;
 	color: #fff;
 }
 input[type=text].search {
@@ -72,7 +75,7 @@ div#debugwrapper:hover div, div#debugwrapper a:hover div {
 div#header {
 	padding: 0.5em 1em;
 	margin-bottom: 1em;
-	background-color: #800080;
+	background-color: #334253;
 	color: #fff;
 }
 
@@ -82,7 +85,6 @@ div#menu {
 	text-align: right;
 	margin-bottom: 1em;
 	padding-top: 1em;
-	font-size: 110%;
 }
 div#menu ul {
 	list-style-type: none;
@@ -97,10 +99,12 @@ div#menu li {
 div#menu a {
 	display: block;
 	padding: 0px 0.4em;
+	color: #fff;
+	text-decoration: none;
 }
 div#menu ul ul {
 	display: none;
-	border: 1px solid #800080;
+	border: 1px solid #0687af;
 }
 div#menu li li {
 	float: none;
@@ -109,32 +113,33 @@ div#menu li li {
 }
 div#menu li:hover a,
 div#menu li a:hover {
-	background-color: #fff;
-	color: #800080;
+	background-color: #0084ad;
+	color: #fff;
 }
 div#menu li:hover ul,
 div#menu li a:hover ul {
 	display: block;
-	background-color: #fff;
 	position: absolute;
 	z-index: 20;
 	margin: 0px;
 	padding: 0px;
 	text-align: left;
 }
-div#menu a, div#menu a:link, div#menu a:hover, div#menu a:active {
-	color: #fff;
-	text-decoration: none;
+div#menu li:hover ul a,
+div#menu li a:hover ul a {
+	background-color: #ecf5ff;
+	color: #334253;
 }
 div#menu li:hover ul a:hover,
 div#menu li a:hover ul a:hover {
-	background-color: #800080;
+	background-color: #334253;
 	color: #fff;
 }
 
 
 div#tree {
-	border: 1px solid #800080;
+	border: 1px solid #334253;
+	background-color: #ecf5ff;
 	width: 200px;
 	font-size: 8pt;
 	float: left;
@@ -189,16 +194,16 @@ div#content {
 	margin-left: 210px;
 }
 div#content .label {
-	color: #800080;
+	color: #334253;
 }
 div#content table {
-	border: 1px solid #800080;
+	border: 1px solid #334253;
 	margin: 1em 0px;
 	border-collapse: collapse;
 }
 div#content table thead tr {
-	border-bottom: 1px solid #800080;
-	background-color: #800080;
+	border-bottom: 1px solid #334253;
+	background-color: #334253;
 	color: #fff;
 }
 div#content table th {
@@ -213,7 +218,7 @@ div#content table tbody tr.unused a {
 	color: #2a2;
 }
 div#content p.error {
-	border: 1px solid #800080;
+	border: 1px solid #334253;
 	background-color: #de0245;
 	color: #fff;
 	padding: 0.2em 1em;
@@ -248,7 +253,11 @@ div#content tr.even td {
 	background-color: inherit;
 }
 div#content tr.odd td {
-	background-color: #f8f8ff;
+	background-color: #ecf5ff;
+}
+div#content tr.odd:hover td,
+div#content tr.even:hover td {
+	background-color: #ade0fb;
 }
 
 
@@ -261,19 +270,19 @@ div#login {
 
 div#login table {
 	border-collapse: collapse;
-	border: 1px solid #800080;
+	border: 1px solid #334253;
 }
 div#login th,
 div#login td {
 	padding: 0.2em 0.5em;
 }
 div#login th {
-	border: 1px solid #800080;
-	background-color: #800080;
+	border: 1px solid #334253;
+	background-color: #334253;
 	color: #fff;
 }
 div#login td.error {
-	border: 1px solid #800080;
+	border: 1px solid #334253;
 	background-color: #de0245;
 	color: #fff;
 	text-align: center;
