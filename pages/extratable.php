@@ -63,18 +63,21 @@ class extratable {
 			foreach ($items as $item) {
 				$comments = '';
 				if (strlen(trim($item['comments']))>0)
-					$comments .= 'Comments:<br /><blockquote>'.$item['comments'].'</blockquote><br />';
+					$comments .= 'Comments:<p style="margin-left: 2em;">'.$item['comments'].'</p>';
 				$nodes = $database->getItemNodes(request('table'), $item['item']);
 				if (count($nodes)>0) {
-					$comments .= 'Nodes:<br /><blockquote>';
+					$comments .= 'Nodes:<p style="margin-left: 2em;">';
 					foreach ($nodes as $node)
-						$comments .= '<a href="?page=main&amp;node='.$node['id'].'">'.showip($node['address'], $node['bits']).'</a><br />';
-					$comments .= '</blockquote>';
+						$comments .= showip($node['address'], $node['bits']).'<br />';
+					$comments .= '</p>';
 				}
 
 				$skin->setVar('item', $item['item']);
 				$skin->setVar('description', ($type=='password' ? crypt($item['description'], randstr(2)) : $item['description']));
-				$skin->setVar('comments', $comments);
+				if (empty($comments))
+					$skin->setVar('comments', '');
+				else
+					$skin->setVar('comments', '<span>'.$comments.'</span>');
 				$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
 				$skin->parse('itemrow');
 				$even = !$even;
