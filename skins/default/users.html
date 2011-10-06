@@ -1,25 +1,34 @@
 <table>
-	<tr><th>username</th><th>name</th><th></th></tr>
-	<!-- BEGIN user -->
-	<tr{oddeven}>
-		<td>{username}</td>
-		<td>{name}</td>
-		<td><a href="{editlink}" remote="remote">edit</a></td>
-	</tr>
-	<!-- END user -->
+	<thead>
+		<tr><th>username</th><th>name</th><th></th></tr>
+	</thead>
+	<tbody>
+		<!-- BEGIN user -->
+		<tr{oddeven}>
+			<td>{username}</td>
+			<td>{name}</td>
+			<td><a href="{editlink}" remote="remote">edit</a></td>
+		</tr>
+		<!-- END user -->
+	</tbody>
 </table>
 
 <br />
 
+<h3>add user:</h3>
 <form method="post" action="" remote="remote">
 	<table>
-		<tr><th>username</th><th>name</th><th>password</th><th></th></tr>
-		<tr>
-			<td><input type="text" name="user" /></td>
-			<td><input type="text" name="name" /></td>
-			<td><input type="password" name="password" /></td>
-			<td></td>
-		</tr>
+		<thead>
+			<tr><th>username</th><th>name</th><th>password</th><th></th></tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><input type="text" name="user" /></td>
+				<td><input type="text" name="name" /></td>
+				<td><input type="password" name="password" /></td>
+				<td></td>
+			</tr>
+		</tbody>
 	</table>
 	<input type="hidden" name="action" value="adduser" />
 	<input type="submit" value="add" />

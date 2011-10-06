@@ -2,7 +2,7 @@
 
 
 body {
-	font-family: 'trebuchet ms', 'lucida sans', 'lucida sans unicode', verdana, tahoma, helvetica, sans-serif;
+	font-family: 'lucida sans', 'lucida sans unicode', verdana, tahoma, helvetica, sans-serif;
 	color: #000;
 	font-size: 9pt;
 	background-color: #ddd;
@@ -81,6 +81,7 @@ div#menu {
 	text-align: right;
 	margin-bottom: 1em;
 	padding-top: 1em;
+	font-size: 110%;
 }
 div#menu ul {
 	list-style-type: none;
@@ -201,10 +202,10 @@ div#content table thead tr {
 }
 div#content table th {
 	font-weight: normal;
-	padding: 0.2px 0.5em;
+	padding: 0.2em 0.7em;
 }
 div#content table td {
-	padding: 0.1px 0.5em;
+	padding: 0.1em 0.5em;
 }
 div#content table tbody tr.unused td,
 div#content table tbody tr.unused a {

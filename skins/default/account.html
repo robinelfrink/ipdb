@@ -29,15 +29,19 @@
 <!-- END localuser -->
 
 <!-- BEGIN access -->
-<p>User access</p>
+<h3>user access:</h3>
 
 <table>
-	<tr><th>network</th><th>access</th></tr>
-	<!-- BEGIN network -->
-	<tr>
-		<td><a href="{nodelink}" remote="remote">{address}</a></td>
-		<td>{access}</td>
-	</tr>
-	<!-- END network -->
+	<thead>
+		<tr><th>network</th><th>access</th></tr>
+	</thead>
+	<tbody>
+		<!-- BEGIN network -->
+		<tr>
+			<td><a href="{nodelink}" remote="remote">{address}</a></td>
+			<td>{access}</td>
+		</tr>
+		<!-- END network -->
+	</tbody>
 </table>
 <!-- END access -->
