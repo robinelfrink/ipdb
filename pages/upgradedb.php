@@ -29,12 +29,18 @@ class upgradedb {
 
 
 	public function get() {
+		global $database, $session;
 		if (request('action')=='upgradedb') {
-			$content = '
+			if ($database->error) {
+				$this->error = $database->error;
+				$content = '';
+			} else {
+				$content = '
 <p>Your database has been upgraded</p>';
+			}
 			request('page', 'main', true);
 			request('action', false, true);
-		} else {
+		} else if ($database->isAdmin($session->username)) {
 			$content = '
 <p>Your database needs an upgrade. Please click the \'upgrade\'-button below
 to upgrade your database.</p>
@@ -43,6 +49,9 @@ to upgrade your database.</p>
 	<input type="hidden" name="action" value="upgradedb" />
 	<input type="submit" value="upgrade" />
 </form>';
+		} else {
+			$content = '
+<p>Your database needs an upgrade. Please contact an administrator.</p>';
 		}
 		return array('title'=>'IPDB :: Upgrade database',
 					 'content'=>$content);

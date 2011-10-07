@@ -28,7 +28,7 @@ class Database {
 	private $db = null;
 	public $error = null;
 	private $provider = null;
-	private $dbversion = '4';
+	private $dbversion = '5';
 	private $prefix = '';
 
 	public function __construct($config) {
@@ -159,17 +159,18 @@ class Database {
 							  "2, '000000000000000000000000C0A80300', 120, 0, ".
 							  "'Default IPv4 network.')"))
 				return false;
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."admin`");
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."users`");
 			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."admin` (".
+			if (!$this->query("CREATE TABLE `".$this->prefix."users` (".
 							  "`username` varchar(15) NOT NULL,".
 							  "`password` varchar(32) NOT NULL,".
 							  "`name` varchar(50) NOT NULL,".
+							  "`admin` tinyint(1) NOT NULL DEFAULT 0,".
 							  "PRIMARY KEY  (`username`)".
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
-			if (!$this->query("INSERT INTO `".$this->prefix."admin` (`username`, `password`, `name`) ".
-							  "VALUES('admin', '".md5('secret')."', 'Administrator')"))
+			if (!$this->query("INSERT INTO `".$this->prefix."users` (`username`, `password`, `name`,`admin`) ".
+							  "VALUES('admin', '".md5('secret')."', 'Administrator', 1)"))
 				return false;
 			$this->query("DROP TABLE IF EXISTS `".$this->prefix."version`");
 			$this->error = null;
@@ -242,6 +243,11 @@ class Database {
 
 
 	public function upgradeDb() {
+		global $session;
+		if (!$this->isAdmin($session->username)) {
+			$this->error = 'Access denied';
+			return false;
+		}
 		$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`');
 		$version = $version[0]['version'];
 		$this->error = null;
@@ -278,6 +284,18 @@ class Database {
 							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
 				return false;
 		}
+		if ($version<5) {
+			$this->query("DROP TABLE IF EXISTS `".$this->prefix."users`");
+			$this->error = null;
+			if (!$this->query("ALTER TABLE `".$this->prefix."admin` RENAME TO `".
+							  $this->prefix."users`"))
+				return false;
+			if (!$this->query("ALTER TABLE `".$this->prefix."users` ADD COLUMN `admin`".
+							  " tinyint(1) NOT NULL DEFAULT 0"))
+				return false;
+			if (!$this->query("UPDATE `".$this->prefix."users` SET `admin`=1 WHERE `username`='admin'"))
+				return false;
+		}
 		if (!$this->query("UPDATE `".$this->prefix."version` SET version=".
 						  $this->escape($this->dbversion)))
 			return false;
@@ -286,8 +304,15 @@ class Database {
 
 
 	public function getUser($username) {
-		$user = $this->query("SELECT `username`, `password`, `name` FROM `".$this->prefix."admin` WHERE `username` = '".
-							 $this->escape($username)."'");
+		if (!$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`'))
+			return false;
+		if ($version[0]['version']<5)
+			$user = $this->query("SELECT `username`, `password`, `name`, IF ('admin' = '".
+								$this->escape($username)."', 1, 0) AS `admin` FROM `".
+								$this->prefix."admin` WHERE `username` = '".$this->escape($username)."'");
+		else
+			$user = $this->query("SELECT `username`, `password`, `name`, `admin` FROM `".
+								 $this->prefix."users` WHERE `username` = '".$this->escape($username)."'");
 		if (!is_array($user) || (count($user)==0))
 			return false;
 		$user = $user[0];
@@ -297,6 +322,12 @@ class Database {
 							   $this->escape($username)."' ORDER BY `address`, `bits`");
 		$user['access'] = $access;
 		return $user;
+	}
+
+
+	public function isAdmin($username) {
+		$user = $this->getUser($username);
+		return ($user['admin'] ? true : false);
 	}
 
 
@@ -328,8 +359,8 @@ class Database {
 
 
 	public function getUsers() {
-		return $this->query("SELECT `username`, `name` FROM `".$this->prefix."admin` ".
-							"WHERE `username`!='admin' ORDER BY `username`");
+		return $this->query("SELECT `username`, `password`, `name`, `admin` FROM `".
+							$this->prefix."users` ORDER BY `username`");
 	}
 
 
@@ -448,7 +479,7 @@ class Database {
 				}
 
 		/* Check for access */
-		if (!preg_match('/^(admin|system)$/', $session->username)) {
+		if (!$this->isAdmin($session->username)) {
 			$access = $this->getAccess($parent, $session->username);
 			if ($access['access']!='w') {
 				$this->error = 'Access denied';
@@ -490,7 +521,7 @@ class Database {
 		global $session;
 
 		/* Check for access */
-		if (!preg_match('/^(admin|system)$/', $session->username)) {
+		if (!$this->isAdmin($session->username)) {
 			$access = $this->getAccess($node, $session->username);
 			if ($access['access']!='w') {
 				$this->error = 'Access denied';
@@ -553,7 +584,7 @@ class Database {
 		}
 
 		/* Check for access */
-		if (!preg_match('/^(admin|system)$/', $session->username)) {
+		if (!$this->isAdmin($session->username)) {
 			$access = $this->getAccess($node, $session->username);
 			if ($access['access']!='w') {
 				$this->error = 'Access denied';
@@ -906,11 +937,10 @@ class Database {
 	public function changeUsername($username, $oldusername) {
 		if ($username==$oldusername)
 			return true;
-		else
-			return ($this->query("UPDATE `".$this->prefix."admin` SET `username`='".
-								 $this->escape($username)."' WHERE `username`='".
-								 $this->escape($oldusername)."'") &&
-					$this->log('Changed username '.$oldusername.' to '.$username));
+		return ($this->query("UPDATE `".$this->prefix."users` SET `username`='".
+							 $this->escape($username)."' WHERE `username`='".
+							 $this->escape($oldusername)."'") &&
+				$this->log('Changed username '.$oldusername.' to '.$username));
 	}
 
 
@@ -918,12 +948,11 @@ class Database {
 		global $session;
 		if (!$username)
 			$username = $session->username;
-		if ($this->query("UPDATE `".$this->prefix."admin` SET `name`='".
-						 $this->escape($name)."' WHERE `username`='".
-						 $this->escape($username)."'"))
-			$session->changeName($name);
-		else
+		if (!$this->query("UPDATE `".$this->prefix."users` SET `name`='".
+						  $this->escape($name)."' WHERE `username`='".
+						  $this->escape($username)."'"))
 			return false;
+		$session->changeName($name);
 		$this->log('Changed name for '.$username.' to '.$name);
 		return true;
 	}
@@ -933,24 +962,40 @@ class Database {
 		global $session;
 		if (!$username)
 			$username = $session->username;
-		return ($this->query("UPDATE `".$this->prefix."admin` SET `password`='".
+		return ($this->query("UPDATE `".$this->prefix."users` SET `password`='".
 							 md5($password)."' WHERE `username`='".
 							 $this->escape($username)."'") &&
 				$this->log('Changed password for '.$username));
 	}
 
 
+	public function changeAdmin($admin, $username) {
+		global $session;
+		if (($username==$session->username) ||
+			!$this->isAdmin($session->username)) {
+			$this->error = 'Access denied';
+			return false;
+		}
+		$user = $this->getUser($username);
+		return ($this->query("UPDATE `".$this->prefix."users` SET `admin`=(NOT ".
+							 $this->escape($user['admin']).") WHERE `username`='".
+							 $this->escape($username)."'") &&
+				$this->log('Changed admin setting for '.$username.' to '.
+						   ($user['admin'] ? 'false' : 'true')));
+	}
+
+
 	public function addUser($username, $name, $password) {
-		return ($this->query("INSERT INTO `".$this->prefix."admin`(`username`, `name`, `password`) ".
+		return ($this->query("INSERT INTO `".$this->prefix."users`(`username`, `name`, `password`, `admin`) ".
 							 "VALUES('".$this->escape($username).
 							 "', '".$this->escape($name).
-							 "', '".md5($password)."')") &&
+							 "', '".md5($password)."', 0)") &&
 				$this->log('Added user '.$username. ' ('.$name.')'));
 	}
 
 
 	public function deleteUser($username) {
-		return ($this->query("DELETE FROM `".$this->prefix."admin` WHERE `username`='".
+		return ($this->query("DELETE FROM `".$this->prefix."users` WHERE `username`='".
 							 $this->escape($username)."'") &&
 				$this->log('Deleted user '.$username));
 	}
