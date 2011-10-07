@@ -106,7 +106,8 @@ else if (request('dummy')=='dummy') {
 
 
 /* Check if we need to act */
-if ($action = request('action'))
+if (($action = request('action')) &&
+	(request('cancel')!='cancel'))
 	acton($action);
 
 /* Set default page to fetch */

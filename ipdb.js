@@ -93,6 +93,15 @@ function ajaxify() {
 					forms[i].onsubmit = function(event) {
 						return submitform(event);
 					}
+					for (var j=0; j<forms[i].elements.length; j++) {
+						if ((forms[i].elements[j].type=='submit') &&
+							(forms[i].elements[j].name=='cancel')) {
+							forms[i].elements[j].onclick = function(event) {
+								ajaxrequest(location.href);
+								return false;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -124,20 +133,12 @@ function submitform(event) {
 	var form;
 	var submit = null;
 
-	if (event && event.name && event.name.match(/form/))
-		form = event;
-	else if (event && !event.target && event.type && event.type == 'submit') {
-		form = event.form;
-		submit = event.name;
-	} else {
-		if (!event) 
-			var event = window.event;
-		if (event.target) 
-			form = event.target;
-		else 
-			if (event.srcElement) 
-				form = event.srcElement;
-	}
+	if (!event) 
+		var event = window.event;
+	if (event.target) 
+		form = event.target;
+	else if (event.srcElement) 
+		form = event.srcElement;
 
 	if (!form.confirm &&
 		form.getAttribute('confirm') &&
@@ -151,10 +152,7 @@ function submitform(event) {
 					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + (form.elements[i].checked ? 'on' : 'off');
 				else if (form.elements[i].type == 'radio') 
 					vars = vars + (form.elements[i].checked ? '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value) : '');
-				else if (form.elements[i].type == 'submit') {
-					if (form.elements[i].name == submit) 
-						vars = vars + '&submit=' + escapeplus(form.elements[i].name);
-				} else if (form.elements[i].type == 'select-one') {
+				else if (form.elements[i].type == 'select-one') {
 					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].options[form.elements[i].selectedIndex].value);
 				} else
 					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value);
@@ -187,9 +185,7 @@ function clicktree(event) {
 	if (target.nodeType == 3)
 		target = target.parentNode;
 	if (target.tagName=='A') {
-		if (target.parentNode.parentNode.className=='collapsed')
-			expand(target.parentNode.parentNode.id.replace(/^a_/, ''));
-		ajaxrequest(target.href.replace(/.*\?/, ''));
+		document.location.href = target.href.replace(/.*\?/, '?');
 		stopEvent(event);
 		return false;
 	} else if (target.tagName=='DIV') {
@@ -256,15 +252,6 @@ function ajaxrequest(args) {
 				if ((xml = request.responseXML) &&
 					xml.getElementsByTagName('content') &&
 					(xml.getElementsByTagName('content').length > 0)) {
-					/* If we get an XML response, we're doing Ajax (obviously). But in the 
-					 * case we had a JS error, the browsers URL may contain variables, which
-					 * prevent the refresh button from function normally. So we will do a
-					 * reload of the page automatically.
-					 */
-					if (document.URL.match(/\?.+/)) {
-						document.location = document.URL.replace(/\?.*/, '');
-						return;
-					}
 					var content = xml.getElementsByTagName('content')[0];
 					var nodes = new Array();
 					for (var i = 0; i < content.childNodes.length; i++) 

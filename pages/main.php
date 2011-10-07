@@ -30,60 +30,60 @@ class main {
 
 	public function get() {
 		global $config, $database, $session;
-		if (($node = request('node')) && ($node>0) && ($data = $database->getAddress($node))) {
+		if (($node = request('node')) && ($node>0) && ($data = $database->getaddress($node))) {
 			$title = showip($data['address'], $data['bits']);
-			$skin = new Skin($config->skin);
-			$skin->setFile('netinfo.html');
+			$skin = new skin($config->skin);
+			$skin->setfile('netinfo.html');
 			if (strcmp($data['address'], '00000000000000000000000100000000')<0) {
-				$skin->setVar('netmask', ip2address(ipv4netmask($data['bits'])));
-				$skin->setVar('broadcast', ip2address(broadcast($data['address'], $data['bits'])));
+				$skin->setvar('netmask', ip2address(ipv4netmask($data['bits'])));
+				$skin->setvar('broadcast', ip2address(broadcast($data['address'], $data['bits'])));
 				$skin->parse('ipv4');
 			}
 			if ($data['parent']>0) {
-				$parent = $database->getAddress($data['parent']);
-				$skin->setVar('label', showip($parent['address'], $parent['bits']));
-				$skin->setVar('link', '?node='.$parent['id']);
+				$parent = $database->getaddress($data['parent']);
+				$skin->setvar('parentlabel', showip($parent['address'], $parent['bits']));
+				$skin->setvar('parentlink', '?page=main&node='.$parent['id']);
 				$skin->parse('parent');
 			}
-			$skin->setVar('address', ip2address($data['address']));
-			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
-			$children = $database->getTree($data['id']);
+			$skin->setvar('address', ip2address($data['address']));
+			$skin->setvar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
+			$children = $database->gettree($data['id']);
 			if ($data['bits']==128) {
-				$skin->setVar('label', 'host '.ip2address($data['address']));
+				$skin->setvar('label', 'host '.ip2address($data['address']));
 			} else {
-				$skin->setVar('label', 'network '.showip($data['address'], $data['bits']));
+				$skin->setvar('label', 'network '.showip($data['address'], $data['bits']));
 				if (count($children)>0) {
 					if (request('showunused')=='yes') {
-						$skin->setVar('unusedlink', me().'?page=main&amp;node='.$data['id'].'&amp;showunused=no');
-						$skin->setVar('unusedlabel', 'hide unused blocks');
+						$skin->setvar('unusedlink', me().'?page=main&amp;node='.$data['id'].'&amp;showunused=no');
+						$skin->setvar('unusedlabel', 'hide unused blocks');
 					} else {
-						$skin->setVar('unusedlink', me().'?page=main&amp;node='.$data['id'].'&amp;showunused=yes');
-						$skin->setVar('unusedlabel', 'show unused blocks');
+						$skin->setvar('unusedlink', me().'?page=main&amp;node='.$data['id'].'&amp;showunused=yes');
+						$skin->setvar('unusedlabel', 'show unused blocks');
 					}
 					$skin->parse('showunused');
 				}
 			}
-			$skin->setVar('node', $data['id']);
-			$skin->setVar('description', htmlentities($data['description']));
+			$skin->setvar('node', $data['id']);
+			$skin->setvar('description', htmlentities($data['description']));
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
-					$skin->setVar('field', $field);
-					$value = $database->getField($field, $node);
+					$skin->setvar('field', $field);
+					$value = $database->getfield($field, $node);
 					if ($details['url'])
-						$skin->setVar('value', '<a href="'.sprintf($details['url'], $value).'">'.$value.'</a>');
+						$skin->setvar('value', '<a href="'.sprintf($details['url'], $value).'">'.$value.'</a>');
 					else
-						$skin->setVar('value', $value);
+						$skin->setvar('value', $value);
 					$skin->parse('extrafield');
 				}
 			if (count($config->extratables)>0)
 				foreach ($config->extratables as $table=>$details)
 					if ($details['linkaddress']) {
-						$item = $database->getItem($table, $data['id']);
-						$skin->setVar('table', $table);
+						$item = $database->getitem($table, $data['id']);
+						$skin->setvar('table', $table);
 						if (($item['item']=='-') || ($details['type']!='password'))
-							$skin->setVar('item', $item['item'].' '.$item['description']);
+							$skin->setvar('item', $item['item'].' '.$item['description']);
 						else
-							$skin->setVar('item', $item['item'].' '.crypt($item['description'], randstr(2)));
+							$skin->setvar('item', $item['item'].' '.crypt($item['description'], randstr(2)));
 						$skin->parse('extratable');
 					}
 
