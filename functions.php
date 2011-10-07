@@ -354,6 +354,7 @@ function send($data) {
 				echo '
 	<'.$key.'>'.implode('</'.$key.'><'.$key.'>', str_split(escape($content), 1024)).'</'.$key.'>';
 		echo '
+	<commands>timeout = '.$session->expire.';</commands>
 </content>';
 	} else if (request('page')=='login') {
 		echo $data['content'];
