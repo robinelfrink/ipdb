@@ -22,34 +22,25 @@ $Id$
 */
 
 
-class users {
+class deleteuser {
 
 
 	public $error = null;
 
 
 	public function get() {
-		global $database, $config;
-		$skin = new Skin($config->skin);
-		$skin->setFile('users.html');
-
-		$users = $database->getUsers();
-
-		$even = true;
-		foreach ($users as $user) {
-			$skin->setVar('username', htmlentities($user['username']));
-			$skin->setVar('name', htmlentities($user['name']));
-			$skin->setVar('editlink', me().'?page=user&amp;user='.htmlentities($user['username']));
-			$skin->setVar('deletelink', me().'?page=deleteuser&amp;user='.htmlentities($user['username']));
-			$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
-			$skin->parse('user');
-			$even = !$even;
-		}
-
-		$content = $skin->get();
-
-		return array('title'=>'IPDB :: Users',
-					 'content'=>$content);
+		global $config, $database;
+		$skin = new skin($config->skin);
+		if ($user = $database->getUser(request('user'))) {
+			$skin->setFile('deleteuser.html');
+			$skin->setVar('user', request('user'));
+			$skin->setVar('name', $user['name']);
+			$content = $skin->get();
+			return array('title'=>'IPDB :: Delete user',
+						 'content'=>$content);
+		} else
+			return array('title'=>'Error',
+						 'content'=>'Requested user cannot be found');
 	}
 
 

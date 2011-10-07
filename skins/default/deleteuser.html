@@ -1,0 +1,12 @@
+<form method="post" action="" remote="remote">
+	<p>You are about to delete the following user:</p>
+	<table>
+		<tbody>
+			<tr><td class="label">username:</td><td>{user}</td></tr>
+			<tr><td class="label">name:</td><td>{name}</td></tr>
+			<tr><td></td><td><input type="submit" value="delete" />&nbsp;<input type="submit" name="cancel" value="cancel" /></td></tr>
+		</tbody>
+	</table>
+	<input type="hidden" name="user" value="{user}" />
+	<input type="hidden" name="action" value="deleteuser" />
+</form>
