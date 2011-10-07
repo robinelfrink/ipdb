@@ -30,7 +30,7 @@ class Session {
 	public $islocal = true;
 	public $username = 'system';
 	public $name = '';
-	private $expire;
+	public $expire;
 
 
 	public function __construct($config) {

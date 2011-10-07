@@ -20,9 +20,30 @@ $Id$
 */
 
 
+var timer = undefined;
+
+
 /* Initialize */
 function initialize() {
 	ajaxify();
+	settimeout();
+}
+
+
+/* Set timeout */
+function settimeout() {
+	if ((typeof timeout != 'undefined') && (timeout!=0)) {
+		if (timer!=undefined) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout('timeoutdummy();', 1050*timeout);
+	}
+}
+
+
+/* Do dummy call after timeout */
+function timeoutdummy() {
+	ajaxrequest(location.href.replace(/.*\?/, '?dummy=dummy'));
 }
 
 

@@ -95,6 +95,14 @@ else if (!$session->authenticate())
 	request('page', 'login', true);
 else if ($database->hasUpgrade())
 	request('page', 'upgradedb', true);
+else if (request('dummy')=='dummy') {
+	header('Content-type: text/xml; charset=utf-8');
+	header('Cache-Control: no-cache, must-revalidate');
+	header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
+	echo '<?xml version="1.0" encoding="UTF-8"?>
+<content></content>';
+	exit;
+}
 
 
 /* Check if we need to act */
