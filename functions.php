@@ -323,7 +323,7 @@ function findunused($base, $next) {
 
 
 function send($data) {
-	global $debugstr, $error, $session, $config, $version;
+	global $database, $debugstr, $error, $session, $config, $version;
 
 	/* Check if we had an error */
 	if ($error) {
@@ -338,7 +338,8 @@ function send($data) {
 		exit('Error: '.$skin->error);
 	if (request('remote')=='remote') {
 		if (preg_match('/^(add|delete|change)/', request('action')) &&
-			!isset($data['tree']))
+			!isset($data['tree']) &&
+			!$database->hasUpgrade())
 			$data['tree'] = Tree::get(0, request('node', NULL));
 		$data['debug'] = $debugstr;
 		header('Content-type: text/xml; charset=utf-8');
@@ -369,7 +370,8 @@ function send($data) {
 //-->
 </script>');
 		$skin->setVar('menu', Menu::get());
-		if ($session->authenticated) {
+		if ($session->authenticated &&
+			!$database->hasUpgrade()) {
 			$skin->setVar('tree', Tree::get(0, request('node', NULL)));
 			$skin->parse('treediv');
 		}
