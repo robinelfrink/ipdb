@@ -28,7 +28,7 @@ class Database {
 	private $db = null;
 	public $error = null;
 	private $provider = null;
-	private $dbversion = '5';
+	private $dbversion = '6';
 	private $prefix = '';
 
 	public function __construct($config) {
@@ -294,6 +294,11 @@ class Database {
 							  " tinyint(1) NOT NULL DEFAULT 0"))
 				return false;
 			if (!$this->query("UPDATE `".$this->prefix."users` SET `admin`=1 WHERE `username`='admin'"))
+				return false;
+		}
+		if ($version<6) {
+			if (!$this->query("CREATE INDEX `".$this->prefix."log` ON `".
+							  $this->prefix."log`(`stamp`, `username`, `action`)"))
 				return false;
 		}
 		if (!$this->query("UPDATE `".$this->prefix."version` SET version=".
