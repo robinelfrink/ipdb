@@ -1018,22 +1018,25 @@ class Database {
 
 	public function changeAccess($node, $username, $access) {
 		$address = $this->getAddress($node);
-		return ($this->query("UPDATE `".$this->prefix."access` SET `access`='".
-							 ($access=='w' ? 'w' : 'r')."' WHERE `username`='".
-							 $this->escape($username)."' AND `node`=".
-							 $this->escape($node)) &&
-				$this->log('Set '.($access=='w' ? 'write' : 'read-only').' access to '.
-						   showip($address['address'], $address['bits']).' for '.$username));
-	}
-
-
-	public function deleteAccess($node, $username) {
-		$address = $this->getAddress($node);
-		return ($this->query("DELETE FROM `".$this->prefix."access` WHERE `username`='".
-							 $this->escape($username)."' AND `node`=".
-							 $this->escape($node)) &&
-				$this->log('Deleted access rule to '.
-						   showip($address['address'], $address['bits']).' for '.$username));
+		$oldaccess = $this->getAccess($node, $username);
+		if ($oldaccess['access']==$access)
+			return true;
+		$this->log('Set '.($access=='w' ? 'write' : 'read-only').' access to '.
+				   showip($address['address'], $address['bits']).' for '.$username);
+		if ($oldaccess['id']==$node) {
+			$sql = "DELETE FROM `".$this->prefix."access` WHERE `username`='".
+				$this->escape($username)."' AND `node`=".
+				$this->escape($node);
+			if (!$this->query($sql))
+				return false;
+			$oldaccess = $this->getAccess($node, $username);
+			/* If parent has same access, try to clean up old rows */
+			if ($oldaccess['access']==$access)
+				return $this->changeAccess($oldaccess['id'], $username, $access);
+		}
+		$sql = "INSERT INTO `".$this->prefix."access`(`node`, `username`, `access`) VALUES(".
+			$node.", '".$this->escape($username)."', '".$access."')";
+		return $this->query($sql);
 	}
 
 

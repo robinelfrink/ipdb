@@ -2,7 +2,7 @@
 	<table>
 		<tr>
 			<td class="label">username:</td>
-			<td><input type="text" name="user" value="{username}" /></td>
+			<td><input type="text" name="user" value="{user}" /></td>
 		</tr>
 		<tr>
 			<td class="label">name:</td>
@@ -21,7 +21,7 @@
 			<td><input type="submit" value="change" /></td>
 		</tr>
 	</table>
-	<input type="hidden" name="olduser" value="{username}" />
+	<input type="hidden" name="olduser" value="{user}" />
 	<input type="hidden" name="oldname" value="{name}" />
 	<input type="hidden" name="action" value="changeuser" />
 </form>
@@ -31,16 +31,29 @@
 
 <form method="post" action="" remote="remote">
 	<table>
-		<tr><th>network</th><th>access</th><th></th></tr>
+		<tr><th>network</th><th colspan="2">access</th></tr>
 		<!-- BEGIN network -->
 		<tr>
 			<td><a href="{nodelink}">{address}</a></td>
-			<td>{access}</td>
-			<td><a href="{deletelink}" remote="remote">delete</a></td>
+			<td><input type="radio" name="access_{node}" value="readonly"{readonly_checked}>read only</td>
+			<td><input type="radio" name="access_{node}" value="write"{write_checked}>write</td>
 		</tr>
 		<!-- END network -->
 	</table>
 	<input type="hidden" name="action" value="changeuseraccess" />
+	<input type="hidden" name="user" value="{user}" />
 	<input type="submit" value="change" />
 </form>
+
 <!-- END access -->
+
+<!-- BEGIN addaccess -->
+<p>additional prefix access:</p>
+<form method="post" action="" remote="remote">
+	<textarea name="prefixes" rows="10" cols="50">{prefixes}</textarea>
+	<br />
+	<input type="hidden" name="action" value="adduseraccess" />
+	<input type="hidden" name="user" value="{user}" />
+	<input type="submit" value="add" />
+</form>
+<!-- END addaccess -->

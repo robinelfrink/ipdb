@@ -1,34 +1,17 @@
 <h4>Access list for <a href="{addresslink}">{address}</a></h4>
 <form method="post" action="" remote="remote">
 	<table>
-		<tr><th>username</th><th>access</th><th></th></tr>
+		<tr><th>username</th><th colspan="2">access</th></tr>
 		<!-- BEGIN user -->
 		<tr{oddeven}>
 			<td><a href="{userlink}">{username}</a></td>
-			<td>{access}</td>
-			<td>{deletelink}</td>
+			<td><input type="radio" name="access_{username}" value="readonly"{readonly_checked}>read only</td>
+			<td><input type="radio" name="access_{username}" value="write"{write_checked}>write</td>
 		</tr>
 		<!-- END user -->
 	</table>
 	<input type="submit" value="change" />
+	<input type="hidden" name="node" value="{node}" />
 	<input type="hidden" name="action" value="changenodeaccess" />
 </form>
 
-<br />
-
-<form method="post" action="" remote="remote">
-	<table>
-		<tr><th>username</th><th>access</th></tr>
-		<tr>
-			<td>{users}</td>
-			<td>
-				<select name="access">
-					<option value="r">read-only</option>
-					<option value="w">write</option>
-				</select>
-			</td>
-		</tr>
-	</table>
-	<input type="hidden" name="action" value="addnodeaccess" />
-	<input type="submit" value="add" />
-</form>

@@ -204,17 +204,17 @@ function acton($action) {
 		  }
 		  break;
 	  case 'adduser':
-		  if ($session->authenticated && ($session->username=='admin'))
+		  if ($session->authenticated && $database->isAdmin($session->username))
 			  if (!$database->addUser(request('user'), request('name'), request('password')))
 				  $error = $database->error;
 		  break;
 	  case 'deleteuser':
-		  if ($session->authenticated && ($session->username=='admin'))
+		  if ($session->authenticated && $database->isAdmin($session->username))
 			  if (!$database->deleteUser(request('username')))
 				  $error = $database->error;
 		  break;
 	  case 'changeuser':
-		  if ($session->authenticated && ($session->username=='admin')) {
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
 			  if ((request('user')!=request('olduser')) &&
 				  !$database->changeUsername(request('user'), request('olduser'))) {
 				  $error = $database->error;
@@ -236,37 +236,45 @@ function acton($action) {
 			  }
 		  }
 		  break;
-	  case 'deleteaccess':
-		  if ($session->authenticated && ($session->username=='admin') &&
-			  !$database->deleteAccess(request('node'), request('user')))
-			  $error = $database->error;
-		  break;
 	  case 'changeuseraccess':
-		  if ($session->authenticated && ($session->username=='admin')) {
-			  $user = $database->getUser(request('user'));
-			  foreach ($user['access'] as $access)
-				  if ((request('access_'.$access['id'])!=$access['access']) &&
-					  !$database->changeAccess($access['id'], request('user'), request('access_'.$access['id']))) {
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  foreach ($_REQUEST as $name=>$value) {
+				  if (preg_match('/^access_(.*)/', $name, $matches) &&
+					  !$database->changeAccess($matches[1], request('user'), ($value=='write' ? 'w' : 'r'))) {
 					  $error = $database->error;
 					  break;
 				  }
+			  }
 		  }
 		  break;
+	  case 'adduseraccess':
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  $prefixes = preg_split('/\s+/s', request('prefixes'));
+			  foreach ($prefixes as $prefix) {
+				  if (preg_match('/(.*)\/(.*)/', $prefix, $matches)) {
+					  $address = address2ip($matches[1]);
+					  $bits = ($address<'00000000000000000000000100000000' ? $matches[2]+96 : $matches[2]);
+					  if ($node = $database->findAddress($address, $bits)) {
+						  $oldaccess = $database->getAccess($node['id'], request('user'));
+						  $newaccess = ($oldaccess['access'] == 'r' ? 'w' : 'r');
+						  if (!$database->changeAccess($node['id'], request('user'), $newaccess)) {
+							  $error = $database->error;
+							  break;
+						  }
+					  }
+				  }
+			  }
+		  }
 	  case 'changenodeaccess':
-		  if ($session->authenticated && ($session->username=='admin')) {
-			  $access = $database->getAccess(request('node'));
-			  foreach ($access as $entry)
-				  if (($entry['access']!=request('access_'.$entry['username'])) &&
-					  !$database->changeAccess(request('node'), $entry['username'], request('access_'.$entry['username']))) {
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  foreach ($_REQUEST as $name=>$value) {
+				  if (preg_match('/^access_(.*)/', $name, $matches) &&
+					  !$database->changeAccess(request('node'), $matches[1], ($value=='write' ? 'w' : 'r'))) {
 					  $error = $database->error;
 					  break;
 				  }
+			  }
 		  }
-		  break;
-	  case 'addnodeaccess':
-		  if ($session->authenticated && ($session->username=='admin') &&
-			  !$database->addAccess(request('node'), request('user'), request('access')))
-			  $error = $database->error;
 		  break;
 	  default:
 		  debug('action: '.request('action'));

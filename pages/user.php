@@ -35,23 +35,26 @@ class user {
 
 		$user = $database->getUser(request('user'));
 
-		$skin->setVar('username', htmlentities($user['username']));
+		$skin->setVar('user', htmlentities($user['username']));
 		$skin->setVar('name', htmlentities($user['name']));
 
-		if (is_array($user['access']) and (count($user['access'])>0)) {
-			foreach ($user['access'] as $access) {
-				$skin->setVar('address', showip($access['address'], $access['bits']));
-				$skin->setVar('nodelink', me().'?page=main&amp;node='.$access['id']);
-				$dropdown = '<select name="access_'.$access['id'].'">
-	<option value="r"'.($access['access']=='r' ? ' selected' : '').'>read-only</option>
-	<option value="w"'.($access['access']=='w' ? ' selected' : '').'>write</option>
-</select>';
-				$skin->setVar('access', $dropdown);
-				$skin->setVar('deletelink', me().'?action=deleteaccess&amp;node='.$access['id'].'&amp;user='.htmlentities($user['username']));
-				$skin->parse('network');
+		if ($database->isAdmin($session->username)) {
+			if (is_array($user['access']) &&
+				(count($user['access'])>0)) {
+				foreach ($user['access'] as $access) {
+					$skin->setVar('address', showip($access['address'], $access['bits']));
+					$skin->setVar('nodelink', me().'?page=main&amp;node='.$access['id']);
+					$skin->setVar('node', $access['id']);
+					$skin->setVar('readonly_checked', $access['access']=='r' ? ' checked="checked"' : '');
+					$skin->setVar('write_checked', $access['access']=='w' ? ' checked="checked"' : '');
+					$skin->parse('network');
+				}
+				$skin->parse('access');
 			}
-			$skin->parse('access');
+			$skin->setVar('prefixes', htmlentities(request('prefixes')));
+			$skin->parse('addaccess');
 		}
+
 
 		$content = $skin->get();
 
