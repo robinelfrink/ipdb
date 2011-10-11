@@ -106,6 +106,7 @@ else if (request('dummy')=='dummy') {
 
 
 /* Check if we need to act */
+request('cancel', null, true);
 if (($action = request('action')) &&
 	(request('cancel')!='cancel'))
 	acton($action);

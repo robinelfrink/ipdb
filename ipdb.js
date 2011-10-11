@@ -152,7 +152,10 @@ function submitform(event) {
 					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + (form.elements[i].checked ? 'on' : 'off');
 				else if (form.elements[i].type == 'radio') 
 					vars = vars + (form.elements[i].checked ? '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value) : '');
-				else if (form.elements[i].type == 'select-one') {
+				else if (form.elements[i].type=='submit') {
+					if (form.elements[i].name!='cancel')
+						vars = vars + '&submit=' + escapeplus(form.elements[i].name);
+				} else if (form.elements[i].type == 'select-one') {
 					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].options[form.elements[i].selectedIndex].value);
 				} else
 					vars = vars + '&' + escapeplus(form.elements[i].name) + '=' + escapeplus(form.elements[i].value);
@@ -160,7 +163,7 @@ function submitform(event) {
 					form.elements[i].value = '';
 			}
 		}
-		ajaxrequest(location.href.replace(/\?.*/, '')+'?'+vars);
+		ajaxrequest(vars);
 	}
 	return false;
 }

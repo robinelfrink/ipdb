@@ -108,6 +108,7 @@ class main {
 				$content .= $this->listchildren($data, $children);
 		} else if (request('node')<0) {
 			global $searchresult;
+			$title = 'The World';
 			$content = $this->listchildren(NULL, $searchresult);
 		} else {
 			$title = 'Main page';
