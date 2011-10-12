@@ -14,13 +14,13 @@
 			<!-- BEGIN extrafield -->
 			<tr>
 				<td class="label">{name}</td>
-				<td><input type="text" name="{name}" value="{value}" /></td>
+				<td><input type="text" name="field-{name}" value="{value}" /><input type="checkbox" name="field-{name}-recursive" id="field-{name}-recursive" /><label for="field-{name}-recursive">recursive</label></td>
 			</tr>
 			<!-- END extrafield -->
 			<!-- BEGIN extratable -->
 			<tr>
 				<td class="label">{table}</td>
-				<td><select name="{table}">{tableoptions}</select><input type="checkbox" name="{table}-recursive" id="{table}-recursive" /><label for="{table}-recursive">recursive</label></td>
+				<td><select name="table-{table}">{tableoptions}</select><input type="checkbox" name="table-{table}-recursive" id="table-{table}-recursive" /><label for="table-{table}-recursive">recursive</label></td>
 			</tr>
 			<!-- END extratable -->
 			<tr>

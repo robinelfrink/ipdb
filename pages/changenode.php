@@ -45,7 +45,6 @@ class changenode {
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					$skin->setVar('name', $field);
-					$skin->setVar('fullname', $details['name']);
 					$skin->setVar('value', $database->getField($field, $node));
 					$skin->parse('extrafield');
 				}

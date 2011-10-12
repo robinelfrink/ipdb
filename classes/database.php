@@ -707,17 +707,29 @@ class Database {
 	}
 
 
-	public function setField($field, $node, $value) {
+	public function setField($field, $node, $value, $recursive = false) {
 		$address = $this->getAddress($node);
 		$old = $this->getField($field, $node);
 		if ($value!=$old) {
-			return ($this->query("REPLACE INTO `".$this->prefix."extrafields` (`node`, `field`, `value`)".
-								 " VALUES (".$this->escape($node).", '".
-								 $this->escape($field)."', '".
-								 $this->escape($value)."')") &&
-					$this->log('Set field \''.$field.'\' for node '.
-							   showip($address['address'], $address['bits']).' to '.
-							   $value));
+			$this->query("REPLACE INTO `".$this->prefix."extrafields` (`node`, `field`, `value`)".
+						 " VALUES (".$this->escape($node).", '".
+						 $this->escape($field)."', '".
+						 $this->escape($value)."')");
+			if ($this->error)
+				return false;
+		}
+		$this->log('Set field \''.$field.'\' for node '.
+				   showip($address['address'], $address['bits']).' to '.
+				   $value);
+		if ($recursive) {
+			$children = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `parent`=".
+									 $this->escape($node));
+			if ($this->error)
+				return false;
+			if (count($children)>0)
+				foreach ($children as $child)
+					if (!$this->setField($field, $child['id'], $value, $recursive))
+						return false;
 		}
 		return true;
 	}
@@ -908,21 +920,21 @@ class Database {
 
 
 	public function setItem($table, $item, $node, $recursive = false) {
-		$olditem = $this->getItem($table, $node);
-		if (($olditem['item']==$item) ||
-			((empty($olditem['item']) || ($olditem['item']=='-')) &&
-			 (empty($item) || ($item=='-'))))
-			return true;
-		$this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `table`='".
-					 $this->escape($table)."' AND `node`=".
-					 $this->escape($node));
-		if ($this->error)
-			return false;
-		$this->query("INSERT INTO `".$this->prefix."tablenode` (`table`, `item`, `node`) VALUES('".
-					 $this->escape($table)."', '".$this->escape($item)."', ".
-					 $this->escape($node).")");
-		if ($this->error)
-			return false;
+		$olditem = preg_replace('/^-$/', '', $this->getItem($table, $node));
+		$item = preg_replace('/^-$/', '', $item);
+			error_log($table, $item, $node, $recursive);
+		if ($olditem['item']!=$item) {
+			$this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `table`='".
+						 $this->escape($table)."' AND `node`=".
+						 $this->escape($node));
+			if ($this->error)
+				return false;
+			$this->query("INSERT INTO `".$this->prefix."tablenode` (`table`, `item`, `node`) VALUES('".
+						 $this->escape($table)."', '".$this->escape($item)."', ".
+						 $this->escape($node).")");
+			if ($this->error)
+				return false;
+		}
 		if ($recursive) {
 			$children = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `parent`=".
 									 $this->escape($node));

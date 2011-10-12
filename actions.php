@@ -58,18 +58,18 @@ function acton($action) {
 				  $error = $database->error;
 				  break;
 			  }
-			  if (count($config->extrafields)>0) {
-				  foreach ($config->extrafields as $field=>$details) {
-					  if (!$database->setField($field, $newnode, request($field))) {
+			  if (count($config->extrafields)>0)
+				  foreach ($config->extrafields as $field=>$details)
+					  if (!$database->setField($field, $newnode, request($field), (request('field-'.$field.'-recursive')=='on' ? true : false))) {
 						  $error = $database->error;
+						  break;
 					  }
-				  }
-			  }
 			  if (count($config->extratables)>0)
 				  foreach ($config->extratables as $table=>$details)
 					  if ($details['linkaddress'] &&
-						  !$database->setItem($table, request($table), $newnode, (request($table.'-recursive')=='on' ? true : false))) {
+						  !$database->setItem($table, request($table), $newnode, (request('table-'.$table.'-recursive')=='on' ? true : false))) {
 						  $error = $database->error;
+						  break;
 					  }
 			  request('node', $newnode, true);
 			  request('page', 'main', true);
@@ -88,14 +88,12 @@ function acton($action) {
 				  if ($database->error) {
 					  $error = $database->error;
 				  } else {
-					  if (count($config->extrafields)>0) {
-						  foreach ($config->extrafields as $field=>$details) {
-							  if (!$database->setField($field, request('node'), request($field))) {
+					  if (count($config->extrafields)>0)
+						  foreach ($config->extrafields as $field=>$details)
+							  if (!$database->setField($field, request('node'), request($field), (request('field-'.$field.'-recursive')=='on' ? true : false))) {
 								  $error = $database->error;
 								  break;
 							  }
-						  }
-					  }
 					  if (count($config->extratables)>0)
 						  foreach ($config->extratables as $table=>$details)
 							  if ($details['linkaddress'] &&
