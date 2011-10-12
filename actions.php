@@ -48,7 +48,7 @@ function acton($action) {
 		  break;
 	  case 'getsubtree':
 		  if ($session->authenticated)
-			  send(array('commands'=>'expandtree(\''.request('leaf').'\', \''.escape(Tree::get(request('leaf'))).'\');'));
+			  send(array('commands'=>'expandtree(\''.request('leaf').'\', \''.escape(Tree::getHtml(request('leaf'))).'\');'));
 		  break;
 	  case 'addnode':
 		  if ($session->authenticated) {
@@ -272,6 +272,20 @@ function acton($action) {
 					  break;
 				  }
 			  }
+		  }
+		  break;
+	  case 'printtree':
+		  if ($session->authenticated) {
+			  $node = $database->getAddress(request('node'));
+			  $net = ip2address($node['address']).
+				  ($node['address']<'00000000000000000000000100000000' ?
+				   ($node['bits']<128 ? '/'.($node['bits']-96) : '') :
+				   ($node['bits']<128 ? '/'.$node['bits'] : ''));
+			  header('Content-Type: text/plain');
+			  header('Content-Disposition: attachment; filename="'.$net.'.txt"');
+			  echo $net.'    '.$node['description']."\n\n";
+			  echo Tree::getTxt(request('node'));
+			  exit;
 		  }
 		  break;
 	  default:

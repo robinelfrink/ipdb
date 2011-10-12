@@ -340,7 +340,7 @@ function send($data) {
 		if (preg_match('/^(add|delete|change)/', request('action')) &&
 			!isset($data['tree']) &&
 			!$database->hasUpgrade())
-			$data['tree'] = Tree::get(0, request('node', NULL));
+			$data['tree'] = Tree::getHtml(0, request('node', NULL));
 		$data['debug'] = $debugstr;
 		header('Content-type: text/xml; charset=utf-8');
 		header('Cache-Control: no-cache, must-revalidate');
@@ -372,7 +372,7 @@ function send($data) {
 		$skin->setVar('menu', Menu::get());
 		if ($session->authenticated &&
 			!$database->hasUpgrade()) {
-			$skin->setVar('tree', Tree::get(0, request('node', NULL)));
+			$skin->setVar('tree', Tree::getHtml(0, request('node', NULL)));
 			$skin->parse('treediv');
 		}
 

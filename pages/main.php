@@ -60,7 +60,9 @@ class main {
 						$skin->setvar('unusedlink', me().'?page=main&amp;node='.$data['id'].'&amp;showunused=yes');
 						$skin->setvar('unusedlabel', 'show unused blocks');
 					}
-					$skin->parse('showunused');
+					$skin->setvar('printtreelink', me().'?action=printtree&amp;node='.$data['id']);
+					$skin->setvar('printtreelabel', 'print tree');
+					$skin->parse('haschildren');
 				}
 			}
 			$skin->setvar('node', $data['id']);

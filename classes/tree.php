@@ -27,8 +27,7 @@ class Tree {
 
 	public $error = null;
 
-	public function get($id, $node = null) {
-
+	public function getHtml($id, $node = null) {
 		global $config, $database;
 		$tree = $database->getTree($id);
 		$skin = new Skin($config->skin);
@@ -42,7 +41,7 @@ class Tree {
 							($child = $database->getAddress($node)) &&
 							addressIsChild($child['address'], $network['address'], $network['bits'])) {
 							$class = 'class="expanded"';
-							$subtree = Tree::get($network['id'], $child['id']);
+							$subtree = Tree::getHtml($network['id'], $child['id']);
 						} else {
 							$class = 'class="collapsed"';
 						}
@@ -61,6 +60,24 @@ class Tree {
 			return $skin->get();
 		} else
 			return '';
+	}
+
+
+	public function getTxt($id, $level = 0) {
+		global $config, $database;
+		$txt = '';
+		$tree = $database->getTree($id);
+		if (count($tree)>0) {
+			foreach ($tree as $id=>$child) {
+				$txt .= str_pad('', ($level+1)*2, ' ').ip2address($child['address']).
+					($child['address']<'00000000000000000000000100000000' ?
+					($child['bits']<128 ? '/'.($child['bits']-96) : '') :
+					($child['bits']<128 ? '/'.$child['bits'] : '')).
+					str_pad('      ', ($level+1)*2, ' ').$child['description']."\n";
+				$txt .= Tree::getTxt($child['id'], 1);
+			}
+		}
+		return $txt;
 	}
 
 
