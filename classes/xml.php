@@ -190,7 +190,7 @@ class XML {
 							  $tableitems = array($request->network->tableitem);
 						  }
 						  foreach ($tableitems as $tableitem) {
-							  if (!$database->setItem($tableitem->table, $tableitem->key, $node)) {
+							  if (!$database->setItem($tableitem->table, $node, $tableitem->key)) {
 								  $result .= $this->error($name, $id,
 														  $database->error ? $database->error : 'Unknown error in setItem');
 								  break 2;

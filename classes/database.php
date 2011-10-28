@@ -782,7 +782,6 @@ class Database {
 			$sql .= "CAST(`".$this->prefix."tablecolumn`.`item` AS SIGNED)";
 		else
 			$sql .= "`".$this->prefix."tablecolumn`.`item`";
-		debug($sql);
 		$items = $this->query($sql);
 		if (count($items)>0) {
 			$allitems = array();
@@ -919,10 +918,9 @@ class Database {
 	}
 
 
-	public function setItem($table, $item, $node, $recursive = false) {
+	public function setItem($table, $node, $item, $recursive = false) {
 		$olditem = preg_replace('/^-$/', '', $this->getItem($table, $node));
 		$item = preg_replace('/^-$/', '', $item);
-			error_log($table, $item, $node, $recursive);
 		if ($olditem['item']!=$item) {
 			$this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `table`='".
 						 $this->escape($table)."' AND `node`=".
@@ -942,7 +940,7 @@ class Database {
 				return false;
 			if (count($children)>0)
 				foreach ($children as $child)
-					if (!$this->setItem($table, $item, $child['id'], $recursive ))
+					if (!$this->setItem($table, $child['id'], $item, $recursive ))
 						return false;
 		}
 		$address = $this->getAddress($node);
