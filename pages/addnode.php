@@ -32,38 +32,27 @@ class addnode {
 		global $config, $database;
 		$skin = new skin($config->skin);
 		$skin->setFile('node.html');
-		if ($data = $database->findAddress(address2ip(request('address')), strcmp(address2ip(request('address')), '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'))) {
-			if ($parent = $database->getAddress($data['parent'])) {
-				$skin->setVar('parentaddress', showip($parent['address'], $parent['bits']));
-				$skin->setVar('parentlink', me().'?page=main&amp;node='.$parent['id']);
-			} else {
-				$skin->setVar('parentaddress', showip('00000000000000000000000000000000', 0));
-				$skin->setVar('parentlink', me().'?page=main&amp;node=0');
-			}
-			$skin->parse('parent');
-			$skin->setVar('description', request('description', $data['description']));
-		} else
-			$skin->setVar('description', request('description'));
+		$skin->setVar('description', request('description'));
+		if (!($basenode = $database->findAddress(request('address'), request('bits'))) &&
+			($basenode = $database->getParent(request('address'), request('bits'))))
+			$basenode = $database->getAddress($basenode); 
 		if (count($config->extrafields)>0)
 			foreach ($config->extrafields as $field=>$details) {
 				$skin->setVar('name', $field);
-				$skin->setVar('fullname', $details['name']);
-				if ($data)
-					$skin->setVar('value', request($field, $database->getField($field, $node)));
-				else
-					$skin->setVar('value', request($field));
+				$skin->setVar('fullname', isset($details['name']) ? $details['name'] : '');
+				$skin->setVar('value', $basenode ? $database->getField($field, $basenode['id']) : request($field));
 				$skin->parse('extrafield');
 			}
 		if (count($config->extratables)>0)
 			foreach ($config->extratables as $table=>$details)
 				if ($details['linkaddress']) {
 					$tableitems = $database->getExtra($table);
-					$item = $database->getItem($table, $node);
+					$item = ($basenode ? $database->getItem($table, $basenode['id']) : null);
 					$options = '<option value="">-</option>';
 					if (count($tableitems)>0)
 						foreach ($tableitems as $tableitem)
 							$options .= '<option value="'.$tableitem['item'].'"'.
-								($item['item']==$tableitem['item'] ? ' selected="selected"' : '').
+								($item && $item['item']==$tableitem['item'] ? ' selected="selected"' : '').
 								'>'.$tableitem['item'].' '.
 								($details['type']=='password' ?
 								 crypt($tableitem['description'], randstr(2)) :
