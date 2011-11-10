@@ -60,14 +60,14 @@ function acton($action) {
 			  }
 			  if (count($config->extrafields)>0)
 				  foreach ($config->extrafields as $field=>$details)
-					  if (!$database->setField($field, $newnode, request($field), (request('field-'.$field.'-recursive')=='on' ? true : false))) {
+					  if (!$database->setField($field, $newnode, request('field-'.$field), (request('field-'.$field.'-recursive')=='on' ? true : false))) {
 						  $error = $database->error;
 						  break;
 					  }
 			  if (count($config->extratables)>0)
 				  foreach ($config->extratables as $table=>$details)
 					  if ($details['linkaddress'] &&
-						  !$database->setItem($table, $newnode, request($table), (request('table-'.$table.'-recursive')=='on' ? true : false))) {
+						  !$database->setItem($table, $newnode, request('table-'.$table), (request('table-'.$table.'-recursive')=='on' ? true : false))) {
 						  $error = $database->error;
 						  break;
 					  }
