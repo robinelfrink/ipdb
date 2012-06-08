@@ -190,7 +190,7 @@ function acton($action) {
 				  $error = $database->error;
 				  break;
 			  }
-			  if (request('password1')) {
+			  if (!isset($config->debug['demo']) && request('password1')) {
 				  if (request('password1')!=request('password2')) {
 					  $error = 'Passwords do not match';
 					  break;
