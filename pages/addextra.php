@@ -35,13 +35,15 @@ class addextra {
 		$skin->setVar('description', request('description', ''));
 		$skin->setVar('comments', request('comments', ''));
 		$skin->setVar('table', $config->extratables[request('table')]['description']);
-		foreach ($config->extratables[request('table')] as $name=>$type)
-			if (preg_match('/^column_([a-z0-9_]+)$/', $name, $matches)) {
-				$skin->setVar('name', $matches[1]);
+		if (isset($config->extratables[request('table')]['columns']) &&
+			is_array($config->extratables[request('table')]['columns']) &&
+			count($config->extratables[request('table')]['columns']))
+			foreach ($config->extratables[request('table')]['columns'] as $column=>$type) {
+				$skin->setVar('name', $column);
 				if ($type=='password')
-					$skin->setVar('input', '<input type="password" name="'.htmlentities($name).'" />');
+					$skin->setVar('input', '<input type="password" name="'.htmlentities($column).'" />');
 				else
-					$skin->setVar('input', '<input type="text" name="'.htmlentities($name).'" />');
+					$skin->setVar('input', '<input type="text" name="'.htmlentities($column).'" />');
 				$skin->parse('column');
 			}
 		$skin->parse('add');

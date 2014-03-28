@@ -158,10 +158,12 @@ function acton($action) {
 	  case 'addextra':
 		  if ($session->authenticated) {
 			  $columndata = array();
-			  foreach ($config->extratables[request('table')] as $column=>$type)
-				  if (preg_match('/^column_([a-z0-9_]+)$/', $column, $matches) &&
-					  request($column))
-					  $columndata[$matches[1]] = request($column);
+			  if (isset($config->extratables[request('table')]['columns']) &&
+				  is_array($config->extratables[request('table')]['columns']) &&
+				  count($config->extratables[request('table')]['columns']))
+				  foreach ($config->extratables[request('table')]['columns'] as $column=>$type)
+					  if (request($column))
+						  $columndata[$column] = request($column);
 			  if ($database->addExtra(request('table'), request('item'), request('description'), request('comments'), $columndata))
 				  request('page', 'extratable', true);
 		  }
@@ -169,10 +171,12 @@ function acton($action) {
 	  case 'changeextra':
 		  if ($session->authenticated) {
 			  $columndata = array();
-			  foreach ($config->extratables[request('table')] as $column=>$type)
-				  if (preg_match('/^column_([a-z0-9_]+)$/', $column, $matches) &&
-					  request($column))
-					  $columndata[$matches[1]] = request($column);
+			  if (isset($config->extratables[request('table')]['columns']) &&
+				  is_array($config->extratables[request('table')]['columns']) &&
+				  count($config->extratables[request('table')]['columns']))
+				  foreach ($config->extratables[request('table')]['columns'] as $column=>$type)
+					  if (request($column))
+						  $columndata[$column] = request($column);
 			  $database->changeExtra(request('table'), request('olditem'), request('item'), request('description'), request('comments'), $columndata);
 			  request('page', 'extratable', true);
 		  }

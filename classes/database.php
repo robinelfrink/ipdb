@@ -850,7 +850,7 @@ class Database {
 									  $this->escape($column)."', '".
 									  $this->escape($data)."')"))
 						return false;
-					else if ($config->extratables[$table]['column_'.$column]=='password')
+					else if ($config->extratables[$table]['columns'][$column]=='password')
 						$changes[] = 'old password';
 					else
 						$changes[] = $column.'='.$entry[$column];
