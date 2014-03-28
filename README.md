@@ -4,7 +4,7 @@
 
 ### Installation
 
-* Copy the file `ipdb.ini.dist` to `ipdb.ini`.
-* Edit `ipdb.ini`.
+* Copy the file `config.dist.php` to `config.php`.
+* Edit `config.php`.
 * Create database.
 * Point your browser to `<...>/ipdb/`.

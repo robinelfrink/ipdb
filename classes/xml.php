@@ -60,7 +60,7 @@ class XML {
 
 		$pools = array();
 		foreach ($config->pools as $name=>$value)
-			if (preg_match('/^pool_([a-z0-9_]+)$/', $name, $matches))
+			if (!preg_match('/^default_/', $name, $matches))
 				$pools[$matches[1]] = preg_split('/,\s*/', $value);
 
 		$result = '';

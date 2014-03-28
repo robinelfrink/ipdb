@@ -33,8 +33,8 @@ class Config {
 							 'prefix'=>'_ipdb');
 	public $session = array('expire'=>'10m',
 							'auth'=>'ipdb');
-	public $debug = array('debug'=>'false');
-	public $skin = array('skin'=>'default');
+	public $debug = false;
+	public $skin = 'default';
 	public $pools = array('default_ipv4_prefix'=>30, 'default_ipv6_prefix'=>64);
 	public $extrafields = array();
 	public $extratables = array();
@@ -43,23 +43,21 @@ class Config {
 	public function __construct() {
 
 		global $root;
-		$files = array($root.DIRECTORY_SEPARATOR.'ipdb.ini.dist',
-					   $root.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'ipdb.ini.dist',
-					   $root.DIRECTORY_SEPARATOR.'ipdb.ini',
-					   $root.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'ipdb.ini');
+		$files = array($root.DIRECTORY_SEPARATOR.'config.dist.php',
+					   $root.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config.dist.php',
+					   $root.DIRECTORY_SEPARATOR.'config.php',
+					   $root.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config.php');
 		foreach ($files as $file)
 			if (file_exists($file))
-				if ($ini = @parse_ini_file($file, true)) {
-					foreach (array('database', 'debug', 'session', 'skin', 'pools') as $section)
-						if (isset($ini[$section]))
-							$this->$section = array_merge($this->$section, $ini[$section]);
-					foreach (array_keys($ini) as $section)
-						if (preg_match('/^extrafield_/', $section))
-							$this->extrafields[preg_replace('/^extrafield_/', '', $section)] = $ini[$section];
-						else if (preg_match('/^extratable_/', $section))
-							$this->extratables[preg_replace('/^extratable_/', '', $section)] = $ini[$section];
-				} else
+				if (false === @include_once($file))
 					$this->error = 'Cannot read config file '.$file;
+				else
+					foreach (array('database', 'debug', 'session', 'skin', 'pools',
+								   'extrafields', 'extratables') as $section)
+						if (is_array($this->$section))
+							$this->$section = array_merge($this->$section, $config[$section]);
+						else
+							$this->$section = $config[$section];
 	}
 
 

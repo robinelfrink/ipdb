@@ -31,10 +31,10 @@ class Skin {
 	private $blocks = array();
 
 
-	public function __construct($config) {
+	public function __construct($skin) {
 
 		global $root;
-		$this->skin = $config['skin'];
+		$this->skin = $skin;
 		if (!is_dir($root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin))
 			$this->error = 'Skin '.$this->skin.' does not exist';
 		else if (!file_exists($root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.'index.html'))
