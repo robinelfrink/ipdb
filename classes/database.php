@@ -544,10 +544,8 @@ class Database {
 		/* Check for exact match */
 		try {
 			$sql = "SELECT `id` FROM `".$this->prefix."ip` ".
-				"WHERE `address`=:address AND `bits`=:bits";
+				"WHERE `address`=? AND `bits`=?";
 			$stmt = $this->db->prepare($sql);
-			$stmt->bindValue('address', $address, PDO::PARAM_STR);
-			$stmt->bindValue('bits', (int)$bits, PDO::PARAM_INT);
 			$stmt->execute(array($address, (int)$bits));
 			if ($stmt->fetch()) {
 				$this->error = 'Node '.showip($address, $bits).' already exists';
