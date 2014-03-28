@@ -26,7 +26,7 @@ class Tree {
 
 	public $error = null;
 
-	public function getHtml($id, $node = null) {
+	public static function getHtml($id, $node = null) {
 		global $config, $database;
 		$tree = $database->getTree($id);
 		$skin = new Skin($config->skin);
