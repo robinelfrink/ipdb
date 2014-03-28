@@ -26,14 +26,11 @@ $config = array(
 	/* Database settings */
 	'database' => array(
 		// mysql example
-		'provider' => 'mysql',
-		'host' => 'localhost',
-		'database' => 'ipdb',
+		'dsn' => 'mysql:dbname=ipdb;host=127.0.0.1',
 		'username' => 'ipuser',
 		'password' => 'secret',
 		// sqlite example
-		// 'provider' => 'sqlite',
-		// 'file' => 'ipdb.db',
+		// 'dsn' => 'sqlite:ipdb.db',
 		'prefix' => 'ipdb_',
 	),
 

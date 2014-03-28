@@ -32,98 +32,76 @@ class Database {
 
 	public function __construct($config) {
 
-		$this->provider = $config['provider'];
-		if ($this->provider=='mysql') {
-			if (function_exists('mysql_connect'))
-				if ($this->db = @mysql_connect($config['server'],
-											   $config['username'],
-											   $config['password'])) {
-					if (!@mysql_select_db($config['database'], $this->db)) {
-						$this->error = mysql_error($this->db);
-						mysql_close($this->db);
-					}
-				} else
-					$this->error = mysql_error();
-			else
-				$this->error = 'No support for '.$this->provider.' databases';
-		} else
-			$this->error = 'Unknown database provider '.$this->provider;
-		$this->prefix = $config['prefix'];
-
-	}
-
-
-	public function __destruct() {
-
-		$this->close();
-
-	}
-
-
-	public function close() {
-
-		if ($this->provider=='mysql')
-			mysql_close($this->db);
-
-	}
-
-
-	public function escape($string) {
-
-		if ($this->provider=='mysql')
-			return mysql_real_escape_string($string);
-		return addslashes($string);
-
-	}
-
-
-	public function query($sql) {
-
-		$this->error = null;
-		if ($this->provider=='mysql') {
-			if (!($resource = mysql_query($sql, $this->db))) {
-				$this->error = mysql_error($this->db);
-				debug($this->error);
-				debug('Faulty query: '.$sql);
-				return false;
+		try {
+			$this->db = new PDO($config['dsn'],
+								isset($config['username']) ? $config['username'] : '',
+								isset($config['password']) ? $config['password'] : '',
+								isset($config['options']) ? $config['options'] : array());
+			if (preg_match('/^(mysql|sqlite)/', $config['dsn'])) {
+				/* Set default character set */
+				$this->db->exec("SET collation_connection = utf8_unicode_ci");
+				$this->db->exec("SET NAMES utf8");
 			}
-			$result = array();
-			if ($resource===true)
-				return true;
-			while ($row = mysql_fetch_array($resource, MYSQL_ASSOC))
-				$result[] = $row;
-			return $result;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 		}
+		$this->prefix = $config['prefix'];
 
 	}
 
 
 	public function log($action) {
 		global $session;
-		return $this->query("INSERT INTO `".$this->prefix."log` (`stamp`, `username`, `action`) ".
-							"VALUES(NOW(), '".$this->escape($session->username).
-							"', '".$this->escape($action)."')");
+		$sql = "INSERT INTO `".$this->prefix."log` (`stamp`, `username`, `action`) ".
+			"VALUES(NOW(), ?, ?)";
+		try {
+			$stmt = $this->db->prepare($sql);
+			return $stmt->execute(array($session->username, $action));
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function hasDatabase() {
 
 		$this->error = null;
-		$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`');
-		if ($this->error) {
-			$this->error = null;
+		$sql = "SELECT `version` FROM `".$this->prefix."version`";
+		try {
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute();
+			if ($stmt->fetch())
+				return true;
+			return false;
+		} catch (PDOException $e) {
 			return false;
 		}
-		return true;
 
 	}
 
 
 	public function hasUpgrade() {
 
+		return ($this->getVersion()<$this->dbversion);
+
+	}
+
+
+	private function getVersion() {
+
 		$this->error = null;
-		$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`');
-		return ($version[0]['version']<$this->dbversion);
+		$sql = "SELECT `version` FROM `".$this->prefix."version`";
+		try {
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute();
+			if ($row = $stmt->fetch(PDO::FETCH_ASSOC))
+				return $row['version'];
+			$this->error = 'Version unknown';
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+		}
+		return false;
 
 	}
 
@@ -131,110 +109,82 @@ class Database {
 	public function initialize() {
 
 		$this->error = null;
-		if (in_array($this->provider, array('mysql', 'mysqli'))) {
-			/* Drop old tables, even though we're pretty sure they don't exist. */
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."ip`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."ip` (".
-							  "`id` INT UNSIGNED NOT NULL,".
-							  "`address` varchar(32) NOT NULL,".
-							  "`bits` INT UNSIGNED NOT NULL,".
-							  "`parent` INT UNSIGNED NOT NULL DEFAULT 0,".
-							  "`description` varchar(255),".
-							  "PRIMARY KEY  (`id`),".
-							  "KEY `address` (`address`),".
-							  "KEY `bits` (`bits`),".
-							  "UNIQUE INDEX `addressbits` (`address`, `bits`),".
-							  "KEY `parent` (`parent`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			if (!$this->query("INSERT INTO `".$this->prefix.
-							  "ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
-							  "1, 'fc030000000000000000000000000000', 16, 0, ".
-							  "'Default IPv6 network.')"))
-				return false;
-			if (!$this->query("INSERT INTO `".$this->prefix.
-							  "ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
-							  "2, '000000000000000000000000C0A80300', 120, 0, ".
-							  "'Default IPv4 network.')"))
-				return false;
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."users`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."users` (".
-							  "`username` varchar(15) NOT NULL,".
-							  "`password` varchar(32) NOT NULL,".
-							  "`name` varchar(50) NOT NULL,".
-							  "`admin` tinyint(1) NOT NULL DEFAULT 0,".
-							  "PRIMARY KEY  (`username`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			if (!$this->query("INSERT INTO `".$this->prefix."users` (`username`, `password`, `name`,`admin`) ".
-							  "VALUES('admin', '".md5('secret')."', 'Administrator', 1)"))
-				return false;
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."version`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."version` (".
-							  "`version` INT NOT NULL".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			if (!$this->query("INSERT INTO `".$this->prefix."version` (`version`) VALUES(".
-							  $this->dbversion.")"))
-				return false;
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."extrafields`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."extrafields` (".
-							  "`node` INT UNSIGNED NOT NULL,".
-							  "`field` varchar(15) NOT NULL,".
-							  "`value` varchar(255) NOT NULL,".
-							  "PRIMARY KEY(`node`, `field`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."extratables`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."extratables` (".
-							  "`table` varchar(15) NOT NULL,".
-							  "`item` varchar(50) NOT NULL,".
-							  "`description` varchar(80) NOT NULL,".
-							  "`comments` text NOT NULL,".
-							  "PRIMARY KEY(`table`, `item`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."tablenode`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."tablenode` (".
-							  "`table` varchar(15) NOT NULL,".
-							  "`item` varchar(50) NOT NULL,".
-							  "`node` INT UNSIGNED NOT NULL,".
-							  "PRIMARY KEY(`table`, `item`, `node`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."tablecolumn`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."tablecolumn` (".
-							  "`table` varchar(15) NOT NULL,".
-							  "`item` varchar(50) NOT NULL,".
-							  "`column` varchar(15) NOT NULL,".
-							  "`value` varchar(255) NOT NULL,".
-							  "PRIMARY KEY(`table`, `item`, `column`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."log`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."log` (".
-							  "`stamp` datetime NOT NULL,".
-							  "`username` varchar(15) NOT NULL,".
-							  "`action` varchar(255) NOT NULL".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."access`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."access` (".
-							  "`node` INT UNSIGNED NOT NULL,".
-							  "`username` varchar(15) NOT NULL,".
-							  "`access` ENUM ('r', 'w'),".
-							  "PRIMARY KEY(`node`, `username`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
+		try {
+			if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+				/* Drop old tables, even though we're pretty sure they don't exist. */
+				foreach (array('ip', 'version', 'extrafields', 'extratables',
+							   'tablenode', 'tablecolumn', 'log', 'access') as $table)
+					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix.$table."`");
+			$this->db->exec("CREATE TABLE `".$this->prefix."ip` (".
+								"`id` INT UNSIGNED NOT NULL,".
+								"`address` varchar(32) NOT NULL,".
+								"`bits` INT UNSIGNED NOT NULL,".
+								"`parent` INT UNSIGNED NOT NULL DEFAULT 0,".
+								"`description` varchar(255),".
+								"PRIMARY KEY  (`id`),".
+								"KEY `address` (`address`),".
+								"KEY `bits` (`bits`),".
+								"UNIQUE INDEX `addressbits` (`address`, `bits`),".
+								"KEY `parent` (`parent`)".
+							")");
+			$this->db->exec("INSERT INTO `".$this->prefix."ip` (`id`, `address`, `bits`, `parent`, `description`) ".
+							"VALUES(1, 'fc030000000000000000000000000000', 16, 0, 'Default IPv6 network.')");
+			$this->db->exec("INSERT INTO `".$this->prefix."ip` (`id`, `address`, `bits`, `parent`, `description`) ".
+							"VALUES(2, '000000000000000000000000C0A80300', 120, 0, 'Default IPv4 network.')");
+			$this->db->exec("CREATE TABLE `".$this->prefix."users` (".
+								"`username` varchar(15) NOT NULL,".
+								"`password` varchar(32) NOT NULL,".
+								"`name` varchar(50) NOT NULL,".
+								"`admin` tinyint(1) NOT NULL DEFAULT 0,".
+								"PRIMARY KEY  (`username`)".
+							")");
+			$this->db->exec("INSERT INTO `".$this->prefix."users` (`username`, `password`, `name`,`admin`) ".
+							"VALUES('admin', '".md5('secret')."', 'Administrator', 1)");
+			$this->db->exec("CREATE TABLE `".$this->prefix."version` (".
+								"`version` INT NOT NULL".
+							")");
+			$this->db->exec("INSERT INTO `".$this->prefix."version` (`version`) ".
+							"VALUES(".$this->dbversion.")");
+			$this->db->exec("CREATE TABLE `".$this->prefix."extrafields` (".
+								"`node` INT UNSIGNED NOT NULL,".
+								"`field` varchar(15) NOT NULL,".
+								"`value` varchar(255) NOT NULL,".
+								"PRIMARY KEY(`node`, `field`)".
+							")");
+			$this->db->exec("CREATE TABLE `".$this->prefix."extratables` (".
+								"`table` varchar(15) NOT NULL,".
+								"`item` varchar(50) NOT NULL,".
+								"`description` varchar(80) NOT NULL,".
+								"`comments` text NOT NULL,".
+								"PRIMARY KEY(`table`, `item`)".
+							")");
+			$this->db->exec("CREATE TABLE `".$this->prefix."tablenode` (".
+								"`table` varchar(15) NOT NULL,".
+								"`item` varchar(50) NOT NULL,".
+								"`node` INT UNSIGNED NOT NULL,".
+								"PRIMARY KEY(`table`, `item`, `node`)".
+							")");
+			$this->db->exec("CREATE TABLE `".$this->prefix."tablecolumn` (".
+								"`table` varchar(15) NOT NULL,".
+								"`item` varchar(50) NOT NULL,".
+								"`column` varchar(15) NOT NULL,".
+								"`value` varchar(255) NOT NULL,".
+								"PRIMARY KEY(`table`, `item`, `column`)".
+							") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			$this->db->exec("CREATE TABLE `".$this->prefix."log` (".
+								"`stamp` datetime NOT NULL,".
+								"`username` varchar(15) NOT NULL,".
+								"`action` varchar(255) NOT NULL".
+							") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			$this->db->exec("CREATE TABLE `".$this->prefix."access` (".
+								"`node` INT UNSIGNED NOT NULL,".
+								"`username` varchar(15) NOT NULL,".
+								"`access` ENUM ('r', 'w'),".
+								"PRIMARY KEY(`node`, `username`)".
+							") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
 		}
 		return $this->log('Initialized database');
 
@@ -247,85 +197,99 @@ class Database {
 			$this->error = 'Access denied';
 			return false;
 		}
-		$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`');
-		$version = $version[0]['version'];
-		$this->error = null;
-		if ($version<2) {
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."log`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."log` (".
-							"`stamp` datetime NOT NULL,".
-							"`username` varchar(15) NOT NULL,".
-							"`action` varchar(255) NOT NULL".
-							") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
+		try {
+			$sql = "SELECT `version` FROM `".$this->prefix."version`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute();
+			if (!($row = $stmt->fetch(PDO::FETCH_ASSOC))) {
+				$this->error = 'Version unknown';
 				return false;
-		}
-		if ($version<3) {
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."access`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."access` (".
-							  "`node` INT UNSIGNED NOT NULL,".
-							  "`username` varchar(15) NOT NULL,".
-							  "`access` ENUM ('r', 'w'),".
-							  "PRIMARY KEY(`node`, `username`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-		}
-		if ($version<4) {
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."tablecolumn`");
-			$this->error = null;
-			if (!$this->query("CREATE TABLE `".$this->prefix."tablecolumn` (".
-							  "`table` varchar(15) NOT NULL,".
-							  "`item` varchar(50) NOT NULL,".
-							  "`column` varchar(15) NOT NULL,".
-							  "`value` varchar(255) NOT NULL,".
-							  "PRIMARY KEY(`table`, `item`, `column`)".
-							  ") ENGINE=InnoDB DEFAULT CHARSET=utf8"))
-				return false;
-		}
-		if ($version<5) {
-			$this->query("DROP TABLE IF EXISTS `".$this->prefix."users`");
-			$this->error = null;
-			if (!$this->query("ALTER TABLE `".$this->prefix."admin` RENAME TO `".
-							  $this->prefix."users`"))
-				return false;
-			if (!$this->query("ALTER TABLE `".$this->prefix."users` ADD COLUMN `admin`".
-							  " tinyint(1) NOT NULL DEFAULT 0"))
-				return false;
-			if (!$this->query("UPDATE `".$this->prefix."users` SET `admin`=1 WHERE `username`='admin'"))
-				return false;
-		}
-		if ($version<6) {
-			if (!$this->query("CREATE INDEX `".$this->prefix."log` ON `".
-							  $this->prefix."log`(`stamp`, `username`, `action`)"))
-				return false;
-		}
-		if (!$this->query("UPDATE `".$this->prefix."version` SET version=".
-						  $this->escape($this->dbversion)))
+			}
+			$version = $row['version'];
+			if ($version<2) {
+				if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix."log`");
+				$this->db->exec("CREATE TABLE `".$this->prefix."log` (".
+									"`stamp` datetime NOT NULL,".
+									"`username` varchar(15) NOT NULL,".
+									"`action` varchar(255) NOT NULL".
+								")");
+			}
+			if ($version<3) {
+				if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix."access`");
+				$this->db->exec("CREATE TABLE `".$this->prefix."access` (".
+									"`node` INT UNSIGNED NOT NULL,".
+									"`username` varchar(15) NOT NULL,".
+									"`access` ENUM ('r', 'w'),".
+									"PRIMARY KEY(`node`, `username`)".
+								")");
+			}
+			if ($version<4) {
+				if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix."tablecolumn`");
+				$this->db->exec("CREATE TABLE `".$this->prefix."tablecolumn` (".
+									"`table` varchar(15) NOT NULL,".
+									"`item` varchar(50) NOT NULL,".
+									"`column` varchar(15) NOT NULL,".
+									"`value` varchar(255) NOT NULL,".
+									"PRIMARY KEY(`table`, `item`, `column`)".
+								")");
+			}
+			if ($version<5) {
+				if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix."users`");
+				$this->db->exec("ALTER TABLE `".$this->prefix."admin` ".
+								"RENAME TO `".$this->prefix."users`");
+				$this->db->exec("ALTER TABLE `".$this->prefix."users` ".
+								"ADD COLUMN `admin` tinyint(1) NOT NULL DEFAULT 0");
+				$this->db->exec("UPDATE `".$this->prefix."users` SET `admin`=1 WHERE `username`='admin'");
+			}
+			if ($version<6)
+				$this->db->exec("CREATE INDEX `".$this->prefix."log` ".
+								"ON `".$this->prefix."log`(`stamp`, `username`, `action`)");
+			$sql = "UPDATE `".$this->prefix."version` SET version=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)$this->dbversion));
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
+		}
 		return $this->log('Upgraded database version '.$version.' to '.$this->dbversion);
 	}
 
 
 	public function getUser($username) {
-		if (!$version = $this->query('SELECT `version` FROM `'.$this->prefix.'version`'))
+		try {
+			if ($this->getVersion()<5) {
+				$sql = "SELECT `username`, `password`, `name`, IF ('admin' = ?, 1, 0) AS `admin` ".
+					"FROM `".$this->prefix."admin` ".
+					"WHERE `username` = ?";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array($username, $username));
+			} else {
+				$sql = "SELECT `username`, `password`, `name`, `admin` ".
+					"FROM `".$this->prefix."users` ".
+					"WHERE `username` = ?";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array($username));
+			}
+			if (!($user = $stmt->fetch(PDO::FETCH_ASSOC)))
+				return false;
+			$sql = "SELECT `id`, `address`, `bits`, `access` ".
+				"FROM `".$this->prefix."access` ".
+				"LEFT JOIN `".$this->prefix."ip` ".
+				"ON `node`=`id` ".
+				"WHERE `username` = ? ".
+				"ORDER BY `address`, `bits`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($username));
+			$user['access'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			return $user;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
-		if ($version[0]['version']<5)
-			$user = $this->query("SELECT `username`, `password`, `name`, IF ('admin' = '".
-								$this->escape($username)."', 1, 0) AS `admin` FROM `".
-								$this->prefix."admin` WHERE `username` = '".$this->escape($username)."'");
-		else
-			$user = $this->query("SELECT `username`, `password`, `name`, `admin` FROM `".
-								 $this->prefix."users` WHERE `username` = '".$this->escape($username)."'");
-		if (!is_array($user) || (count($user)==0))
-			return false;
-		$user = $user[0];
-		$access = $this->query("SELECT `id`, `address`, `bits`, `access` FROM `".
-							   $this->prefix."access` LEFT JOIN `".
-							   $this->prefix."ip` ON `node`=`id` WHERE `username` = '".
-							   $this->escape($username)."' ORDER BY `address`, `bits`");
-		$user['access'] = $access;
-		return $user;
+		}
 	}
 
 
@@ -337,112 +301,197 @@ class Database {
 
 	public function getAccess($node, $username = null) {
 		$address = $this->getAddress($node);
-		if ($username) {
-			$access = $this->query("SELECT `id`, `address`, `bits`, `access` FROM `".
-								   $this->prefix."access` LEFT JOIN `".
-								   $this->prefix."ip` ON `id`=`node` WHERE `username`='".
-								   $this->escape($username)."' AND `address`<='".
-								   $address['address']."' ORDER BY `address` DESC, `bits` DESC");
-			if (is_array($access))
-				foreach ($access as $key=>$entry)
-					if (strcmp(broadcast($address['address'], $address['bits']),
-							   broadcast($entry['address'], $entry['bits']))>0)
-						unset($access[$key]);
-			if (count($access)>0)
-				return reset($access);
-			else
-				return array('id'=>0,
-							 'address'=>'00000000000000000000000000000000',
-							 'bits'=>0,
-							 'access'=>'r');
+		try {
+			if ($username) {
+				$sql = "SELECT `id`, `address`, `bits`, `access` ".
+					"FROM `".$this->prefix."access` ".
+					"LEFT JOIN `".$this->prefix."ip` ".
+					"ON `id`=`node` ".
+					"WHERE `username`=? ".
+					"AND `address`<=? ".
+					"ORDER BY `address` DESC, `bits` DESC";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array($username, $address['address']));
+				$access = $stmt->fetchAll(PDO::FETCH_ASSOC);
+				if (is_array($access))
+					foreach ($access as $key=>$entry)
+						if (strcmp(broadcast($address['address'], $address['bits']),
+								   broadcast($entry['address'], $entry['bits']))>0)
+							unset($access[$key]);
+				if (count($access)>0)
+					return reset($access);
+				else
+					return array('id'=>0,
+								 'address'=>'00000000000000000000000000000000',
+								 'bits'=>0,
+								 'access'=>'r');
+			}
+			$sql = "SELECT `username`, `access` ".
+				"FROM `".$this->prefix."access` ".
+				"WHERE `node`=? ".
+				"ORDER BY `username`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($address['address']));
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
 		}
-		return $this->query("SELECT `username`, `access` FROM `".
-							$this->prefix."access` WHERE `node`=".
-							$this->escape($node)." ORDER BY `username`");
 	}
 
 
 	public function getUsers() {
-		return $this->query("SELECT `username`, `password`, `name`, `admin` FROM `".
-							$this->prefix."users` ORDER BY `username`");
+		try {
+			$sql = "SELECT `username`, `password`, `name`, `admin` ".
+				"FROM `".$this->prefix."users` ".
+				"ORDER BY `username`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute();
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function getAddress($node) {
-		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
-							   $this->prefix."ip` WHERE ".
-							   "`id`=".$this->escape($node));
-		return ($result ? $result[0] : false);
+		try {
+			$sql = "SELECT `id`, `address`, `bits`, `parent`, `description` ".
+				"FROM `".$this->prefix."ip` ".
+				"WHERE `id`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)$node));
+			return $stmt->fetch(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function findAddress($address, $bits) {
-		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
-							   $this->prefix."ip` WHERE ".
-							   "`address`='".$this->escape($address)."' AND `bits`=".
-							   $this->escape($bits));
-		return ($result ? $result[0] : false);
+		try {
+			$sql = "SELECT `id`, `address`, `bits`, `parent`, `description` ".
+				"FROM `".$this->prefix."ip` ".
+				"WHERE `address`=? ".
+				"AND `bits`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($address, (int)$bits));
+			return $stmt->fetch(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}   
 	}
 
 
 	public function getTree($parent, $recursive = false) {
-		$result = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
-							   $this->prefix."ip` WHERE ".
-							   "`parent`=".$this->escape($parent)." ORDER BY `address`");
-		if ($recursive===false)
+		$sql = "SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".$this->prefix."ip` ".
+			"WHERE `parent`=? ORDER BY `address`";
+		try {
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)$parent));
+			$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			if ($recursive===false)
+				return $result;
+			foreach ($result as $network)
+				if (($recursive===true) ||
+					(is_string($recursive) && addressIsChild($recursive, $result['address'], $result['bits'])))
+					$result['children'] = $this->getTree($result['id'], $recursive);
 			return $result;
-		foreach ($result as $network)
-			if (($recursive===true) ||
-				(is_string($recursive) && addressIsChild($recursive, $result['address'], $result['bits'])))
-				$result['children'] = $this->getTree($result['id'], $recursive);
-		return $result;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function hasChildren($parent) {
-		$result = $this->query("SELECT COUNT(`id`) AS `total` FROM `".$this->prefix.
-							   "ip` WHERE `parent`=".$this->escape($parent));
-		return ($result[0]['total']>0);
+		try {
+			$sql = "SELECT COUNT(`id`) AS `total` ".
+				"FROM `".$this->prefix."ip` ".
+				"WHERE `parent`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)$parent));
+			return ($stmt->rowCount()>0);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function hasNetworks($parent) {
-		$result = $this->query("SELECT COUNT(`id`) AS `total` FROM `".$this->prefix."ip` WHERE `parent`=".
-							   $this->escape($parent)." AND `bits`<128");
-		return ($result[0]['total']>0);
+		try {
+			$sql = "SELECT COUNT(`id`) AS `total` ".
+				"FROM `".$this->prefix."ip` ".
+				"WHERE `parent`=? ".
+				"AND `bits`<128";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)$parent));
+			if ($result = $stmt->fetch(PDO::FETCH_ASSOC))
+				return ($result['total']>0);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+		}
+		return false;
 	}
 
 
 	public function getParent($address, $bits=128) {
-		$entries = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
-								$this->prefix."ip` WHERE ".
-								"STRCMP('".$this->escape($address)."', `address`)>=0 ".
-								"ORDER BY `address` DESC, `bits` ASC");
-		if (count($entries)>0)
-			foreach ($entries as $entry)
-				if (strcmp(broadcast($address, $bits), broadcast($entry['address'], $entry['bits']))<=0)
-					return $entry['id'];
-		return 0;
+		try {
+			$sql = "SELECT `id`, `address`, `bits`, `parent`, `description` ".
+				"FROM `".$this->prefix."ip` ".
+				"WHERE STRCMP(?, `address`)>=0 ".
+				"ORDER BY `address` DESC, `bits` ASC";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($address));
+			$entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			if (count($entries)>0)
+				foreach ($entries as $entry)
+					if (strcmp(broadcast($address, $bits), broadcast($entry['address'], $entry['bits']))<=0)
+						return $entry['id'];
+			return 0;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function search($search) {
-		return $this->query("SELECT DISTINCT `id`, `address`, `bits`, `parent`, `description` FROM `".
-							$this->prefix."ip` LEFT JOIN `".
-							$this->prefix."extrafields` ON `".
-							$this->prefix."extrafields`.`node`=`".
-							$this->prefix."ip`.`id` WHERE `address`='".
-							address2ip($search)."' OR `description` LIKE '%".
-							$this->escape($search)."%' OR `".$this->prefix."extrafields`.`value` LIKE '%".
-							$this->escape($search)."%' ORDER BY `address`");
+		try {
+			$sql = "SELECT DISTINCT `id`, `address`, `bits`, `parent`, `description` ".
+				"FROM `".$this->prefix."ip` ".
+				"LEFT JOIN `".$this->prefix."extrafields` ".
+				"ON `".$this->prefix."extrafields`.`node`=`".$this->prefix."ip`.`id` ".
+				"WHERE `address`=? ".
+				"OR `description` LIKE CONCAT('%', ?, '%') ".
+				"OR `".$this->prefix."extrafields`.`value` LIKE CONCAT('%', ?, '%') ".
+				"ORDER BY `address`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($search, $search, $search));
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 	public function getNext($address) {
-		$entry = $this->query("SELECT `id`, `address`, `bits`, `parent`, `description` FROM `".
-							  $this->prefix."ip` WHERE ".
-							  "STRCMP('".$this->escape($address)."', `address`)<0 ".
-							  "ORDER BY `address` ASC LIMIT 1");
-		return (count($entry)>0 ? $entry[0] : null);
+		try {
+			$sql = "SELECT `id`, `address`, `bits`, `parent`, `description` ".
+				"FROM `".$this->prefix."ip` ".
+				"WHERE STRCMP(? , `address`)<0 ".
+				"ORDER BY `address` ASC LIMIT 1";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($address));
+			return ($stmt->rowCount()>0 ? $stmt->fetch(PDO::FETCH_ASSOC) : null);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
@@ -457,11 +506,17 @@ class Database {
 
 		$broadcast = broadcast($address, $bits);
 		/* Check for exact match */
-		$check = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `address`='".
-							  $this->escape($address)."' AND `bits`=".
-							  $this->escape($bits));
-		if (count($check)>0) {
-			$this->error = 'Node '.showip($address, $bits).' already exists';
+		try {
+			$sql = "SELECT `id` FROM `".$this->prefix."ip` ".
+				"WHERE `address`=? AND `bits`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($address, (int)$bits));
+			if ($stmt->rowCount()>0) {
+				$this->error = 'Node '.showip($address, $bits).' already exists';
+				return false;
+			}
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
 		}
 
@@ -473,14 +528,23 @@ class Database {
 
 		/* Check possible parent */
 		$parent = 0;
-		$parents = $this->query("SELECT `id`, `address`, `bits` FROM `".$this->prefix."ip` WHERE `address`<='".
-								$this->escape($address)."' ORDER BY `address` DESC, `bits` DESC");
-		if (count($parents)>0)
-			foreach ($parents as $parentnode)
-				if (strcmp(broadcast($address, $bits), broadcast($parentnode['address'], $parentnode['bits']))<=0) {
-					$parent = $parentnode['id'];
-					break;
-				}
+		try {
+			$sql = "SELECT `id`, `address`, `bits` ".
+				"FROM `".$this->prefix."ip` ".
+				"WHERE `address`<=? ".
+				"ORDER BY `address` DESC, `bits` DESC";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($address));
+			if ($stmt->rowCount()>0)
+				foreach ($parents as $parentnode)
+					if (strcmp(broadcast($address, $bits), broadcast($parentnode['address'], $parentnode['bits']))<=0) {
+						$parent = $parentnode['id'];
+						break;
+					}
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 
 		/* Check for access */
 		if (!$this->isAdmin($session->username)) {
@@ -500,21 +564,37 @@ class Database {
 					unset($children[$id]);
 
 		/* Add new node */
-		$max = $this->query("SELECT MAX(`id`) AS `max` FROM `".$this->prefix."ip`");
-		$this->query("INSERT INTO `".$this->prefix."ip` (`id`, `address`, `bits`, `parent`, `description`) VALUES(".
-					 $this->escape($max[0]['max']+1).", '".
-					 $this->escape($address)."', ".$this->escape($bits).", ".
-					 $this->escape($parent).", '".$this->escape($description)."')");
+		try {
+			$sql = "SELECT MAX(`id`) AS `max` FROM `".$this->prefix."ip`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute();
+			$max = $stmt->fetch(PDO::FETCH_ASSOC);
+			$sql = "INSERT INTO `".$this->prefix."ip` (`id`, `address`, `bits`, `parent`, `description`) ".
+				"VALUES(?, ?, ?, ?, ?)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)($max['max']+1), $address, (int)$bits, $parent, $description));
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 
 		/* Update possible children */
 		if (count($children)>0) {
 			$ids = array();
 			foreach ($children as $child)
 				$ids[] = $child['id'];
-			$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($max[0]['max']+1).
-						 " WHERE `id` IN (".implode(',', $ids).")");
+			try {
+				$sql = "UPDATE `".$this->prefix."ip` ".
+					"SET `parent`=? ".
+					"WHERE `id` IN (".implode(',', $ids).")";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute($max['max']+1);
+			} catch (PDOException $e) {
+				$this->error = $e->getMessage();
+				return false;
+			}
 		}
-		$node = $max[0]['max']+1;
+		$node = $max['max']+1;
 		$this->log('Added node '.showip($address, $bits).
 				   (empty($description) ? '' : ' ('.$description.')'));
 		return $node;
@@ -536,31 +616,58 @@ class Database {
 		$address = $this->getAddress($node);
 		if ($this->error)
 			return false;
-		$children = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `parent`=".
-								 $this->escape($node));
-		if ($this->error)
+		try {
+			$sql = "SELECT `id` FROM `".$this->prefix."ip` ".
+				"WHERE `parent`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)$node));
+			$children = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
+		}
 		if (count($children)>0) {
 			if ($childaction=='delete') {
 				foreach ($children as $child)
 					if (!($this->deleteNode($child['id'], $childaction)))
 						return false;
-				$this->query("DELETE FROM `".$this->prefix."ip` WHERE `id`=".$this->escape($node));
+				try {
+					$sql = "DELETE FROM `".$this->prefix."ip` WHERE `id`=?";
+					$stmt = $this->db->prepare($sql);
+					$stmt->execute(array((int)$node));
+				} catch (PDOException $e) {
+					$this->error = $e->getMessage();
+					return false;
+				}
 			} else if ($childaction=='move') {
-				if (!$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".
-								  $this->escape($address['parent']).
-								  " WHERE `parent`=".
-								  $this->escape($node)))
+				try {
+					$sql = "UPDATE `".$this->prefix."ip` ".
+						"SET `parent`=? ".
+						"WHERE `parent`=";
+					$stmt = $this->db->prepare($sql);
+					$stmt->execute(array((int)$address['parent'], (int)$node));
+					$sql = "DELETE FROM `".$this->prefix."ip` ".
+						"WHERE `id`=?";
+					$stmt = $this->db->prepare($sql);
+					$stmt->execute(array((int)$node));
+				} catch (PDOException $e) {
+					$this->error = $e->getMessage();
 					return false;
-				if (!$this->query("DELETE FROM `".$this->prefix."ip` WHERE `id`=".$this->escape($node)))
-					return false;
+				}
 			} else {
 				$this->error = 'Node has children';
 				return false;
 			}
 		} else {
-			if (!$this->query("DELETE FROM `".$this->prefix."ip` WHERE `id`=".$this->escape($node)))
+			try {
+				$sql = "DELETE FROM `".$this->prefix."ip` ".
+					"WHERE `id`=?";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array((int)$node));
+			} catch (PDOException $e) {
+				$this->error = $e->getMessage();
 				return false;
+			}
 		}
 		$this->log('Deleted node '.showip($address['address'], $address['bits']));
 		return true;
@@ -570,13 +677,20 @@ class Database {
 	public function getField($field, $node) {
 		if (empty($node))
 			return false;
-		$value = $this->query("SELECT `value` FROM `".$this->prefix."extrafields` WHERE `node`=".
-							  $this->escape($node)." AND `field`='".
-							  $this->escape($field)."'");
-		if (is_array($value) && (count($value)>0))
-			return $value[0]['value'];
-		else
+		try {
+			$sql = "SELECT `value` ".
+				"FROM `".$this->prefix."extrafields` ".
+				"WHERE `node`=? ".
+				"AND `field`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)$node, $field));
+			if ($value = $stmt->fetch(PDO::FETCH_ASSOC))
+				return $value['value'];
 			return '';
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
@@ -610,11 +724,19 @@ class Database {
 		}
 
 		/* Check for exact match */
-		$check = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `address`='".
-							  $this->escape($address)."' AND `bits`=".
-							  $this->escape($bits));
-		if ((count($check)>0) && ($check[0]['id']!=$node)) {
-			$this->error = 'Node '.showip($address, $bits).' already exists';
+		try {
+			$sql = "SELECT `id` ".
+				"FROM `".$this->prefix."ip` ".
+				"WHERE `address`=? AND `bits`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($address, (int)$bits));
+			if (($check = $stmt->fetch(PDO::FETCH_ASSOC)) &&
+				($check['id']!=$node)) {
+				$this->error = 'Node '.showip($address, $bits).' already exists';
+				return false;
+			}
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
 		}
 
@@ -627,76 +749,73 @@ class Database {
 		/* Find change in address */
 		$change = _xor($entry['address'], $address);
 
-		/* Start transaction */
-		if (!$this->query('BEGIN'))
-			return false;
+		try {
+			/* Start transaction */
+			$this->db->beginTransaction();
 
-		/* Change node */
-		if (!($this->query("UPDATE `".$this->prefix."ip` SET `address`='".$this->escape($address).
-						   "', `bits`=".$this->escape($bits).
-						   ", `description`='".$this->escape($description)."' WHERE `id`=".
-						   $this->escape($node)))) {
-			$error = $this->error;
-			$this->query('ROLLBACK');
-			$this->error = $error;
-			return false;
-		}
+			/* Change node */
+			$sql = "UPDATE `".$this->prefix."ip` ".
+				"SET `address`=?, `bits`=?, `description`=? ".
+				"WHERE `id`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute($address, (int)$bits, $description);
 
-		/* Find new parent */
-		$parent = $entry['parent'];
-		$parents = $this->query("SELECT `id`, `address`, `bits` FROM `".$this->prefix."ip` WHERE `address`<='".
-								$this->escape($address)."' AND `id`!=".$this->escape($node).
-								" ORDER BY `address` DESC, `bits` DESC");
-		if (count($parents)>0)
-			foreach ($parents as $parentnode)
-				if (strcmp(broadcast($address, $bits), broadcast($parentnode['address'], $parentnode['bits']))<=0) {
-					$parent = $parentnode['id'];
-					break;
-				}
-		if (($parent!=$entry['parent']) &&
-			!$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($parent)." WHERE `id`=".
-						  $this->escape($node))) {
-			$error = $this->error;
-			$this->query('ROLLBACK');
-			$this->error = $error;
-			return false;
-		}
+			/* Find new parent */
+			$parent = $entry['parent'];
+			$sql = "SELECT `id`, `address`, `bits` ".
+				"FROM `".$this->prefix."ip` ".
+				"WHERE `address`<=? AND id!=? ".
+				"ORDER BY `address` DESC, `bits` DESC";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($address, (int)$node));
+			$parents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			if (count($parents)>0)
+				foreach ($parents as $parentnode)
+					if (strcmp(broadcast($address, $bits), broadcast($parentnode['address'], $parentnode['bits']))<=0) {
+						$parent = $parentnode['id'];
+						break;
+					}
+			if ($parent!=$entry['parent']) {
+				$sql = "UPDATE `".$this->prefix."ip` ".
+					"SET `parent`=? ".
+					"WHERE `id`=?";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array((int)$parent, (int)$node));
+			}
 
-		/* Check if old children still fit */
-		$children = $this->getTree($entry['id']);
-		if (count($children)>0)
-			foreach ($children as $child)
-				if (($child['id']!=$node) &&
-					((strcmp($address, $child['address'])>0) ||
-					 (strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))<0)))
-					if (!$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($entry['parent']).
-									  ", `address`='".$this->escape(_xor($child['address'], $change))."'".
-									  " WHERE `id`=".$this->escape($child['id']))) {
-						$error = $this->error;
-						$this->query('ROLLBACK');
-						$this->error = $error;
-						return false;
+			/* Check if old children still fit */
+			$children = $this->getTree($entry['id']);
+			if (count($children)>0)
+				foreach ($children as $child)
+					if (($child['id']!=$node) &&
+						((strcmp($address, $child['address'])>0) ||
+						 (strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))<0))) {
+						$sql = "UPDATE `".$this->prefix."ip` ".
+							"SET `parent`=?, `address`=? ".
+							"WHERE `id`=?";
+						$stmt = $this->db->prepare($sql);
+						$stmt->execute(array((int)$entry['parent'], _xor($child['address'], $change), (int)$child['id']));
 					}
 
-		/* Check for new children */
-		$children = $this->getTree($parent);
-		if (count($children)>0) 
-			foreach ($children as $child)
-				if (($child['id']!=$node) &&
-					(strcmp($address, $child['address'])<=0) &&
-					(strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))>=0))
-					if (!$this->query("UPDATE `".$this->prefix."ip` SET `parent`=".$this->escape($entry['id']).
-									  " WHERE `id`=".$this->escape($child['id']))) {
-						$error = $this->error;
-						$this->query('ROLLBACK');
-						$this->error = $error;
-						return false;
+			/* Check for new children */
+			$children = $this->getTree($parent);
+			if (count($children)>0) 
+				foreach ($children as $child)
+					if (($child['id']!=$node) &&
+						(strcmp($address, $child['address'])<=0) &&
+						(strcmp(broadcast($address, $bits), broadcast($child['address'], $child['bits']))>=0)) {
+						$sql = "UPDATE `".$this->prefix."ip` ".
+							"SET `parent`=? ".
+							"WHERE `id`=?";
+						$stmt = $this->db->prepare($sql);
+						$stmt->execute(array((int)$entry['id'], (int)$child['id']));
 					}
 
-		if (!$this->query('COMMIT')) {
-			$error = $this->error;
-			$this->query('ROLLBACK');
-			$this->error = $error;
+			$this->db->commit();
+
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			$this->db->rollBack();
 			return false;
 		}
 
@@ -709,22 +828,30 @@ class Database {
 	public function setField($field, $node, $value, $recursive = false) {
 		$address = $this->getAddress($node);
 		$old = $this->getField($field, $node);
-		if ($value!=$old) {
-			$this->query("REPLACE INTO `".$this->prefix."extrafields` (`node`, `field`, `value`)".
-						 " VALUES (".$this->escape($node).", '".
-						 $this->escape($field)."', '".
-						 $this->escape($value)."')");
-			if ($this->error)
+		if ($value!=$old) 
+			try {
+				$sql = "REPLACE INTO `".$this->prefix."extrafields` (`node`, `field`, `value`) ".
+					"VALUES(?, ?, ?)";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array((int)$node, $field, $value));
+			} catch (PDOException $e) {
+				$this->error = $e->getMessage();
 				return false;
-		}
+			}
 		$this->log('Set field \''.$field.'\' for node '.
 				   showip($address['address'], $address['bits']).' to '.
 				   $value);
 		if ($recursive) {
-			$children = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `parent`=".
-									 $this->escape($node));
-			if ($this->error)
+			try {
+				$sql = "SELECT `id` FROM `".$this->prefix."ip` ".
+					"WHERE `parent`=?";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array((int)$node));
+				$children = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			} catch (PDOException $e) {
+				$this->error = $e->getMessage();
 				return false;
+			}
 			if (count($children)>0)
 				foreach ($children as $child)
 					if (!$this->setField($field, $child['id'], $value, $recursive))
@@ -736,25 +863,41 @@ class Database {
 
 	public function getExtra($table, $item = null) {
 		global $config;
-		if ($item===null) {
-			if ($config->extratables[$table]['type']=='integer')
-				$sql = "SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
-					$this->escape($table)."' ORDER BY CAST(`item` AS SIGNED)";
-			else
-				$sql = "SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
-					$this->escape($table)."' ORDER BY `".$this->prefix."extratables`.`item`";
-			return $this->query($sql);
-		}
-		$items = $this->query("SELECT * FROM `".$this->prefix."extratables` WHERE `table`='".
-							  $this->escape($table)."' AND `item`='".$this->escape($item)."'");
-		if (count($items)<1)
+		if ($item===null)
+			try {
+				$sql = "SELECT * FROM `".$this->prefix."extratables` ".
+					"WHERE `table`=? ";
+				if ($config->extratables[$table]['type']=='integer')
+					$sql .= "ORDER BY CAST(`item` AS SIGNED)";
+				else
+					$sql .= "ORDER BY `".$this->prefix."extratables`.`item`";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array($table));
+				return $stmt->fetchAll(PDO::FETCH_ASSOC);
+			} catch (PDOException $e) {
+				$this->error = $e->getMessage();
+				return false;
+			}
+		try {
+			$sql = "SELECT * FROM `".$this->prefix."extratables` ".
+				"WHERE `table`=? AND `item`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($table, $item));
+			if (!($extra = $stmt->fetch(PDO::FETCH_ASSOC)))
+				return false;
+			$sql = "SELECT * FROM `".$this->prefix."tablecolumn` ".
+				"WHERE `table`=? AND `item`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($table, $item));
+			$columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			if (count($columns)>0)
+				foreach ($columns as $data)
+					$extra[$data['column']] = $data['value'];
+			return $extra;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
-		$columns = $this->query("SELECT * FROM `".$this->prefix."tablecolumn` WHERE `table`='".
-								$this->escape($table)."' AND `item`='".$this->escape($item)."'");
-		if (count($columns)>0)
-			foreach ($columns as $data)
-				$items[0][$data['column']] = $data['value'];
-		return $items[0];
+		}
 	}
 
 
@@ -762,26 +905,28 @@ class Database {
 		global $config;
 		if (empty($search))
 			return $this->getExtra($table);
-		$sql = "SELECT DISTINCT `".$this->prefix."extratables`.`item` FROM `".
-			$this->prefix."extratables` LEFT JOIN `".
-			$this->prefix."tablecolumn` ON `".
-			$this->prefix."extratables`.`table`=`".
-			$this->prefix."tablecolumn`.`table` AND `".
-			$this->prefix."extratables`.`item`=`".
-			$this->prefix."tablecolumn`.`item` WHERE `".
-			$this->prefix."extratables`.`table`='".
-			$this->escape($table)."' AND (`".
-			$this->prefix."extratables`.`item` LIKE '%".
-			$this->escape($search)."%' OR `".
-			$this->prefix."extratables`.`description` LIKE '%".
-			$this->escape($search)."%' OR `".
-			$this->prefix."tablecolumn`.`value` LIKE '%".
-			$this->escape($search)."%') ORDER BY ";
-		if ($config->extratables[$table]['type']=='integer')
-			$sql .= "CAST(`".$this->prefix."tablecolumn`.`item` AS SIGNED)";
-		else
-			$sql .= "`".$this->prefix."tablecolumn`.`item`";
-		$items = $this->query($sql);
+		try {
+			$sql = "SELECT DISTINCT `".$this->prefix."extratables`.`item` ".
+				"FROM `".$this->prefix."extratables` ".
+				"LEFT JOIN `".$this->prefix."tablecolumn` ".
+				"ON `".$this->prefix."extratables`.`table`=`".$this->prefix."tablecolumn`.`table` ".
+				"AND `".$this->prefix."extratables`.`item`=`".$this->prefix."tablecolumn`.`item` ".
+				"WHERE `".$this->prefix."extratables`.`table`=? ".
+				"AND (`".$this->prefix."extratables`.`item` LIKE CONCAT('%', ?, '%') ".
+				"OR `".$this->prefix."extratables`.`description` LIKE CONCAT('%', ?, '%') ".
+				"OR `".$this->prefix."tablecolumn`.`value` LIKE CONCAT('%', ?, '%') ".
+				"ORDER BY ";
+			if ($config->extratables[$table]['type']=='integer')
+				$sql .= "CAST(`".$this->prefix."tablecolumn`.`item` AS SIGNED)";
+			else
+				$sql .= "`".$this->prefix."tablecolumn`.`item`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($table, $search, $search, $search));
+			$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 		if (count($items)>0) {
 			$allitems = array();
 			foreach ($items as $item)
@@ -798,22 +943,26 @@ class Database {
 			$this->error = 'Unknown table '.$table;
 			return false;
 		}
-		if (!$this->query("INSERT INTO `".$this->prefix.
-						  "extratables` (`table`, `item`, `description`, `comments`) VALUES('".
-						  $this->escape($table)."', '".
-						  $this->escape($item)."', '".
-						  $this->escape($description)."', '".
-						  $this->escape($comments)."')"))
+		try {
+			$sql = "INSERT INTO `".$this->prefix."extratables` (`table`, `item`, `description`, `comments`) ".
+				"VALUES(? ? ? ?)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($table, $item, $description, $comments));
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
+		}
 		if (is_array($columndata) && (count($columndata)>0))
 			foreach ($columndata as $column=>$data)
-				if (!$this->query("INSERT INTO `".$this->prefix.
-								  "tablecolumn` (`table`, `item`, `column`, `value`) VALUES('".
-								  $this->escape($table)."', '".
-								  $this->escape($item)."', '".
-								  $this->escape($column)."', '".
-								  $this->escape($data)."')"))
+				try {
+					$sql = "INSERT INTO `".$this->prefix."tablecolumn` (`table`, `item`, `column`, `value`) ".
+						"VALUES(?, ?, ?, ?)";
+					$stmt = $this->db->prepare($sql);
+					$stmt->execute(array($table, $item, $column, $data));
+				} catch (PDOException $e) {
+					$this->error = $e->getMessage();
 					return false;
+				}
 		return $this->log('Added \''.$table.'\' item '.$item.
 						  (empty($description) ? '' : ' ('.$description.')'));
 	}
@@ -821,12 +970,16 @@ class Database {
 
 	public function changeExtra($table, $olditem, $item, $description, $comments, $columndata) {
 		global $config;
-		$this->query("UPDATE `".$this->prefix."extratables` SET `item`='".
-					 $this->escape($item)."', `description`='".
-					 $this->escape($description)."', `comments`='".
-					 $this->escape($comments)."' WHERE `item`='".
-					 $this->escape($olditem)."' AND `table`='".
-					 $this->escape($table)."'");
+		try {
+			$sql = "UPDATE `".$this->prefix."extratables` ".
+				"SET `item`=?, `description`=?, `comments`=? ".
+				"WHERE `item`=? AND `table`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($item, $description, $comments, $olditem, $table));
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 		$entry = $this->getExtra($table, $olditem);
 		$changes = array();
 		if ($item!=$olditem)
@@ -835,25 +988,33 @@ class Database {
 			$changes[] = $entry['description'];
 		if ($this->error)
 			return false;
-		if (!$this->query("UPDATE `".$this->prefix."tablenode` SET `item`='".
-						  $this->escape($item)."' WHERE `item`='".
-						  $this->escape($olditem)."' AND `table`='".
-						  $this->escape($table)."'"))
+		try {
+			$sql = "UPDATE `".$this->prefix."tablenode` ".
+				"SET `item`=? ".
+				"WHERE `item`=? AND `table`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($item, $olditem, $table));
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
+		}
 		if (is_array($columndata) && (count($columndata)>0))
 			foreach ($columndata as $column=>$data)
-				if ($data!=$entry[$column])
-					if (!$this->query("REPLACE INTO `".$this->prefix.
-									  "tablecolumn` (`table`, `item`, `column`, `value`) VALUES('".
-									  $this->escape($table)."', '".
-									  $this->escape($item)."', '".
-									  $this->escape($column)."', '".
-									  $this->escape($data)."')"))
+				if ($data!=$entry[$column]) {
+					try {
+						$sql = "REPLACE INTO `".$this->prefix."tablecolumn` (`table`, `item`, `column`, `value`) ".
+							"VALUES(?, ?, ?, ?)";
+						$stmt = $this->db->prepare($sql);
+						$stmt->execute(array($table, $item, $column, $data));
+					} catch (PDOException $e) {
+						$this->error = $e->getMessage();
 						return false;
-					else if ($config->extratables[$table]['columns'][$column]=='password')
+					}
+					if ($config->extratables[$table]['columns'][$column]=='password')
 						$changes[] = 'old password';
 					else
 						$changes[] = $column.'='.$entry[$column];
+				}
 		if (count($changes)>0)
 			$this->log('Changed \''.$table.'\' item '.$item.' (was: '.implode(', ', $changes).')');
 		return true;
@@ -861,51 +1022,63 @@ class Database {
 
 
 	public function deleteExtra($table, $item) {
-		$this->query("DELETE FROM `".$this->prefix."extratables` WHERE `item`='".
-					 $this->escape($item)."' AND `table`='".
-					 $this->escape($table)."'");
-		if ($this->error)
+		try {
+			$sql = "DELETE FROM `".$this->prefix."extratables` ".
+				"WHERE `item`=? AND `table`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($item, $table));
+			$sql = "DELETE FROM `".$this->prefix."tablecolumn` ".
+				"WHERE `item`=? AND `table`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($item, $table));
+			$sql = "DELETE FROM `".$this->prefix."tablenode` ".
+				"WHERE `item`=? AND `table`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($item, $table));
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
-		$this->query("DELETE FROM `".$this->prefix."tablecolumn` WHERE `item`='".
-					 $this->escape($item)."' AND `table`='".
-					 $this->escape($table)."'");
-		if ($this->error)
-			return false;
-		return ($this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `item`='".
-							 $this->escape($item)."' AND `table`='".
-							 $this->escape($table)."'") &&
-				$this->log('Deleted \''.$table.'\' item '.$item));
+		}
+		return $this->log('Deleted \''.$table.'\' item '.$item);
 	}
 
 
 	public function getItem($table, $node) {
 		if (empty($node))
 			return false;
-		$item = $this->query("SELECT `".$this->prefix."tablenode`.`item` AS `item`, `".
-							 $this->prefix."extratables`.`description` AS `description` FROM `".
-							 $this->prefix."tablenode` LEFT JOIN `".
-							 $this->prefix."extratables` ON `".$this->prefix."tablenode`.`item`=`".
-							 $this->prefix."extratables`.`item` AND `".$this->prefix."tablenode`.`table`=`".
-							 $this->prefix."extratables`.`table` WHERE `node`=".
-							 $this->escape($node)." AND `".$this->prefix."tablenode`.`table`='".
-							 $this->escape($table)."'");
-		if ($this->error)
-			return false;
-		else if (count($item)>0)
-			return $item[0];
-		else
+		try {
+			$sql = "SELECT `".$this->prefix."tablenode`.`item` AS `item`, ".
+				"`".$this->prefix."extratables`.`description` AS `description` ".
+				"FROM `".$this->prefix."tablenode` ".
+				"LEFT JOIN `".$this->prefix."extratables` ".
+				"ON `".$this->prefix."tablenode`.`item`=`".$this->prefix."extratables`.`item` ".
+				"AND `".$this->prefix."tablenode`.`table`=`".$this->prefix."extratables`.`table` ".
+				"WHERE `node`=? AND `".$this->prefix."tablenode`.`table`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)$node, $table));
+			if ($item = $stmt->fetch(PDO::FETCH_ASSOC))
+				return $item;
 			return array('item'=>'-', 'description'=>'');
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function getItemNodes($table, $item) {
-		$nodes = $this->query("SELECT `".$this->prefix."tablenode`.`node` FROM `".
-							  $this->prefix."tablenode` WHERE `item`='".
-							  $this->escape($item)."' AND `".$this->prefix."tablenode`.`table`='".
-							  $this->escape($table)."'");
-		if ($this->error)
+		try {
+			$sql = "SELECT `".$this->prefix."tablenode`.`node` ".
+				"FROM `".$this->prefix."tablenode` ".
+				"WHERE `item`=? AND `".$this->prefix."tablenode`.`table`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($item, $table));
+			$nodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
-		else if (count($nodes)>0) {
+		}
+		if (count($nodes)>0) {
 			foreach ($nodes as $key=>$node)
 				if ($details = $this->getAddress($node['node']))
 					$nodes[$key] = $details;
@@ -920,28 +1093,35 @@ class Database {
 	public function setItem($table, $node, $item, $recursive = false) {
 		$olditem = preg_replace('/^-$/', '', $this->getItem($table, $node));
 		$item = preg_replace('/^-$/', '', $item);
-		if ($olditem['item']!=$item) {
-			$this->query("DELETE FROM `".$this->prefix."tablenode` WHERE `table`='".
-						 $this->escape($table)."' AND `node`=".
-						 $this->escape($node));
-			if ($this->error)
+		if ($olditem['item']!=$item)
+			try {
+				$sql = "DELETE FROM `".$this->prefix."tablenode` WHERE ".
+					"`table`=? AND `node`=?";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array($table, (int)$node));
+				$sql = "INSERT INTO `".$this->prefix."tablenode` (`table`, `item`, `node`) ".
+					"VALUES(?, ?, ?)";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array($table, $item, (int)$node));
+			} catch (PDOException $e) {
+				$this->error = $e->getMessage();
 				return false;
-			$this->query("INSERT INTO `".$this->prefix."tablenode` (`table`, `item`, `node`) VALUES('".
-						 $this->escape($table)."', '".$this->escape($item)."', ".
-						 $this->escape($node).")");
-			if ($this->error)
+			}
+		if ($recursive)
+			try {
+				$sql = "SELECT `id` FROM `".$this->prefix."ip` ".
+					"WHERE `parent`=?";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array((int)$node));
+				$children = $stmt->fetchAll(PDO::FETCH_ASSOC);
+				if (count($children)>0)
+					foreach ($children as $child)
+						if (!$this->setItem($table, $child['id'], $item, $recursive ))
+							return false;
+			} catch (PDOException $e) {
+				$this->error = $e->getMessage();
 				return false;
-		}
-		if ($recursive) {
-			$children = $this->query("SELECT `id` FROM `".$this->prefix."ip` WHERE `parent`=".
-									 $this->escape($node));
-			if ($this->error)
-				return false;
-			if (count($children)>0)
-				foreach ($children as $child)
-					if (!$this->setItem($table, $child['id'], $item, $recursive ))
-						return false;
-		}
+			}
 		$address = $this->getAddress($node);
 		$this->log('Set \''.$table.'\' for '.showip($address['address'], $address['bits']).' to '.$item);
 		return true;
@@ -951,10 +1131,18 @@ class Database {
 	public function changeUsername($username, $oldusername) {
 		if ($username==$oldusername)
 			return true;
-		return ($this->query("UPDATE `".$this->prefix."users` SET `username`='".
-							 $this->escape($username)."' WHERE `username`='".
-							 $this->escape($oldusername)."'") &&
-				$this->log('Changed username '.$oldusername.' to '.$username));
+		try {
+			$sql = "UPDATE `".$this->prefix."users` ".
+				"SET `username`=? ".
+				"WHERE `username`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($username, $oldusername));
+			$this->log('Changed username '.$oldusername.' to '.$username);
+			return true;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
@@ -962,10 +1150,16 @@ class Database {
 		global $session;
 		if (!$username)
 			$username = $session->username;
-		if (!$this->query("UPDATE `".$this->prefix."users` SET `name`='".
-						  $this->escape($name)."' WHERE `username`='".
-						  $this->escape($username)."'"))
+		try {
+			$sql = "UPDATE `".$this->prefix."users` ".
+				"SET `name`=? ".
+				"WHERE `username`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($name, $username));
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
 			return false;
+		}
 		$session->changeName($name);
 		$this->log('Changed name for '.$username.' to '.$name);
 		return true;
@@ -976,10 +1170,18 @@ class Database {
 		global $session;
 		if (!$username)
 			$username = $session->username;
-		return ($this->query("UPDATE `".$this->prefix."users` SET `password`='".
-							 md5($password)."' WHERE `username`='".
-							 $this->escape($username)."'") &&
-				$this->log('Changed password for '.$username));
+		try {
+			$sql = "UPDATE `".$this->prefix."users` ".
+				"SET `password`=? ".
+				"WHERE `username`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array(md5($password), $username));
+			$this->log('Changed password for '.$username);
+			return true;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
@@ -991,37 +1193,69 @@ class Database {
 			return false;
 		}
 		$user = $this->getUser($username);
-		return ($this->query("UPDATE `".$this->prefix."users` SET `admin`=(NOT ".
-							 $this->escape($user['admin']).") WHERE `username`='".
-							 $this->escape($username)."'") &&
-				$this->log('Changed admin setting for '.$username.' to '.
-						   ($user['admin'] ? 'false' : 'true')));
+		try {
+			$sql = "UPDATE `".$this->prefix."users` ".
+				"SET `admin`=? ".
+				"WHERE `username`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)($admin ? 0 : 1), $username));
+			$this->log('Changed admin setting for '.$username.' to '.
+					   ($user['admin'] ? 'false' : 'true'));
+			return true;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function addUser($username, $name, $password) {
-		return ($this->query("INSERT INTO `".$this->prefix."users`(`username`, `name`, `password`, `admin`) ".
-							 "VALUES('".$this->escape($username).
-							 "', '".$this->escape($name).
-							 "', '".md5($password)."', 0)") &&
-				$this->log('Added user '.$username. ' ('.$name.')'));
+		try {
+			$sql = "INSERT INTO `".$this->prefix."users` (`username`, `name`, `password`, `admin`) ".
+				"VALUES(?, ?, ?, ?)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($username, $name, md5($password), 0));
+			$this->log('Added user '.$username. ' ('.$name.')');
+			return true;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function deleteUser($username) {
-		return ($this->query("DELETE FROM `".$this->prefix."users` WHERE `username`='".
-							 $this->escape($username)."'") &&
-				$this->log('Deleted user '.$username));
+		try {
+			$sql = "DELETE FROM `".$this->prefix."users` ".
+				"WHERE `username`=?";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array($username));
+			$this->log('Deleted user '.$username);
+			return true;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function getLog($search) {
-		$sql = "SELECT * FROM `".$this->prefix."log`";
-		if ($search && (trim($search)!=''))
-			$sql .= " WHERE `username` LIKE '%".$this->escape($search).
-				"%' OR `action` LIKE '%".$this->escape($search)."%'";
-		$sql .= " ORDER BY `stamp` DESC";
-		return $this->query($sql);
+		try {
+			$sql = "SELECT * FROM `".$this->prefix."log`";
+			if ($search && (trim($search)!=''))
+				$sql .= " WHERE `username` LIKE CONCAT('%', ?, '%') ".
+					"OR `action` LIKE CONCAT('%', ?, '%') ";
+			$sql .= "ORDER BY `stamp` DESC";
+			$stmt = $this->db->prepare($sql);
+			if ($search && (trim($search)!=''))
+				$stmt->execute(array($search, $search));
+			else
+				$stmt->execute();
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
@@ -1033,30 +1267,47 @@ class Database {
 		$this->log('Set '.($access=='w' ? 'write' : 'read-only').' access to '.
 				   showip($address['address'], $address['bits']).' for '.$username);
 		if ($oldaccess['id']==$node) {
-			$sql = "DELETE FROM `".$this->prefix."access` WHERE `username`='".
-				$this->escape($username)."' AND `node`=".
-				$this->escape($node);
-			if (!$this->query($sql))
+			try {
+				$sql = "DELETE FROM `".$this->prefix."access` ".
+					"WHERE `username`=? AND `node`=?";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute(array($username, (int)$node));
+			} catch (PDOException $e) {
+				$this->error = $e->getMessage();
 				return false;
+			}
 			$oldaccess = $this->getAccess($node, $username);
 			/* If parent has same access, try to clean up old rows */
 			if ($oldaccess['access']==$access)
 				return $this->changeAccess($oldaccess['id'], $username, $access);
 		}
-		$sql = "INSERT INTO `".$this->prefix."access`(`node`, `username`, `access`) VALUES(".
-			$node.", '".$this->escape($username)."', '".$access."')";
-		return $this->query($sql);
+		try {
+			$sql = "INSERT INTO `".$this->prefix."access` (`node`, `username`, `access`) ".
+				"VALUES(?, ?, ?)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute(array((int)$node, $username, $access));
+			return true;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
 	public function addAccess($node, $username, $access) {
 		$address = $this->getAddress($node);
-		return ($this->query("INSERT INTO `".$this->prefix."access` (`node`, `username`, `access`) VALUES(".
-							 $this->escape($node).", '".
-							 $this->escape($username)."', '".
-							 ($access=='w' ? 'w' : 'r')."')") &&
-				$this->log('Added '.($access=='w' ? 'write' : 'read-only').' access to '.
-						   showip($address['address'], $address['bits']).' for '.$username));
+		try {
+			$sql = "INSERT INTO `".$this->prefix."access` (`node`, `username`, `access`) ".
+				"VALUES(?, ?, ?)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute((int)$node, $username, $access=='w' ? 'w' : 'r');
+			$this->log('Added '.($access=='w' ? 'write' : 'read-only').' access to '.
+					   showip($address['address'], $address['bits']).' for '.$username);
+			return true;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			return false;
+		}
 	}
 
 
