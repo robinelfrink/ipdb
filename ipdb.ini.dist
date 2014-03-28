@@ -1,8 +1,6 @@
 ;
 ; IP Database configuration
 ;
-; $Id$
-;
 
 ; Database settings
 [database]
