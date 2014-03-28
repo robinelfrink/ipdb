@@ -445,7 +445,7 @@ class Database {
 				"WHERE `parent`=?";
 			$stmt = $this->db->prepare($sql);
 			$stmt->execute(array((int)$parent));
-			return ($stmt->fetch() && true);
+			return (($id = $stmt->fetch(PDO::FETCH_ASSOC)) && ($id['id']>0));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
