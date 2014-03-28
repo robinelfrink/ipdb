@@ -1000,7 +1000,7 @@ class Database {
 		}
 		try {
 			$sql = "INSERT INTO `".$this->prefix."extratables` (`table`, `item`, `description`, `comments`) ".
-				"VALUES(? ? ? ?)";
+				"VALUES(?, ?, ?, ?)";
 			$stmt = $this->db->prepare($sql);
 			$stmt->execute(array($table, $item, $description, $comments));
 		} catch (PDOException $e) {
