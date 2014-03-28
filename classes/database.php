@@ -37,13 +37,15 @@ class Database {
 								isset($config['username']) ? $config['username'] : '',
 								isset($config['password']) ? $config['password'] : '',
 								isset($config['options']) ? $config['options'] : array());
-			if (preg_match('/^(mysql|sqlite)/', $config['dsn'])) {
+			$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME)=='mysql') {
 				/* Set default character set */
 				$this->db->exec("SET collation_connection = utf8_unicode_ci");
 				$this->db->exec("SET NAMES utf8");
 			}
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 		}
 		$this->prefix = $config['prefix'];
 
@@ -59,6 +61,7 @@ class Database {
 			return $stmt->execute(array($session->username, $action));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -75,6 +78,7 @@ class Database {
 				return true;
 			return false;
 		} catch (PDOException $e) {
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 
@@ -100,6 +104,7 @@ class Database {
 			$this->error = 'Version unknown';
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 		}
 		return false;
 
@@ -110,7 +115,7 @@ class Database {
 
 		$this->error = null;
 		try {
-			if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+			if (in_array($this->db->getAttribute(PDO::ATTR_DRIVER_NAME), array('mysql', 'sqlite')))
 				/* Drop old tables, even though we're pretty sure they don't exist. */
 				foreach (array('ip', 'version', 'extrafields', 'extratables',
 							   'tablenode', 'tablecolumn', 'log', 'access') as $table)
@@ -121,7 +126,7 @@ class Database {
 								"`bits` INT UNSIGNED NOT NULL,".
 								"`parent` INT UNSIGNED NOT NULL DEFAULT 0,".
 								"`description` varchar(255),".
-								"PRIMARY KEY  (`id`),".
+								"PRIMARY KEY (`id`),".
 								"KEY `address` (`address`),".
 								"KEY `bits` (`bits`),".
 								"UNIQUE INDEX `addressbits` (`address`, `bits`),".
@@ -184,6 +189,7 @@ class Database {
 							") ENGINE=InnoDB DEFAULT CHARSET=utf8");
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		return $this->log('Initialized database');
@@ -207,7 +213,7 @@ class Database {
 			}
 			$version = $row['version'];
 			if ($version<2) {
-				if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+				if (in_array($this->db->getAttribute(PDO::ATTR_DRIVER_NAME), array('mysql', 'sqlite')))
 					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix."log`");
 				$this->db->exec("CREATE TABLE `".$this->prefix."log` (".
 									"`stamp` datetime NOT NULL,".
@@ -216,7 +222,7 @@ class Database {
 								")");
 			}
 			if ($version<3) {
-				if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+				if (in_array($this->db->getAttribute(PDO::ATTR_DRIVER_NAME), array('mysql', 'sqlite')))
 					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix."access`");
 				$this->db->exec("CREATE TABLE `".$this->prefix."access` (".
 									"`node` INT UNSIGNED NOT NULL,".
@@ -226,7 +232,7 @@ class Database {
 								")");
 			}
 			if ($version<4) {
-				if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+				if (in_array($this->db->getAttribute(PDO::ATTR_DRIVER_NAME), array('mysql', 'sqlite')))
 					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix."tablecolumn`");
 				$this->db->exec("CREATE TABLE `".$this->prefix."tablecolumn` (".
 									"`table` varchar(15) NOT NULL,".
@@ -237,7 +243,7 @@ class Database {
 								")");
 			}
 			if ($version<5) {
-				if (preg_match('/^(mysql|sqlite)/', $this->config['dsn']))
+				if (in_array($this->db->getAttribute(PDO::ATTR_DRIVER_NAME), array('mysql', 'sqlite')))
 					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix."users`");
 				$this->db->exec("ALTER TABLE `".$this->prefix."admin` ".
 								"RENAME TO `".$this->prefix."users`");
@@ -253,6 +259,7 @@ class Database {
 			$stmt->execute(array((int)$this->dbversion));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		return $this->log('Upgraded database version '.$version.' to '.$this->dbversion);
@@ -288,6 +295,7 @@ class Database {
 			return $user;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -335,6 +343,7 @@ class Database {
 			return $stmt->fetchAll(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -350,6 +359,7 @@ class Database {
 			return $stmt->fetchAll(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -365,6 +375,7 @@ class Database {
 			return $stmt->fetch(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -381,6 +392,7 @@ class Database {
 			return $stmt->fetch(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}   
 	}
@@ -402,6 +414,7 @@ class Database {
 			return $result;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -417,6 +430,7 @@ class Database {
 			return ($stmt->rowCount()>0);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -434,6 +448,7 @@ class Database {
 				return ($result['total']>0);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 		}
 		return false;
 	}
@@ -455,6 +470,7 @@ class Database {
 			return 0;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -475,6 +491,7 @@ class Database {
 			return $stmt->fetchAll(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -490,6 +507,7 @@ class Database {
 			return ($stmt->rowCount()>0 ? $stmt->fetch(PDO::FETCH_ASSOC) : null);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -517,6 +535,7 @@ class Database {
 			}
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 
@@ -543,6 +562,7 @@ class Database {
 					}
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 
@@ -575,6 +595,7 @@ class Database {
 			$stmt->execute(array((int)($max['max']+1), $address, (int)$bits, $parent, $description));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 
@@ -591,6 +612,7 @@ class Database {
 				$stmt->execute($max['max']+1);
 			} catch (PDOException $e) {
 				$this->error = $e->getMessage();
+				error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 				return false;
 			}
 		}
@@ -624,6 +646,7 @@ class Database {
 			$children = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		if (count($children)>0) {
@@ -637,6 +660,7 @@ class Database {
 					$stmt->execute(array((int)$node));
 				} catch (PDOException $e) {
 					$this->error = $e->getMessage();
+					error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 					return false;
 				}
 			} else if ($childaction=='move') {
@@ -652,6 +676,7 @@ class Database {
 					$stmt->execute(array((int)$node));
 				} catch (PDOException $e) {
 					$this->error = $e->getMessage();
+					error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 					return false;
 				}
 			} else {
@@ -666,6 +691,7 @@ class Database {
 				$stmt->execute(array((int)$node));
 			} catch (PDOException $e) {
 				$this->error = $e->getMessage();
+				error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 				return false;
 			}
 		}
@@ -689,6 +715,7 @@ class Database {
 			return '';
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -737,6 +764,7 @@ class Database {
 			}
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 
@@ -815,6 +843,7 @@ class Database {
 
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			$this->db->rollBack();
 			return false;
 		}
@@ -836,6 +865,7 @@ class Database {
 				$stmt->execute(array((int)$node, $field, $value));
 			} catch (PDOException $e) {
 				$this->error = $e->getMessage();
+				error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 				return false;
 			}
 		$this->log('Set field \''.$field.'\' for node '.
@@ -850,6 +880,7 @@ class Database {
 				$children = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			} catch (PDOException $e) {
 				$this->error = $e->getMessage();
+				error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 				return false;
 			}
 			if (count($children)>0)
@@ -876,6 +907,7 @@ class Database {
 				return $stmt->fetchAll(PDO::FETCH_ASSOC);
 			} catch (PDOException $e) {
 				$this->error = $e->getMessage();
+				error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 				return false;
 			}
 		try {
@@ -896,6 +928,7 @@ class Database {
 			return $extra;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -925,6 +958,7 @@ class Database {
 			$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		if (count($items)>0) {
@@ -950,6 +984,7 @@ class Database {
 			$stmt->execute(array($table, $item, $description, $comments));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		if (is_array($columndata) && (count($columndata)>0))
@@ -961,6 +996,7 @@ class Database {
 					$stmt->execute(array($table, $item, $column, $data));
 				} catch (PDOException $e) {
 					$this->error = $e->getMessage();
+					error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 					return false;
 				}
 		return $this->log('Added \''.$table.'\' item '.$item.
@@ -978,6 +1014,7 @@ class Database {
 			$stmt->execute(array($item, $description, $comments, $olditem, $table));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		$entry = $this->getExtra($table, $olditem);
@@ -996,6 +1033,7 @@ class Database {
 			$stmt->execute(array($item, $olditem, $table));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		if (is_array($columndata) && (count($columndata)>0))
@@ -1008,6 +1046,7 @@ class Database {
 						$stmt->execute(array($table, $item, $column, $data));
 					} catch (PDOException $e) {
 						$this->error = $e->getMessage();
+						error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 						return false;
 					}
 					if ($config->extratables[$table]['columns'][$column]=='password')
@@ -1037,6 +1076,7 @@ class Database {
 			$stmt->execute(array($item, $table));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		return $this->log('Deleted \''.$table.'\' item '.$item);
@@ -1061,6 +1101,7 @@ class Database {
 			return array('item'=>'-', 'description'=>'');
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -1076,6 +1117,7 @@ class Database {
 			$nodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		if (count($nodes)>0) {
@@ -1105,6 +1147,7 @@ class Database {
 				$stmt->execute(array($table, $item, (int)$node));
 			} catch (PDOException $e) {
 				$this->error = $e->getMessage();
+				error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 				return false;
 			}
 		if ($recursive)
@@ -1120,6 +1163,7 @@ class Database {
 							return false;
 			} catch (PDOException $e) {
 				$this->error = $e->getMessage();
+				error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 				return false;
 			}
 		$address = $this->getAddress($node);
@@ -1141,6 +1185,7 @@ class Database {
 			return true;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -1158,6 +1203,7 @@ class Database {
 			$stmt->execute(array($name, $username));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 		$session->changeName($name);
@@ -1180,6 +1226,7 @@ class Database {
 			return true;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -1204,6 +1251,7 @@ class Database {
 			return true;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -1219,6 +1267,7 @@ class Database {
 			return true;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -1234,6 +1283,7 @@ class Database {
 			return true;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -1254,6 +1304,7 @@ class Database {
 			return $stmt->fetchAll(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -1274,6 +1325,7 @@ class Database {
 				$stmt->execute(array($username, (int)$node));
 			} catch (PDOException $e) {
 				$this->error = $e->getMessage();
+				error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 				return false;
 			}
 			$oldaccess = $this->getAccess($node, $username);
@@ -1289,6 +1341,7 @@ class Database {
 			return true;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -1306,6 +1359,7 @@ class Database {
 			return true;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
