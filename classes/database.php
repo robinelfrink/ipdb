@@ -71,7 +71,7 @@ class Database {
 	public function escape($string) {
 
 		if ($this->provider=='mysql')
-			return mysql_escape_string($string);
+			return mysql_real_escape_string($string);
 		return addslashes($string);
 
 	}
