@@ -55,10 +55,10 @@ class Database {
 	public function log($action) {
 		global $session;
 		$sql = "INSERT INTO `".$this->prefix."log` (`stamp`, `username`, `action`) ".
-			"VALUES(NOW(), ?, ?)";
+			"VALUES(?, ?, ?)";
 		try {
 			$stmt = $this->db->prepare($sql);
-			return $stmt->execute(array($session->username, $action));
+			return $stmt->execute(array(date('c'), $session->username, $action));
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
@@ -120,22 +120,26 @@ class Database {
 				foreach (array('ip', 'version', 'extrafields', 'extratables',
 							   'tablenode', 'tablecolumn', 'log', 'access') as $table)
 					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix.$table."`");
+
+			/* ip */
 			$this->db->exec("CREATE TABLE `".$this->prefix."ip` (".
 								"`id` INT UNSIGNED NOT NULL,".
 								"`address` varchar(32) NOT NULL,".
 								"`bits` INT UNSIGNED NOT NULL,".
 								"`parent` INT UNSIGNED NOT NULL DEFAULT 0,".
 								"`description` varchar(255),".
-								"PRIMARY KEY (`id`),".
-								"KEY `address` (`address`),".
-								"KEY `bits` (`bits`),".
-								"UNIQUE INDEX `addressbits` (`address`, `bits`),".
-								"KEY `parent` (`parent`)".
+								"PRIMARY KEY (`id`)".
 							")");
+			$this->db->exec("CREATE UNIQUE INDEX `addressbits` ON `".$this->prefix."ip` (`address`, `bits`)");
+			$this->db->exec("CREATE INDEX `address` ON `".$this->prefix."ip` (`address`)");
+			$this->db->exec("CREATE INDEX `bits` ON `".$this->prefix."ip` (`bits`)");
+			$this->db->exec("CREATE INDEX `parent` ON `".$this->prefix."ip` (`parent`)");
 			$this->db->exec("INSERT INTO `".$this->prefix."ip` (`id`, `address`, `bits`, `parent`, `description`) ".
 							"VALUES(1, 'fc030000000000000000000000000000', 16, 0, 'Default IPv6 network.')");
 			$this->db->exec("INSERT INTO `".$this->prefix."ip` (`id`, `address`, `bits`, `parent`, `description`) ".
 							"VALUES(2, '000000000000000000000000C0A80300', 120, 0, 'Default IPv4 network.')");
+
+			/* users */
 			$this->db->exec("CREATE TABLE `".$this->prefix."users` (".
 								"`username` varchar(15) NOT NULL,".
 								"`password` varchar(32) NOT NULL,".
@@ -145,17 +149,23 @@ class Database {
 							")");
 			$this->db->exec("INSERT INTO `".$this->prefix."users` (`username`, `password`, `name`,`admin`) ".
 							"VALUES('admin', '".md5('secret')."', 'Administrator', 1)");
+
+			/* version */
 			$this->db->exec("CREATE TABLE `".$this->prefix."version` (".
 								"`version` INT NOT NULL".
 							")");
 			$this->db->exec("INSERT INTO `".$this->prefix."version` (`version`) ".
 							"VALUES(".$this->dbversion.")");
+
+			/* extrafields */
 			$this->db->exec("CREATE TABLE `".$this->prefix."extrafields` (".
 								"`node` INT UNSIGNED NOT NULL,".
 								"`field` varchar(15) NOT NULL,".
 								"`value` varchar(255) NOT NULL,".
 								"PRIMARY KEY(`node`, `field`)".
 							")");
+
+			/* extratables */
 			$this->db->exec("CREATE TABLE `".$this->prefix."extratables` (".
 								"`table` varchar(15) NOT NULL,".
 								"`item` varchar(50) NOT NULL,".
@@ -163,30 +173,38 @@ class Database {
 								"`comments` text NOT NULL,".
 								"PRIMARY KEY(`table`, `item`)".
 							")");
+
+			/* tablenode */
 			$this->db->exec("CREATE TABLE `".$this->prefix."tablenode` (".
 								"`table` varchar(15) NOT NULL,".
 								"`item` varchar(50) NOT NULL,".
 								"`node` INT UNSIGNED NOT NULL,".
 								"PRIMARY KEY(`table`, `item`, `node`)".
 							")");
+
+			/* tablecolumn */
 			$this->db->exec("CREATE TABLE `".$this->prefix."tablecolumn` (".
 								"`table` varchar(15) NOT NULL,".
 								"`item` varchar(50) NOT NULL,".
 								"`column` varchar(15) NOT NULL,".
 								"`value` varchar(255) NOT NULL,".
 								"PRIMARY KEY(`table`, `item`, `column`)".
-							") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+							")");
+
+			/* log */
 			$this->db->exec("CREATE TABLE `".$this->prefix."log` (".
 								"`stamp` datetime NOT NULL,".
 								"`username` varchar(15) NOT NULL,".
 								"`action` varchar(255) NOT NULL".
-							") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+							")");
+
+			/* access */
 			$this->db->exec("CREATE TABLE `".$this->prefix."access` (".
 								"`node` INT UNSIGNED NOT NULL,".
 								"`username` varchar(15) NOT NULL,".
-								"`access` ENUM ('r', 'w'),".
+								"`access` VARCHAR(1),".
 								"PRIMARY KEY(`node`, `username`)".
-							") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+							")");
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
@@ -427,7 +445,7 @@ class Database {
 				"WHERE `parent`=?";
 			$stmt = $this->db->prepare($sql);
 			$stmt->execute(array((int)$parent));
-			return ($stmt->rowCount()>0);
+			return ($stmt->fetch() && true);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
@@ -501,10 +519,10 @@ class Database {
 			$sql = "SELECT `id`, `address`, `bits`, `parent`, `description` ".
 				"FROM `".$this->prefix."ip` ".
 				"WHERE STRCMP(? , `address`)<0 ".
-				"ORDER BY `address` ASC LIMIT 1";
+				"ORDER BY `address` ASC";
 			$stmt = $this->db->prepare($sql);
 			$stmt->execute(array($address));
-			return ($stmt->rowCount()>0 ? $stmt->fetch(PDO::FETCH_ASSOC) : null);
+			return ($node = $stmt->fetch(PDO::FETCH_ASSOC) ? $node: null);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
@@ -526,10 +544,12 @@ class Database {
 		/* Check for exact match */
 		try {
 			$sql = "SELECT `id` FROM `".$this->prefix."ip` ".
-				"WHERE `address`=? AND `bits`=?";
+				"WHERE `address`=:address AND `bits`=:bits";
 			$stmt = $this->db->prepare($sql);
+			$stmt->bindValue('address', $address, PDO::PARAM_STR);
+			$stmt->bindValue('bits', (int)$bits, PDO::PARAM_INT);
 			$stmt->execute(array($address, (int)$bits));
-			if ($stmt->rowCount()>0) {
+			if ($stmt->fetch()) {
 				$this->error = 'Node '.showip($address, $bits).' already exists';
 				return false;
 			}
@@ -554,7 +574,8 @@ class Database {
 				"ORDER BY `address` DESC, `bits` DESC";
 			$stmt = $this->db->prepare($sql);
 			$stmt->execute(array($address));
-			if ($stmt->rowCount()>0)
+			$parents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			if (count($parents)>0)
 				foreach ($parents as $parentnode)
 					if (strcmp(broadcast($address, $bits), broadcast($parentnode['address'], $parentnode['bits']))<=0) {
 						$parent = $parentnode['id'];
