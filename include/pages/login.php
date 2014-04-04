@@ -36,7 +36,7 @@ class login {
 			$skin->parse('errorheader');
 		}
 		$skin->setVar('username', request('username', isset($_SESSION['username']) ? $_SESSION['username'] : ''));
-		$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>');
+		$skin->setVar('meta', '<script type="text/javascript" src="js/ipdb.js"></script>');
 
 		$content = $skin->get();
 		$commands = "

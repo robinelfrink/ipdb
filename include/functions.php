@@ -362,7 +362,7 @@ function send($data) {
 		$skin->setFile('index.html');
 		$skin->setVar('title', $data['title']);
 		$skin->setVar('version', $version);
-		$skin->setVar('meta', '<script type="text/javascript" src="ipdb.js"></script>
+		$skin->setVar('meta', '<script type="text/javascript" src="js/ipdb.js"></script>
 <script type="text/javascript">
 <!--
 	var timeout = '.$session->expire.';
@@ -406,7 +406,7 @@ function randstr($length, $base = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRS
 function fatal($str) {
 	global $xml;
 	if ($xml) {
-		require_once 'classes/xml.php';
+		require_once 'include/xml.php';
 		XML::fatal($str);
 	} else
 		exit('Error: '.$str);

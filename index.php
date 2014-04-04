@@ -24,20 +24,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /* Request for xsd schema */
 if (isset($_REQUEST['xsd'])) {
 	header('Content-type: text/xml');
-	readfile('classes/xmlschema.xsd');
+	readfile('include/xmlschema.xsd');
 	exit;
 }
 
 
 /* Include necessary files */
-require_once 'actions.php';
-require_once 'functions.php';
-require_once 'classes/config.php';
-require_once 'classes/database.php';
-require_once 'classes/menu.php';
-require_once 'classes/session.php';
-require_once 'classes/skin.php';
-require_once 'classes/tree.php';
+require_once 'include/actions.php';
+require_once 'include/functions.php';
+require_once 'include/config.php';
+require_once 'include/database.php';
+require_once 'include/menu.php';
+require_once 'include/session.php';
+require_once 'include/skin.php';
+require_once 'include/tree.php';
 
 
 /* Set some settings */
@@ -83,7 +83,7 @@ if ($database->error)
 	fatal($database->error);
 
 if ($xml) {
-	require_once 'classes/xml.php';
+	require_once 'include/xml.php';
 	XML::handle($xml);
 	exit;
 }
@@ -116,11 +116,11 @@ $page = request('page', 'main');
 
 
 /* Fetch the selected page */
-if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php')) {
+if (!file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'include/pages'.DIRECTORY_SEPARATOR.$page.'.php')) {
 	$_SESSION['page'] = $oldpage;
 	fatal('No code defined for page '.$page);
 }
-require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR.$page.'.php';
+require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'include/pages'.DIRECTORY_SEPARATOR.$page.'.php';
 $pageobj = new $page();
 if (method_exists($pageobj, 'get')) {
 	$pagedata = $pageobj->get();
