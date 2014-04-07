@@ -95,31 +95,17 @@ function request($name, $default = NULL, $set = false) {
 }
 
 
-function ip2address($address) {
-	if (strcmp($address, '00000000000000000000000100000000')<0) {
-		/* IPv4 */
-		$output = '';
-		for ($i=0; $i<8; $i=$i+2)
-			$output .= hexdec(substr($address, 24+$i, 2)).'.';
-		return preg_replace('/\.$/', '', $output);
-	} else {
-		/* IPv6 */
-		$output = preg_replace('/:$/', '', preg_replace('/([0-9a-f]{4})/', '\1:', $address));
-		return ipv6compress($output);
-	}
+function ip2address($ip) {
+	if (!preg_match('/^[0-9a-f]{32}$/i', $ip))
+		trigger_error($ip.' is not a valid internal address representation');
+	return inet_ntop(pack('H*', preg_replace('/^[0]{24}/', '', $ip)));
 }
 
 
 function address2ip($address) {
-	if (preg_match('/^([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$/', $address, $matches))
-		return '000000000000000000000000'.str_pad(dechex($matches[1]), 2, '0', STR_PAD_LEFT).
-			str_pad(dechex($matches[2]), 2, '0', STR_PAD_LEFT).
-			str_pad(dechex($matches[3]), 2, '0', STR_PAD_LEFT).
-			str_pad(dechex($matches[4]), 2, '0', STR_PAD_LEFT);
-	$ipv6 = ipv6uncompress($address);
-	if (preg_match('/^([0-9a-f]{4}:){7}[0-9a-f]{4}$/', $ipv6))
-		return preg_replace('/:/', '', $ipv6);
-	return $address;
+	if (false==($ip = inet_pton($address)))
+		trigger_error($address.' is not a valid IP address');
+	return str_pad(unpack('H*', $ip)[1], 32, '0', STR_PAD_LEFT);
 }
 
 
