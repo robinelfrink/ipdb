@@ -49,6 +49,7 @@ class Session {
 		$this->error = null;
 		ini_set('session.use_cookies', '1');
 		ini_set('session.save_handler', 'files');
+		session_set_cookie_params(0, me());
 		session_start();
 
 		if (request('action')=='login') {
