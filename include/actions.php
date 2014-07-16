@@ -51,39 +51,34 @@ function acton($action) {
 		  break;
 	  case 'addnode':
 		  if ($session->authenticated) {
-			  $address = address2ip(request('address'));
-			  $bits = (strcmp($address, '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'));
-			  if (!($newnode = $database->addNode($address, $bits, request('description')))) {
+			  if (!($node = $database->addNode(request('address').'/'.request('bits'), request('description')))) {
 				  $error = $database->error;
 				  break;
 			  }
 			  if (count($config->extrafields)>0)
 				  foreach ($config->extrafields as $field=>$details)
-					  if (!$database->setField($field, $newnode, request('field-'.$field), (request('field-'.$field.'-recursive')=='on' ? true : false))) {
+					  if (!$database->setField($field, $node, request('field-'.$field), (request('field-'.$field.'-recursive')=='on' ? true : false))) {
 						  $error = $database->error;
 						  break;
 					  }
 			  if (count($config->extratables)>0)
 				  foreach ($config->extratables as $table=>$details)
 					  if ($details['linkaddress'] &&
-						  !$database->setItem($table, $newnode, request('table-'.$table), (request('table-'.$table.'-recursive')=='on' ? true : false))) {
+						  !$database->setItem($table, $node, request('table-'.$table), (request('table-'.$table.'-recursive')=='on' ? true : false))) {
 						  $error = $database->error;
 						  break;
 					  }
-			  request('node', $newnode, true);
+			  request('node', $node, true);
 			  request('page', 'main', true);
 		  }
 		  break;
 	  case 'changenode':
 		  if ($session->authenticated) {
-			  $details = $database->getAddress(request('node'));
+			  $node = $database->getNode(request('node'));
 			  if ($database->error) {
 				  $error = $database->error;
 			  } else {
-				  $address = address2ip(request('address'));
-				  $bits = (strcmp($address, '00000000000000000000000100000000')<0 ? request('bits')+96 : request('bits'));
-				  $database->changeNode(request('node'), $address, $bits,
-										request('description'));
+				  $database->changeNode(request('node'), request('address').'/'.request('bits'), request('description'));
 				  if ($database->error) {
 					  $error = $database->error;
 				  } else {
@@ -109,17 +104,13 @@ function acton($action) {
 		  break;
 	  case 'deletenode':
 		  if ($session->authenticated) {
-			  $details = $database->getAddress(request('node'));
+			  $database->deleteNode(request('node'), request('childaction'));
 			  if ($database->error) {
 				  $error = $database->error;
 			  } else {
-				  $database->deleteNode(request('node'), request('childaction'));
-				  if ($database->error) {
-					  $error = $database->error;
-				  } else {
-					  request('node', $details['parent'], true);
-					  request('page', 'main', true);
-				  }
+				  $parent = $database->getParent(request('node'));
+				  request('node', $parent['node'], true);
+				  request('page', 'main', true);
 			  }
 		  }
 		  break;
@@ -241,7 +232,7 @@ function acton($action) {
 		  if ($session->authenticated && $database->isAdmin($session->username)) {
 			  foreach ($_REQUEST as $name=>$value) {
 				  if (preg_match('/^access_(.*)/', $name, $matches) &&
-					  !$database->changeAccess($matches[1], request('user'), ($value=='write' ? 'w' : 'r'))) {
+					  !$database->setAccess($matches[1], request('user'), ($value=='write' ? 'w' : 'r'))) {
 					  $error = $database->error;
 					  break;
 				  }
@@ -252,17 +243,10 @@ function acton($action) {
 		  if ($session->authenticated && $database->isAdmin($session->username)) {
 			  $prefixes = preg_split('/\s+/s', request('prefixes'));
 			  foreach ($prefixes as $prefix) {
-				  if (preg_match('/(.*)\/(.*)/', $prefix, $matches)) {
-					  $address = address2ip($matches[1]);
-					  $bits = ($address<'00000000000000000000000100000000' ? $matches[2]+96 : $matches[2]);
-					  if ($node = $database->findAddress($address, $bits)) {
-						  $oldaccess = $database->getAccess($node['id'], request('user'));
-						  $newaccess = ($oldaccess['access'] == 'r' ? 'w' : 'r');
-						  if (!$database->changeAccess($node['id'], request('user'), $newaccess)) {
-							  $error = $database->error;
-							  break;
-						  }
-					  }
+				  $oldaccess = $database->getAccess($prefix, request('user'));
+				  if (!$database->setAccess($prefix, request('user'), $oldaccess['access'] == 'r' ? 'w' : 'r')) {
+					  $error = $database->error;
+					  break;
 				  }
 			  }
 		  }
@@ -270,7 +254,7 @@ function acton($action) {
 		  if ($session->authenticated && $database->isAdmin($session->username)) {
 			  foreach ($_REQUEST as $name=>$value) {
 				  if (preg_match('/^access_(.*)/', $name, $matches) &&
-					  !$database->changeAccess(request('node'), $matches[1], ($value=='write' ? 'w' : 'r'))) {
+					  !$database->setAccess(request('node'), $matches[1], ($value=='write' ? 'w' : 'r'))) {
 					  $error = $database->error;
 					  break;
 				  }
@@ -279,14 +263,10 @@ function acton($action) {
 		  break;
 	  case 'printtree':
 		  if ($session->authenticated) {
-			  $node = $database->getAddress(request('node'));
-			  $net = ip2address($node['address']).
-				  ($node['address']<'00000000000000000000000100000000' ?
-				   ($node['bits']<128 ? '/'.($node['bits']-96) : '') :
-				   ($node['bits']<128 ? '/'.$node['bits'] : ''));
+			  $node = $database->getNode(request('node'));
 			  header('Content-Type: text/plain');
-			  header('Content-Disposition: attachment; filename="'.$net.'.txt"');
-			  echo $net.'    '.$node['description']."\n\n";
+			  header('Content-Disposition: attachment; filename="'.$node['node'].'.txt"');
+			  echo $node['node'].'    '.$node['description']."\n\n";
 			  echo Tree::getTxt(request('node'));
 			  exit;
 		  }

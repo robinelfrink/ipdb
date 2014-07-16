@@ -31,27 +31,26 @@ class changenode {
 		global $config, $database;
 		$skin = new skin($config->skin);
 		$skin->setFile('node.html');
-		if ($node = request('node')) {
-			$data = $database->getAddress($node);
-			if ($parent = $database->getAddress($data['parent'])) {
-				$skin->setVar('parentaddress', showip($parent['address'], $parent['bits']));
-				$skin->setVar('parentlink', me().'?page=main&amp;node='.$parent['id']);
+		if ($node = $database->getNode(request('node'))) {
+			if ($parent = $database->getParent($node['node'])) {
+				$skin->setVar('parentaddress', $parent['node']);
+				$skin->setVar('parentlink', me().'?page=main&amp;node='.$parent['node']);
 			} else {
-				$skin->setVar('parentaddress', showip('00000000000000000000000000000000', 0));
-				$skin->setVar('parentlink', me().'?page=main&amp;node=0');
+				$skin->setVar('parentaddress', '::/0');
+				$skin->setVar('parentlink', me().'?page=main&amp;node=::/0');
 			}
 			$skin->parse('parent');
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					$skin->setVar('name', $field);
-					$skin->setVar('value', $database->getField($field, $node));
+					$skin->setVar('value', $database->getField($field, $node['node']));
 					$skin->parse('extrafield');
 				}
 			if (count($config->extratables)>0)
 				foreach ($config->extratables as $table=>$details)
 					if ($details['linkaddress']) {
 						$tableitems = $database->getExtra($table);
-						$item = $database->getItem($table, $node);
+						$item = $database->getItem($table, $node['node']);
 						$options = '<option value="">-</option>';
 						if (count($tableitems)>0)
 							foreach ($tableitems as $tableitem)
@@ -65,10 +64,10 @@ class changenode {
 						$skin->setVar('tableoptions', $options);
 						$skin->parse('extratable');
 					}
-			$skin->setVar('address', ip2address($data['address']));
-			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
-			$skin->setVar('description', htmlentities($data['description']));
-			$skin->setVar('node', $node);
+			$skin->setVar('address', preg_replace('/\/.*/', '', $node['node']));
+			$skin->setVar('bits', preg_replace('/.*\//', '', $node['node']));
+			$skin->setVar('description', htmlentities($node['description']));
+			$skin->setVar('node', $node['node']);
 		}
 		$skin->parse('changenode');
 		$content = $skin->get();

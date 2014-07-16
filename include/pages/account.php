@@ -32,7 +32,6 @@ class account {
 		$skin->setVar('username', htmlentities($session->username));
 		$skin->setVar('name', htmlentities($session->name));
 
-		debug($session);
 		if ($session->islocal)
 			$skin->parse('localuser');
 		else
@@ -41,8 +40,7 @@ class account {
 		$user = $database->getUser($session->username);
 		if (is_array($user['access']) && (count($user['access'])>0)) {
 			foreach ($user['access'] as $access) {
-				$skin->setVar('address', showip($access['address'], $access['bits']));
-				$skin->setVar('nodelink', me().'?page=main&amp;node='.$access['id']);
+				$skin->setVar('node', $access['node']);
 				$skin->setVar('access', ($access['access']=='w' ? 'write' : 'read-only'));
 				$skin->parse('network');
 			}

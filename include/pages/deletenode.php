@@ -30,16 +30,13 @@ class deletenode {
 	public function get() {
 		global $config, $database;
 		$skin = new skin($config->skin);
-		if ($node = request('node')) {
-			$data = $database->getAddress($node);
+		if ($node = $database->getNode(request('node'))) {
 			$skin->setFile('deletenode.html');
-			if ($database->hasChildren($node))
+			$children = $database->getChildren($node['node']);
+			if (count($children))
 				$skin->parse('children');
-			$skin->setVar('link', me().'?page=main&amp;node='.$node);
-			$skin->setVar('address', ip2address($data['address']));
-			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
-			$skin->setVar('description', $data['description']);
-			$skin->setVar('node', $node);
+			$skin->setVar('description', $node['description']);
+			$skin->setVar('node', $node['node']);
 			$content = $skin->get();
 			return array('title'=>'IPDB :: Delete node',
 						 'content'=>$content);

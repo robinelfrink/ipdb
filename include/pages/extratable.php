@@ -67,7 +67,7 @@ class extratable {
 				if (count($nodes)>0) {
 					$comments .= 'Nodes:<p style="margin-left: 2em;">';
 					foreach ($nodes as $node)
-						$comments .= showip($node['address'], $node['bits']).'<br />';
+						$comments .= $node['node'].'<br />';
 					$comments .= '</p>';
 				}
 

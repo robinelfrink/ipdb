@@ -29,47 +29,46 @@ class main {
 
 	public function get() {
 		global $config, $database, $session;
-		if (($node = request('node')) && ($node>0) && ($data = $database->getaddress($node))) {
-			$title = showip($data['address'], $data['bits']);
+		if (($node = request('node')) &&
+			($node!='::/0') &&
+			($data = $database->getNode($node))) {
 			$skin = new skin($config->skin);
 			$skin->setfile('netinfo.html');
-			if (strcmp($data['address'], '00000000000000000000000100000000')<0) {
-				$skin->setvar('netmask', ip2address(ipv4netmask($data['bits'])));
-				$skin->setvar('broadcast', ip2address(broadcast($data['address'], $data['bits'])));
+			if (preg_match('/^[\.0-9]+\//', $data['node'])) {
+				$skin->setvar('netmask', $database->getNetmask($data['node']));
+				$skin->setvar('broadcast', $database->getBroadcast($data['node']));
 				$skin->parse('ipv4');
 			}
-			if ($data['parent']>0) {
-				$parent = $database->getaddress($data['parent']);
-				$skin->setvar('parentlabel', showip($parent['address'], $parent['bits']));
-				$skin->setvar('parentlink', '?page=main&node='.$parent['id']);
+			if ($parent = $database->getParent($data['node'])) {
+				$skin->setvar('parentnode', $parent['node']);
 				$skin->parse('parent');
 			}
-			$skin->setvar('address', ip2address($data['address']));
-			$skin->setvar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
-			$children = $database->gettree($data['id']);
-			if ($data['bits']==128) {
-				$skin->setvar('label', 'host '.ip2address($data['address']));
+			$skin->setvar('address', preg_replace('/\/.*/', '', $data['node']));
+			$skin->setvar('bits', preg_replace('/.*\//', '', $data['node']));
+			$children = $database->getChildren($data['node']);
+			if (preg_match('/^[\.0-9]+\/32$/', $data['node']) ||
+				preg_match('/^[:0-9a-f]+\/128$/', $data['node'])) {
+				$skin->setvar('label', 'host '.preg_replace('/\/.*/', '', $data['node']));
 			} else {
-				$skin->setvar('label', 'network '.showip($data['address'], $data['bits']));
+				$skin->setvar('label', 'network '.$data['node']);
 				if (count($children)>0) {
 					if (request('showunused')=='yes') {
-						$skin->setvar('unusedlink', me().'?page=main&amp;node='.$data['id'].'&amp;showunused=no');
+						$skin->setvar('unusedyesno', 'no');
 						$skin->setvar('unusedlabel', 'hide unused blocks');
 					} else {
-						$skin->setvar('unusedlink', me().'?page=main&amp;node='.$data['id'].'&amp;showunused=yes');
+						$skin->setvar('unusedyesno', 'yes');
 						$skin->setvar('unusedlabel', 'show unused blocks');
 					}
-					$skin->setvar('printtreelink', me().'?action=printtree&amp;node='.$data['id']);
 					$skin->setvar('printtreelabel', 'print tree');
+					$skin->setvar('node', $data['node']);
 					$skin->parse('haschildren');
 				}
 			}
-			$skin->setvar('node', $data['id']);
 			$skin->setvar('description', htmlentities($data['description']));
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					$skin->setvar('field', $field);
-					$value = $database->getfield($field, $node);
+					$value = $database->getField($field, $node);
 					if ($details['url'])
 						$skin->setvar('value', '<a href="'.sprintf($details['url'], $value).'">'.$value.'</a>');
 					else
@@ -78,101 +77,60 @@ class main {
 				}
 			if (count($config->extratables)>0)
 				foreach ($config->extratables as $table=>$details)
-					if ($details['linkaddress']) {
-						$item = $database->getitem($table, $data['id']);
+					if ($details['linkaddress'] &&
+						($item = $database->getItem($table, $node))) {
 						$skin->setvar('table', $table);
-						if (($item['item']=='-') || ($details['type']!='password'))
+						if ($details['type']!='password')
 							$skin->setvar('item', $item['item'].' '.$item['description']);
 						else
-							$skin->setvar('item', $item['item'].' '.crypt($item['description'], randstr(2)));
+							$skin->setvar('item', $item['item'].' '.crypt($item['description']));
 						$skin->parse('extratable');
 					}
 
-			$skin->setVar('address', ip2address($data['address']));
-			$skin->setVar('bits', (strcmp($data['address'], '00000000000000000000000100000000')<0 ? $data['bits']-96 : $data['bits']));
+			$skin->setVar('address', preg_replace('/\/.*/', '', $data['node']));
+			$skin->setVar('bits', preg_replace('/.*\//', '', $data['node']));
 
-			$access = $database->getAccess($data['id'], $session->username);
+			$access = $database->getAccess($data['node'], $session->username);
 			if (($session->username=='admin') || ($access['access']=='w')) {
 				$links = '
-<a href="'.me().'?page=addnode&amp;address='.htmlentities($data['address']).'&amp;bits='.htmlentities($data['bits']).'" remote="remote">add</a> |
-<a href="'.me().'?page=deletenode&amp;node='.$data['id'].'" remote="remote">delete</a> |
-<a href="'.me().'?page=changenode&amp;node='.$data['id'].'" remote="remote">change</a>';
+<a href="'.me().'?page=addnode&amp;node='.$data['node'].'" remote="remote">add</a> |
+<a href="'.me().'?page=deletenode&amp;node='.$data['node'].'" remote="remote">delete</a> |
+<a href="'.me().'?page=changenode&amp;node='.$data['node'].'" remote="remote">change</a>';
 				if ($session->username=='admin')
 					$links .= ' |
-	<a href="'.me().'?page=nodeaccess&amp;node='.$data['id'].'" remote="remote">access</a>';
+	<a href="'.me().'?page=nodeaccess&amp;node='.$data['node'].'" remote="remote">access</a>';
 			} else {
 				$links = '';
 			}
 			$skin->setVar('links', $links);
 			$content = $skin->get();
+			$children = $database->getChildren($data['node'], false, request('showunused')=='yes');
 			if (count($children)>0)
-				$content .= $this->listchildren($data, $children);
-		} else if (request('node')<0) {
-			global $searchresult;
-			$title = 'The World';
-			$content = $this->listchildren(NULL, $searchresult);
+				$content .= $this->listchildren($children);
 		} else {
-			$title = 'Main page';
-			$tree = $database->getTree(0, false);
-			if (count($tree)>0) {
-				$skin = new Skin($config->skin);
-				$skin->setFile('main.html');
-				$even = true;
-				foreach ($tree as $network) {
-					$skin->setVar('link', ($network['id'] ? '?page=main&amp;node='.$network['id'] : '?page=modify&amp;action=add&amp;address='.$network['address'].'&amp;bits='.(strcmp($network['address'], '00000000000000000000000100000000')<0 ? $network['bits']-96 : $network['bits'])));
-					$skin->setVar('label', showip($network['address'], $network['bits']));
-					$skin->setVar('description', $network['description']);
-					$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
-					$skin->parse('network');
-					$even = !$even;
-				}
-				$skin->setVar('count', count($tree));
-				$content = $skin->get();
-			} else {
-				$content = '
-<p>You currently do not have any networks in your database.</p>';
-			}
+			global $searchresult;
+			$node = 'The World';
+			$nodes = $searchresult ? $searchresult : $database->getChildren('::/0', false, request('showunused')=='yes');
+			$content = $this->listchildren($nodes);
 		}
-		return array('title'=>'IPDB :: '.$title,
+		return array('title'=>'IPDB :: '.$node,
 					 'content'=>$content);
 	}
 
 
-	private function listchildren($node, $children) {
+	private function listchildren($children) {
 		global $config, $database;
 		$skin = new Skin($config->skin);
 		$skin->setFile('children.html');
-		$base = ($node ? $node['address'] : '00000000000000000000000000000000');;
-		$networks = array();
-		foreach ($children as $child) {
-			if ((request('action')!='search') &&
-				(request('showunused')=='yes') &&
-				(strcmp($base, $child['address'])<0)) {
-				$unused = findunused($base, $child['address']);
-				if (is_array($unused) && (count($unused)>0))
-					foreach ($unused as $network)
-						if (!$node || ($network['bits']!=128) ||
-							(($network['address']!=$node['address']) &&
-							 ($network['address']!=broadcast($node['address'], $node['bits']))))
-							$networks[] = $network;
-			}
-			$networks[] = $child;
-			$base = plus(broadcast($child['address'], $child['bits']), '00000000000000000000000000000001');
-		}
-		if (request('showunused')=='yes') {
-			$unused = findunused($base, plus(broadcast($node['address'], $node['bits']), '00000000000000000000000000000001'));
-			if (is_array($unused) && (count($unused)>0))
-				foreach ($unused as $network)
-					$networks[] = $network;
-		}
 		$even = true;
-		foreach ($networks as $network) {
-			$skin->setVar('link', ($network['id'] ? '?page=main&amp;node='.$network['id'] : '?page=addnode&amp;address='.$network['address'].'&amp;bits='.$network['bits'].'&amp;node='.$node['id']));
-			$skin->setVar('label', showip($network['address'], $network['bits']));
+		foreach ($children as $child) {
+			$skin->setVar('link', '?page='.(isset($child['unused']) ? 'addnode' : 'main').
+								  '&node='.$child['node']);
+			$skin->setVar('label', $child['node']);
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					if ($details['inoverview']) {
-						$value = $database->getField($field, $network['id']);
+						$value = $database->getField($field, $child['node']);
 						if (isset($details['url']))
 							$skin->setVar('extrafield', '<a href="'.htmlentities(sprintf($details['url'], $value)).'">'.htmlentities($value).'</a>');
 						else
@@ -184,15 +142,15 @@ class main {
 				foreach ($config->extratables as $table=>$details) 
 					 if (isset($details['inoverview']) && $details['inoverview'] &&
 						 isset($details['linkaddress']) && $details['linkaddress']) {
-						 $item = $database->getItem($table, $network['id']);
+						 $item = $database->getItem($table, $child['node']);
 						 $skin->setVar('extratable', $item['item']);
 						 $skin->parse('extratabledata');
 					 }
 
-			$skin->setVar('description', ($network['id'] ? htmlentities($network['description']) : 'unused'));
-			$skin->setVar('class', ($network['id'] ? '' : ' class="unused"'));
+			$skin->setVar('description', htmlentities($child['description']));
+			$skin->setVar('class', isset($child['unused']) ? ' class="unused"' : '');
 			$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').
-						  ($network['id'] ? '' : ' unused').'"');
+						  (isset($child['unused']) ? ' unused' : '').'"');
 			$skin->parse('child');
 			$even = !$even;
 		}

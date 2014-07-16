@@ -214,17 +214,7 @@ class XML {
 						  $ok = true;
 					  }
 				  } else if ($request->network) {
-					  $address = preg_replace('/\/.*/', '', (string)$request->network);
-					  $bits = preg_replace('/.*\//', '', (string)$request->network);
-					  if (preg_match('/\./', $address))
-						  $bits += 96;
-					  $ip = address2ip($address);
-					  if (!($node = $database->findAddress($ip, $bits))) {
-						  $result .= $this->error($name, $id,
-												  $database->error ? $database->error : 'Address not found');
-						  break;
-					  }
-					  if (!$database->deleteNode($node['id'])) {
+					  if (!$database->deleteNode((string)$request->network)) {
 						  $result .= $this->error($name, $id,
 												  $database->error ? $database->error : 'Unknown error in deleteNode');
 						  break;
@@ -235,43 +225,41 @@ class XML {
 				  }
 				  break;
 			  case 'get':
-				  $ip = address2ip((string)$request->address);
-				  $bits = (string)$request->bits + (preg_match('/\./', (string)$request->address) ? 96 : 0);
-				  if (!($node = $database->findAddress($ip, $bits))) {
+				  if (!($node = $database->getNode((string)$request->address))) {
 					  $result .= $this->error($name, $id,
 											  $database->error ? $database->error : 'Address not found');
 					  break;
 				  }
-				  $xml = '<address>'.ip2address($node['address']).'</address>
-<bits>'.(strcmp('00000000000000000000000100000000', $ip)>0 ? $node['bits']-96 : $node['bits']).'</bits>
-<broadcast>'.ip2address(broadcast($node['address'], $node['bits'])).'</broadcast>
+				  $xml = '<address>'.preg_replace('/\/.*/', '', $node['node']).'</address>
+<bits>'.preg_replace('/.*\//', '', $node['node']).'</bits>
+<broadcast>'.$database::getBroadcast($node['node']).'</broadcast>
 <description>'.htmlentities($node['description']).'</description>';
 				  foreach ($config->extrafields as $field=>$details)
-					  if ($details['inoverview'] && ($extra = $database->getField($field, $node['id'])))
+					  if ($details['inoverview'] && ($extra = $database->getField($field, $node['node'])))
 						  $xml .= '
 <'.$field.'>'.$extra.'</'.$field.'>';
 				  foreach ($config->extratables as $table=>$details)
-					  if ($item = $database->getItem($table, $node['id']))
+					  if ($item = $database->getItem($table, $node['node']))
 						  $xml .= '
 <'.$table.'>'.$item['item'].'</'.$table.'>';
 				  if (((string)$request->children) &&
-					  $database->hasChildren($node['id'])) {
-					  $children = $database->getTree($node['id']);
+					  ($children = $database->getChildren($node['node'])) &&
+					  count($children)) {
 					  $xml .= '
 <children>';
 					  foreach ($children as $child) {
 						  $xml .= '
 	<child>
-		<address>'.ip2address($child['address']).'</address>
-		<bits>'.(strcmp('00000000000000000000000100000000', $child['address'])>0 ? $child['bits']-96 : $child['bits']).'</bits>
-		<broadcast>'.ip2address(broadcast($child['address'], $child['bits'])).'</broadcast>
+		<address>'.preg_replace('/\/.*/', '', $child['node']).'</address>
+		<bits>'.preg_replace('/.*\//', '', $child['node']).'</bits>
+		<broadcast>'.$database::getBroadcast($child['node']).'</broadcast>
 		<description>'.htmlentities($child['description']).'</description>';
 						  foreach ($config->extrafields as $field=>$details)
-							  if ($details['inoverview'] && ($extra = $database->getField($field, $child['id'])))
+							  if ($details['inoverview'] && ($extra = $database->getField($field, $child['node'])))
 								  $xml .= '
 		<'.$field.'>'.$extra.'</'.$field.'>';
 						  foreach ($config->extratables as $table=>$details)
-							  if ($item = $database->getItem($table, $child['id']))
+							  if ($item = $database->getItem($table, $child['node']))
 								  $xml .= '
 		<'.$table.'>'.$item['item'].'</'.$table.'>';
 						  $xml .= '

@@ -41,9 +41,7 @@ class user {
 			if (is_array($user['access']) &&
 				(count($user['access'])>0)) {
 				foreach ($user['access'] as $access) {
-					$skin->setVar('address', showip($access['address'], $access['bits']));
-					$skin->setVar('nodelink', me().'?page=main&amp;node='.$access['id']);
-					$skin->setVar('node', $access['id']);
+					$skin->setVar('node', $access['node']);
 					$skin->setVar('readonly_checked', $access['access']=='r' ? ' checked="checked"' : '');
 					$skin->setVar('write_checked', $access['access']=='w' ? ' checked="checked"' : '');
 					$skin->parse('network');

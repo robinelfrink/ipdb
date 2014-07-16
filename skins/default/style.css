@@ -156,6 +156,9 @@ div#tree li div {
 div#tree li.collapsed>div {
 	background-image: url('images/plus.png');
 }
+div#tree li.collapsed ul {
+	display: none;
+}
 div#tree li.expanded>div {
 	background-image: url('images/minus.png');
 }

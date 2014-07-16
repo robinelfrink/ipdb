@@ -26,35 +26,27 @@ class Tree {
 
 	public $error = null;
 
-	public static function getHtml($id, $node = null) {
+	public static function getHtml($parent, $node = null) {
 		global $config, $database;
-		$tree = $database->getTree($id);
+		$children = $database->getChildren($parent, false);
 		$skin = new Skin($config->skin);
 		$skin->setFile('tree.html');
-		if (count($tree)>0) {
-			foreach ($tree as $network) {
-				if ($network['bits']<128) {
-					$subtree = '';
-					if ($database->hasNetworks($network['id'])) {
-						if (is_numeric($node) &&
-							($child = $database->getAddress($node)) &&
-							addressIsChild($child['address'], $network['address'], $network['bits'])) {
-							$class = 'class="expanded"';
-							$subtree = Tree::getHtml($network['id'], $child['id']);
-						} else {
-							$class = 'class="collapsed"';
-						}
-					} else {
-						$class = '';
-					}
-					$skin->setVar('node', $network['id']);
-					$skin->setVar('link', '?page=main&amp;node='.$network['id']);
-					$skin->setVar('label', showip($network['address'], $network['bits']));
-					$skin->setVar('description', htmlentities($network['description']));
-					$skin->setVar('subtree', $subtree);
-					$skin->setVar('class', $class);
-					$skin->parse('network');
+		if (count($children)) {
+			foreach ($children as $child) {
+				$subtree = Tree::getHtml($child['node'], $node);
+				if (empty($subtree)) {
+					$class = '';
+				} else if ($node && (Database::isSame($node, $child['node']) ||
+									 Database::isChild($node, $child['node']))) {
+					$class = 'class="expanded"';
+				} else {
+					$class = 'class="collapsed"';
 				}
+				$skin->setVar('node', $child['node']);
+				$skin->setVar('description', htmlentities($child['description']));
+				$skin->setVar('subtree', $subtree);
+				$skin->setVar('class', $class);
+				$skin->parse('network');
 			}
 			return $skin->get();
 		} else
@@ -62,20 +54,16 @@ class Tree {
 	}
 
 
-	public function getTxt($id, $level = 0) {
+	public static function getTxt($node, $level = 0) {
 		global $config, $database;
 		$txt = '';
-		$tree = $database->getTree($id);
-		if (count($tree)>0) {
-			foreach ($tree as $id=>$child) {
-				$txt .= str_pad('', ($level+1)*2, ' ').ip2address($child['address']).
-					($child['address']<'00000000000000000000000100000000' ?
-					($child['bits']<128 ? '/'.($child['bits']-96) : '') :
-					($child['bits']<128 ? '/'.$child['bits'] : '')).
+		$children = $database->getChildren($node);
+		if (count($children))
+			foreach ($children as $child) {
+				$txt .= str_pad('', ($level+1)*2, ' ').$child['node'].
 					str_pad('      ', ($level+1)*2, ' ').$child['description']."\n";
-				$txt .= Tree::getTxt($child['id'], 1);
+				$txt .= Tree::getTxt($child['node'], 1);
 			}
-		}
 		return $txt;
 	}
 

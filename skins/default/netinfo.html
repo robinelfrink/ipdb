@@ -14,7 +14,7 @@
 		<tr><td class="label">{table}:</td><td>{item}</td></tr>
 		<!-- END extratable -->
 		<!-- BEGIN parent -->
-		<tr><td class="label">parent:</td><td><a href="{parentlink}">{parentlabel}</a></td></tr>
+		<tr><td class="label">parent:</td><td><a href="?page=main&amp;node={parentnode}">{parentnode}</a></td></tr>
 		<!-- END parent -->
 	</tbody>
 </table>
@@ -23,7 +23,7 @@
 
 <!-- BEGIN haschildren -->
 <p>
-	<a href="{unusedlink}" remote="remote">{unusedlabel}</a> |
-	<a href="{printtreelink}">{printtreelabel}</a>
+	<a href="?page=main&amp;node={node}&amp;showunused={unusedyesno}" remote="remote">{unusedlabel}</a> |
+	<a href="?action=printtree&amp;node={node}">{printtreelabel}</a>
 </p>
 <!-- END haschildren -->

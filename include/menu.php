@@ -30,7 +30,7 @@ class Menu {
 		if ($session->authenticated) {
 			$skin = new Skin($config->skin);
 			$skin->setFile('menu.html');
-			$skin->setVar('item', '<a href="'.me().'?page=main&amp;node=0">The World</a>');
+			$skin->setVar('item', '<a href="'.me().'?page=main&amp;node=::/0">The World</a>');
 			$skin->parse('menuitem');
 			if (count($config->extratables)>0) {
 				$submenu = '<a href="">Tables<ul>';

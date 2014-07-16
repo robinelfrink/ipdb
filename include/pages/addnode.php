@@ -32,21 +32,20 @@ class addnode {
 		$skin = new skin($config->skin);
 		$skin->setFile('node.html');
 		$skin->setVar('description', request('description'));
-		if (!($basenode = $database->findAddress(request('address'), request('bits'))) &&
-			($basenode = $database->getParent(request('address'), request('bits'))))
-			$basenode = $database->getAddress($basenode); 
+		if (!($basenode = $database->getNode(request('node'))))
+			$basenode = $database->getParent(request('node'));
 		if (count($config->extrafields)>0)
 			foreach ($config->extrafields as $field=>$details) {
 				$skin->setVar('name', $field);
 				$skin->setVar('fullname', isset($details['name']) ? $details['name'] : '');
-				$skin->setVar('value', $basenode ? $database->getField($field, $basenode['id']) : request($field));
+				$skin->setVar('value', $database->getField($field, $basenode['node']));
 				$skin->parse('extrafield');
 			}
 		if (count($config->extratables)>0)
 			foreach ($config->extratables as $table=>$details)
 				if ($details['linkaddress']) {
 					$tableitems = $database->getExtra($table);
-					$item = ($basenode ? $database->getItem($table, $basenode['id']) : null);
+					$item = $database->getItem($table, $basenode['node']);
 					$options = '<option value="">-</option>';
 					if (count($tableitems)>0)
 						foreach ($tableitems as $tableitem)
@@ -60,8 +59,8 @@ class addnode {
 					$skin->setVar('tableoptions', $options);
 					$skin->parse('extratable');
 				}
-		$skin->setVar('address', ip2address(request('address')));
-		$skin->setVar('bits', (request('address')<'00000000000000000000000100000000' ? request('bits')-96 : request('bits')));
+		$skin->setVar('address', preg_replace('/\/.*/', '', request('node')));
+		$skin->setVar('bits', preg_replace('/.*\//', '', request('node')));
 		$skin->parse('addnode');
 		$content = $skin->get();
 		return array('title'=>'IPDB :: Add node',

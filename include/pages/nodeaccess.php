@@ -32,16 +32,14 @@ class nodeaccess {
 		$skin = new Skin($config->skin);
 		$skin->setFile('nodeaccess.html');
 
-		$address = $database->getAddress(request('node'));
+		$node = $database->getNode(request('node'));
 		$access = $database->getAccess(request('node'));
-		$users = $database->getUsers();
 
 		$userselect = '<select name="user">';
 
-		foreach ($users as $user) {
-			$skin->setVar('userlink', me().'?page=user&amp;user='.$user['username']);
-			$skin->setVar('username', $user['username']);
-			$useraccess = $database->getAccess(request('node'), $user['username']);
+		foreach ($access as $username=>$useraccess) {
+			$skin->setVar('userlink', me().'?page=user&amp;user='.$username);
+			$skin->setVar('username', $username);
 			$skin->setVar('readonly_checked', $useraccess['access']=='r' ? ' checked="checked"' : '');
 			$skin->setVar('write_checked', $useraccess['access']=='w' ? ' checked="checked"' : '');
 			$skin->parse('user');
@@ -51,8 +49,6 @@ class nodeaccess {
 </select>';
 		$skin->setVar('users', $userselect);
 		$skin->setVar('node', request('node'));
-		$skin->setVar('address', showip($address['address'], $address['bits']));
-		$skin->setVar('addresslink', me().'?page=main&amp;node='.request('node'));
 		$content = $skin->get();
 
 		return array('title'=>'IPDB :: Access',
