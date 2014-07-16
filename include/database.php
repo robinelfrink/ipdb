@@ -1139,7 +1139,7 @@ class Database {
 		try {
 			$sql = "UPDATE `".$this->prefix."extratables` ".
 				"SET `item`=:item, `description`=:description, `comments`=:comments ".
-				"WHERE `item`=:olditem AND `table`=table";
+				"WHERE `item`=:olditem AND `table`=:table";
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
 			$stmt->bindParam(':item', $item, PDO::PARAM_STR);
@@ -1176,7 +1176,8 @@ class Database {
 		}
 		if (is_array($columndata) && (count($columndata)>0))
 			foreach ($columndata as $column=>$data)
-				if ($data!=$entry[$column]) {
+				if (!isset($entry['column']) ||
+					($data!=$entry[$column])) {
 					try {
 						$sql = "REPLACE INTO `".$this->prefix."tablecolumn` (`table`, `item`, `column`, `value`) ".
 							"VALUES(:table, :item, :column, :value)";
@@ -1184,7 +1185,7 @@ class Database {
 						$stmt->bindParam(':table', $table, PDO::PARAM_STR);
 						$stmt->bindParam(':item', $item, PDO::PARAM_STR);
 						$stmt->bindParam(':column', $column, PDO::PARAM_STR);
-						$stmt->bindParam(':value', $value, PDO::PARAM_STR);
+						$stmt->bindParam(':value', $data, PDO::PARAM_STR);
 						$stmt->execute();
 					} catch (PDOException $e) {
 						$this->error = $e->getMessage();
@@ -1193,7 +1194,7 @@ class Database {
 					}
 					if ($config->extratables[$table]['columns'][$column]=='password')
 						$changes[] = 'old password';
-					else
+					else if (isset($entry[$column]))
 						$changes[] = $column.'='.$entry[$column];
 				}
 		if (count($changes)>0)

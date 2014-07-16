@@ -44,8 +44,10 @@ class changeextra {
 				$skin->setVar('name', $column);
 				if ($type=='password')
 					$skin->setVar('input', '<input type="password" name="'.htmlentities($column).'" />');
-				else
+				else if (isset($item[$column]))
 					$skin->setVar('input', '<input type="text" name="'.htmlentities($column).'" value="'.htmlentities($item[$column]).'" />');
+				else
+					$skin->setVar('input', '<input type="text" name="'.htmlentities($column).'" value="" />');
 				$skin->parse('column');
 			}
 		$skin->setVar('item', htmlentities(request('item')));
