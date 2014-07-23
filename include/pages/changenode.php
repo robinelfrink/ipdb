@@ -29,22 +29,21 @@ class changenode {
 
 	public function get() {
 		global $config, $database;
-		$skin = new skin($config->skin);
-		$skin->setFile('node.html');
+		$tpl = new Template('node.html');
 		if ($node = $database->getNode(request('node'))) {
 			if ($parent = $database->getParent($node['node'])) {
-				$skin->setVar('parentaddress', $parent['node']);
-				$skin->setVar('parentlink', me().'?page=main&amp;node='.$parent['node']);
+				$tpl->setVar('parentaddress', $parent['node']);
+				$tpl->setVar('parentlink', me().'?page=main&amp;node='.$parent['node']);
 			} else {
-				$skin->setVar('parentaddress', '::/0');
-				$skin->setVar('parentlink', me().'?page=main&amp;node=::/0');
+				$tpl->setVar('parentaddress', '::/0');
+				$tpl->setVar('parentlink', me().'?page=main&amp;node=::/0');
 			}
-			$skin->parse('parent');
+			$tpl->parse('parent');
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
-					$skin->setVar('name', $field);
-					$skin->setVar('value', $database->getField($field, $node['node']));
-					$skin->parse('extrafield');
+					$tpl->setVar('name', $field);
+					$tpl->setVar('value', $database->getField($field, $node['node']));
+					$tpl->parse('extrafield');
 				}
 			if (count($config->extratables)>0)
 				foreach ($config->extratables as $table=>$details)
@@ -60,17 +59,17 @@ class changenode {
 								($details['type']=='password' ?
 								 crypt($tableitem['description'], randstr(2)) :
 								 $tableitem['description']).'</option>';
-						$skin->setVar('table', $table);
-						$skin->setVar('tableoptions', $options);
-						$skin->parse('extratable');
+						$tpl->setVar('table', $table);
+						$tpl->setVar('tableoptions', $options);
+						$tpl->parse('extratable');
 					}
-			$skin->setVar('address', preg_replace('/\/.*/', '', $node['node']));
-			$skin->setVar('bits', preg_replace('/.*\//', '', $node['node']));
-			$skin->setVar('description', htmlentities($node['description']));
-			$skin->setVar('node', $node['node']);
+			$tpl->setVar('address', preg_replace('/\/.*/', '', $node['node']));
+			$tpl->setVar('bits', preg_replace('/.*\//', '', $node['node']));
+			$tpl->setVar('description', htmlentities($node['description']));
+			$tpl->setVar('node', $node['node']);
 		}
-		$skin->parse('changenode');
-		$content = $skin->get();
+		$tpl->parse('changenode');
+		$content = $tpl->get();
 		return array('title'=>'IPDB :: Change node',
 					 'content'=>$content);
 	}

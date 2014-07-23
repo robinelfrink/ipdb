@@ -29,23 +29,22 @@ class users {
 
 	public function get() {
 		global $database, $config;
-		$skin = new Skin($config->skin);
-		$skin->setFile('users.html');
+		$tpl = new Template('users.html');
 
 		$users = $database->getUsers();
 
 		$even = true;
 		foreach ($users as $user) {
-			$skin->setVar('username', htmlentities($user['username']));
-			$skin->setVar('name', htmlentities($user['name']));
-			$skin->setVar('editlink', me().'?page=user&amp;user='.htmlentities($user['username']));
-			$skin->setVar('deletelink', me().'?page=deleteuser&amp;user='.htmlentities($user['username']));
-			$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
-			$skin->parse('user');
+			$tpl->setVar('username', htmlentities($user['username']));
+			$tpl->setVar('name', htmlentities($user['name']));
+			$tpl->setVar('editlink', me().'?page=user&amp;user='.htmlentities($user['username']));
+			$tpl->setVar('deletelink', me().'?page=deleteuser&amp;user='.htmlentities($user['username']));
+			$tpl->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
+			$tpl->parse('user');
 			$even = !$even;
 		}
 
-		$content = $skin->get();
+		$content = $tpl->get();
 
 		return array('title'=>'IPDB :: Users',
 					 'content'=>$content);

@@ -29,8 +29,7 @@ class Tree {
 	public static function getHtml($parent, $node = null) {
 		global $config, $database;
 		$children = $database->getChildren($parent, false);
-		$skin = new Skin($config->skin);
-		$skin->setFile('tree.html');
+		$tpl = new Template('tree.html');
 		if (count($children)) {
 			foreach ($children as $child) {
 				$subtree = Tree::getHtml($child['node'], $node);
@@ -42,13 +41,13 @@ class Tree {
 				} else {
 					$class = 'class="collapsed"';
 				}
-				$skin->setVar('node', $child['node']);
-				$skin->setVar('description', htmlentities($child['description']));
-				$skin->setVar('subtree', $subtree);
-				$skin->setVar('class', $class);
-				$skin->parse('network');
+				$tpl->setVar('node', $child['node']);
+				$tpl->setVar('description', htmlentities($child['description']));
+				$tpl->setVar('subtree', $subtree);
+				$tpl->setVar('class', $class);
+				$tpl->parse('network');
 			}
-			return $skin->get();
+			return $tpl->get();
 		} else
 			return '';
 	}

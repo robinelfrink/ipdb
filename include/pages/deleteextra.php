@@ -35,12 +35,11 @@ class deleteextra {
 			require_once dirname(__FILE__).'/extratable.php';
 			return extratable::get();
 		}
-		$skin = new skin($config->skin);
-		$skin->setFile('deleteextra.html');
-		$skin->setVar('item', $item['item']);
-		$skin->setVar('description', $item['description']);
+		$tpl = new Template('deleteextra.html');
+		$tpl->setVar('item', $item['item']);
+		$tpl->setVar('description', $item['description']);
 		return array('title'=>'IPDB :: Delete '.$config->extratables[request('table')]['description'],
-					 'content'=>$skin->get());
+					 'content'=>$tpl->get());
 	}
 
 

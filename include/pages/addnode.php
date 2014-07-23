@@ -29,17 +29,16 @@ class addnode {
 
 	public function get() {
 		global $config, $database;
-		$skin = new skin($config->skin);
-		$skin->setFile('node.html');
-		$skin->setVar('description', request('description'));
+		$tpl = new Template('node.html');
+		$tpl->setVar('description', request('description'));
 		if (!($basenode = $database->getNode(request('node'))))
 			$basenode = $database->getParent(request('node'));
 		if (count($config->extrafields)>0)
 			foreach ($config->extrafields as $field=>$details) {
-				$skin->setVar('name', $field);
-				$skin->setVar('fullname', isset($details['name']) ? $details['name'] : '');
-				$skin->setVar('value', $database->getField($field, $basenode['node']));
-				$skin->parse('extrafield');
+				$tpl->setVar('name', $field);
+				$tpl->setVar('fullname', isset($details['name']) ? $details['name'] : '');
+				$tpl->setVar('value', $database->getField($field, $basenode['node']));
+				$tpl->parse('extrafield');
 			}
 		if (count($config->extratables)>0)
 			foreach ($config->extratables as $table=>$details)
@@ -55,14 +54,14 @@ class addnode {
 								($details['type']=='password' ?
 								 crypt($tableitem['description'], randstr(2)) :
 								 $tableitem['description']).'</option>';
-					$skin->setVar('table', $table);
-					$skin->setVar('tableoptions', $options);
-					$skin->parse('extratable');
+					$tpl->setVar('table', $table);
+					$tpl->setVar('tableoptions', $options);
+					$tpl->parse('extratable');
 				}
-		$skin->setVar('address', preg_replace('/\/.*/', '', request('node')));
-		$skin->setVar('bits', preg_replace('/.*\//', '', request('node')));
-		$skin->parse('addnode');
-		$content = $skin->get();
+		$tpl->setVar('address', preg_replace('/\/.*/', '', request('node')));
+		$tpl->setVar('bits', preg_replace('/.*\//', '', request('node')));
+		$tpl->parse('addnode');
+		$content = $tpl->get();
 		return array('title'=>'IPDB :: Add node',
 					 'content'=>$content);
 	}

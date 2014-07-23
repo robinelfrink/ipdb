@@ -29,26 +29,25 @@ class addextra {
 
 	public function get() {
 		global $config, $error, $database;
-		$skin = new Skin($config->skin);
-		$skin->setFile('extradetails.html');
-		$skin->setVar('item', request('item', ''));
-		$skin->setVar('description', request('description', ''));
-		$skin->setVar('comments', request('comments', ''));
-		$skin->setVar('table', $config->extratables[request('table')]['description']);
+		$tpl = new Template('extradetails.html');
+		$tpl->setVar('item', request('item', ''));
+		$tpl->setVar('description', request('description', ''));
+		$tpl->setVar('comments', request('comments', ''));
+		$tpl->setVar('table', $config->extratables[request('table')]['description']);
 		if (isset($config->extratables[request('table')]['columns']) &&
 			is_array($config->extratables[request('table')]['columns']) &&
 			count($config->extratables[request('table')]['columns']))
 			foreach ($config->extratables[request('table')]['columns'] as $column=>$type) {
-				$skin->setVar('name', $column);
+				$tpl->setVar('name', $column);
 				if ($type=='password')
-					$skin->setVar('input', '<input type="password" name="'.htmlentities($column).'" />');
+					$tpl->setVar('input', '<input type="password" name="'.htmlentities($column).'" />');
 				else
-					$skin->setVar('input', '<input type="text" name="'.htmlentities($column).'" />');
-				$skin->parse('column');
+					$tpl->setVar('input', '<input type="text" name="'.htmlentities($column).'" />');
+				$tpl->parse('column');
 			}
-		$skin->parse('add');
+		$tpl->parse('add');
 		return array('title'=>'IPDB :: Add '.$config->extratables[request('table')]['description'],
-					 'content'=>$skin->get());
+					 'content'=>$tpl->get());
 
 	}
 

@@ -29,12 +29,11 @@ class deleteuser {
 
 	public function get() {
 		global $config, $database;
-		$skin = new skin($config->skin);
 		if ($user = $database->getUser(request('user'))) {
-			$skin->setFile('deleteuser.html');
-			$skin->setVar('user', request('user'));
-			$skin->setVar('name', $user['name']);
-			$content = $skin->get();
+			$tpl = new Template('deleteuser.html');
+			$tpl->setVar('user', request('user'));
+			$tpl->setVar('name', $user['name']);
+			$content = $tpl->get();
 			return array('title'=>'IPDB :: Delete user',
 						 'content'=>$content);
 		} else

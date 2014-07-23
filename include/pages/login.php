@@ -29,16 +29,15 @@ class login {
 
 	public function get() {
 		global $session, $config;
-		$skin = new Skin($config->skin);
-		$skin->setFile('login.html');
+		$tpl = new Template('login.html');
 		if ($session->error) {
-			$skin->setVar('error', $session->error);
-			$skin->parse('errorheader');
+			$tpl->setVar('error', $session->error);
+			$tpl->parse('errorheader');
 		}
-		$skin->setVar('username', request('username', isset($_SESSION['username']) ? $_SESSION['username'] : ''));
-		$skin->setVar('meta', '<script type="text/javascript" src="js/ipdb.js"></script>');
+		$tpl->setVar('username', request('username', isset($_SESSION['username']) ? $_SESSION['username'] : ''));
+		$tpl->setVar('meta', '<script type="text/javascript" src="js/ipdb.js"></script>');
 
-		$content = $skin->get();
+		$content = $tpl->get();
 		$commands = "
 if (getElement('username')) {
 	getElement('username').focus();

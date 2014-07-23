@@ -21,41 +21,22 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class Skin {
+class Template {
 
 
-	public $error = null;
-	private $skin = null;
 	private $data = null;
 	private $vars = array();
 	private $blocks = array();
 
 
-	public function __construct($skin) {
+	public function __construct($file) {
 
-		global $root;
-		$this->skin = $skin;
-		if (!is_dir($root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin))
-			$this->error = 'Skin '.$this->skin.' does not exist';
-		else if (!file_exists($root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.'index.html'))
-			$this->error = 'Skin '.$this->skin.' file not found';
-
-	}
-
-
-	public function setFile($filename) {
-
-		global $root;
-		$this->error = null;
-		$this->data = null;
-		$this->blocks = array();
-		if (file_exists($file = $root.DIRECTORY_SEPARATOR.'skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename)) {
-			$this->data = file_get_contents($file);
-			$this->findBlocks();
-			return true;
-		}
-		$this->error = 'Cannot read skin file skins'.DIRECTORY_SEPARATOR.$this->skin.DIRECTORY_SEPARATOR.$filename;
-		return false;
+		$dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR;
+		if (!file_exists($dir.$file))
+			throw new Exception('Cannot read template file '.$file);
+		$this->data = file_get_contents($dir.$file);
+		$this->findBlocks();
+		return true;
 
 	}
 
@@ -72,7 +53,6 @@ class Skin {
 				$this->vars[$block] = '';
 			}
 		}
-		$this->vars['skindir'] = 'skins/'.$this->skin;
 
 	}
 

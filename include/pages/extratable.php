@@ -31,8 +31,7 @@ class extratable {
 		global $config, $database;
 		$type = $config->extratables[request('table')]['type'];
 		$items = $database->getExtra(request('table'));
-		$skin = new Skin($config->skin);
-		$skin->setFile('extratable.html');
+		$tpl = new Template('extratable.html');
 
 		$items = $database->findExtra(request('table'), request('extrasearch'));
 		if (is_array($items) && (count($items)>0)) {
@@ -71,26 +70,26 @@ class extratable {
 					$comments .= '</p>';
 				}
 
-				$skin->setVar('item', $item['item']);
-				$skin->setVar('description', ($type=='password' ? crypt($item['description'], randstr(2)) : $item['description']));
+				$tpl->setVar('item', $item['item']);
+				$tpl->setVar('description', ($type=='password' ? crypt($item['description'], randstr(2)) : $item['description']));
 				if (empty($comments))
-					$skin->setVar('comments', '');
+					$tpl->setVar('comments', '');
 				else
-					$skin->setVar('comments', '<span>'.$comments.'</span>');
-				$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
-				$skin->parse('itemrow');
+					$tpl->setVar('comments', '<span>'.$comments.'</span>');
+				$tpl->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
+				$tpl->parse('itemrow');
 				$even = !$even;
 			}
-			$skin->parse('items');
-			$skin->setVar('navigation', $navigation);
+			$tpl->parse('items');
+			$tpl->setVar('navigation', $navigation);
 		} else {
-			$skin->parse('noitems');
+			$tpl->parse('noitems');
 		}
 
-		$skin->setVar('extrasearch', request('extrasearch'));
-		$skin->setVar('table', $config->extratables[request('table')]['description']);
+		$tpl->setVar('extrasearch', request('extrasearch'));
+		$tpl->setVar('table', $config->extratables[request('table')]['description']);
 		return array('title'=>'IPDB :: Table '.$config->extratables[request('table')]['description'],
-					 'content'=>$skin->get());
+					 'content'=>$tpl->get());
 
 	}
 

@@ -29,15 +29,14 @@ class deletenode {
 
 	public function get() {
 		global $config, $database;
-		$skin = new skin($config->skin);
 		if ($node = $database->getNode(request('node'))) {
-			$skin->setFile('deletenode.html');
+			$tpl = new Template('deletenode.html');
 			$children = $database->getChildren($node['node']);
 			if (count($children))
-				$skin->parse('children');
-			$skin->setVar('description', $node['description']);
-			$skin->setVar('node', $node['node']);
-			$content = $skin->get();
+				$tpl->parse('children');
+			$tpl->setVar('description', $node['description']);
+			$tpl->setVar('node', $node['node']);
+			$content = $tpl->get();
 			return array('title'=>'IPDB :: Delete node',
 						 'content'=>$content);
 		} else

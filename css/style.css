@@ -26,7 +26,7 @@ input[type=submit], input[type=button], input[type=reset] {
 	color: #fff;
 }
 input[type=text].search {
-	background-image: url('images/search.png');
+	background-image: url('../images/search.png');
 	background-position: 0.2em center;
 	background-repeat: no-repeat;
 	padding-left: 17px;
@@ -154,13 +154,13 @@ div#tree li div {
 	padding-left: 16px;
 }
 div#tree li.collapsed>div {
-	background-image: url('images/plus.png');
+	background-image: url('../images/plus.png');
 }
 div#tree li.collapsed ul {
 	display: none;
 }
 div#tree li.expanded>div {
-	background-image: url('images/minus.png');
+	background-image: url('../images/minus.png');
 }
 div#tree a {
 	position: relative;

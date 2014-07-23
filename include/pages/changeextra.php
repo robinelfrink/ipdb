@@ -35,28 +35,27 @@ class changeextra {
 			require_once dirname(__FILE__).'/extratable.php';
 			return extratable::get();
 		}
-		$skin = new Skin($config->skin);
-		$skin->setFile('extradetails.html');
+		$tpl = new Template('extradetails.html');
 		if (isset($config->extratables[request('table')]['columns']) &&
 			is_array($config->extratables[request('table')]['columns']) &&
 			count($config->extratables[request('table')]['columns']))
 			foreach ($config->extratables[request('table')]['columns'] as $column=>$type) {
-				$skin->setVar('name', $column);
+				$tpl->setVar('name', $column);
 				if ($type=='password')
-					$skin->setVar('input', '<input type="password" name="'.htmlentities($column).'" />');
+					$tpl->setVar('input', '<input type="password" name="'.htmlentities($column).'" />');
 				else if (isset($item[$column]))
-					$skin->setVar('input', '<input type="text" name="'.htmlentities($column).'" value="'.htmlentities($item[$column]).'" />');
+					$tpl->setVar('input', '<input type="text" name="'.htmlentities($column).'" value="'.htmlentities($item[$column]).'" />');
 				else
-					$skin->setVar('input', '<input type="text" name="'.htmlentities($column).'" value="" />');
-				$skin->parse('column');
+					$tpl->setVar('input', '<input type="text" name="'.htmlentities($column).'" value="" />');
+				$tpl->parse('column');
 			}
-		$skin->setVar('item', htmlentities(request('item')));
-		$skin->setVar('description', htmlentities($item['description']));
-		$skin->setVar('comments', htmlentities($item['comments']));
-		$skin->setVar('table', htmlentities($config->extratables[request('table')]['description']));
-		$skin->parse('change');
+		$tpl->setVar('item', htmlentities(request('item')));
+		$tpl->setVar('description', htmlentities($item['description']));
+		$tpl->setVar('comments', htmlentities($item['comments']));
+		$tpl->setVar('table', htmlentities($config->extratables[request('table')]['description']));
+		$tpl->parse('change');
 		return array('title'=>'IPDB :: Change '.$config->extratables[request('table')]['description'],
-					 'content'=>$skin->get());
+					 'content'=>$tpl->get());
 
 	}
 

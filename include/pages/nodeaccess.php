@@ -29,8 +29,7 @@ class nodeaccess {
 
 	public function get() {
 		global $database, $config;
-		$skin = new Skin($config->skin);
-		$skin->setFile('nodeaccess.html');
+		$tpl = new Template('nodeaccess.html');
 
 		$node = $database->getNode(request('node'));
 		$access = $database->getAccess(request('node'));
@@ -38,18 +37,18 @@ class nodeaccess {
 		$userselect = '<select name="user">';
 
 		foreach ($access as $username=>$useraccess) {
-			$skin->setVar('userlink', me().'?page=user&amp;user='.$username);
-			$skin->setVar('username', $username);
-			$skin->setVar('readonly_checked', $useraccess['access']=='r' ? ' checked="checked"' : '');
-			$skin->setVar('write_checked', $useraccess['access']=='w' ? ' checked="checked"' : '');
-			$skin->parse('user');
+			$tpl->setVar('userlink', me().'?page=user&amp;user='.$username);
+			$tpl->setVar('username', $username);
+			$tpl->setVar('readonly_checked', $useraccess['access']=='r' ? ' checked="checked"' : '');
+			$tpl->setVar('write_checked', $useraccess['access']=='w' ? ' checked="checked"' : '');
+			$tpl->parse('user');
 		}
 
 		$userselect .= '
 </select>';
-		$skin->setVar('users', $userselect);
-		$skin->setVar('node', request('node'));
-		$content = $skin->get();
+		$tpl->setVar('users', $userselect);
+		$tpl->setVar('node', request('node'));
+		$content = $tpl->get();
 
 		return array('title'=>'IPDB :: Access',
 					 'content'=>$content);

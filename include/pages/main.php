@@ -32,63 +32,62 @@ class main {
 		if (($node = request('node')) &&
 			($node!='::/0') &&
 			($data = $database->getNode($node))) {
-			$skin = new skin($config->skin);
-			$skin->setfile('netinfo.html');
+			$tpl = new Template('netinfo.html');
 			if (preg_match('/^[\.0-9]+\//', $data['node'])) {
-				$skin->setvar('netmask', $database->getNetmask($data['node']));
-				$skin->setvar('broadcast', $database->getBroadcast($data['node']));
-				$skin->parse('ipv4');
+				$tpl->setvar('netmask', $database->getNetmask($data['node']));
+				$tpl->setvar('broadcast', $database->getBroadcast($data['node']));
+				$tpl->parse('ipv4');
 			}
 			if ($parent = $database->getParent($data['node'])) {
-				$skin->setvar('parentnode', $parent['node']);
-				$skin->parse('parent');
+				$tpl->setvar('parentnode', $parent['node']);
+				$tpl->parse('parent');
 			}
-			$skin->setvar('address', preg_replace('/\/.*/', '', $data['node']));
-			$skin->setvar('bits', preg_replace('/.*\//', '', $data['node']));
+			$tpl->setvar('address', preg_replace('/\/.*/', '', $data['node']));
+			$tpl->setvar('bits', preg_replace('/.*\//', '', $data['node']));
 			$children = $database->getChildren($data['node']);
 			if (preg_match('/^[\.0-9]+\/32$/', $data['node']) ||
 				preg_match('/^[:0-9a-f]+\/128$/', $data['node'])) {
-				$skin->setvar('label', 'host '.preg_replace('/\/.*/', '', $data['node']));
+				$tpl->setvar('label', 'host '.preg_replace('/\/.*/', '', $data['node']));
 			} else {
-				$skin->setvar('label', 'network '.$data['node']);
+				$tpl->setvar('label', 'network '.$data['node']);
 				if (count($children)>0) {
 					if (request('showunused')=='yes') {
-						$skin->setvar('unusedyesno', 'no');
-						$skin->setvar('unusedlabel', 'hide unused blocks');
+						$tpl->setvar('unusedyesno', 'no');
+						$tpl->setvar('unusedlabel', 'hide unused blocks');
 					} else {
-						$skin->setvar('unusedyesno', 'yes');
-						$skin->setvar('unusedlabel', 'show unused blocks');
+						$tpl->setvar('unusedyesno', 'yes');
+						$tpl->setvar('unusedlabel', 'show unused blocks');
 					}
-					$skin->setvar('printtreelabel', 'print tree');
-					$skin->setvar('node', $data['node']);
-					$skin->parse('haschildren');
+					$tpl->setvar('printtreelabel', 'print tree');
+					$tpl->setvar('node', $data['node']);
+					$tpl->parse('haschildren');
 				}
 			}
-			$skin->setvar('description', htmlentities($data['description']));
+			$tpl->setvar('description', htmlentities($data['description']));
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
-					$skin->setvar('field', $field);
+					$tpl->setvar('field', $field);
 					$value = $database->getField($field, $node);
 					if ($details['url'])
-						$skin->setvar('value', '<a href="'.sprintf($details['url'], $value).'">'.$value.'</a>');
+						$tpl->setvar('value', '<a href="'.sprintf($details['url'], $value).'">'.$value.'</a>');
 					else
-						$skin->setvar('value', $value);
-					$skin->parse('extrafield');
+						$tpl->setvar('value', $value);
+					$tpl->parse('extrafield');
 				}
 			if (count($config->extratables)>0)
 				foreach ($config->extratables as $table=>$details)
 					if ($details['linkaddress'] &&
 						($item = $database->getItem($table, $node))) {
-						$skin->setvar('table', $table);
+						$tpl->setvar('table', $table);
 						if ($details['type']!='password')
-							$skin->setvar('item', $item['item'].' '.$item['description']);
+							$tpl->setvar('item', $item['item'].' '.$item['description']);
 						else
-							$skin->setvar('item', $item['item'].' '.crypt($item['description']));
-						$skin->parse('extratable');
+							$tpl->setvar('item', $item['item'].' '.crypt($item['description']));
+						$tpl->parse('extratable');
 					}
 
-			$skin->setVar('address', preg_replace('/\/.*/', '', $data['node']));
-			$skin->setVar('bits', preg_replace('/.*\//', '', $data['node']));
+			$tpl->setVar('address', preg_replace('/\/.*/', '', $data['node']));
+			$tpl->setVar('bits', preg_replace('/.*\//', '', $data['node']));
 
 			$access = $database->getAccess($data['node'], $session->username);
 			if (($session->username=='admin') || ($access['access']=='w')) {
@@ -102,8 +101,8 @@ class main {
 			} else {
 				$links = '';
 			}
-			$skin->setVar('links', $links);
-			$content = $skin->get();
+			$tpl->setVar('links', $links);
+			$content = $tpl->get();
 			$children = $database->getChildren($data['node'], false, request('showunused')=='yes');
 			if (count($children)>0)
 				$content .= $this->listchildren($children);
@@ -120,22 +119,21 @@ class main {
 
 	private function listchildren($children) {
 		global $config, $database;
-		$skin = new Skin($config->skin);
-		$skin->setFile('children.html');
+		$tpl = new Template('children.html');
 		$even = true;
 		foreach ($children as $child) {
-			$skin->setVar('link', '?page='.(isset($child['unused']) ? 'addnode' : 'main').
+			$tpl->setVar('link', '?page='.(isset($child['unused']) ? 'addnode' : 'main').
 								  '&node='.$child['node']);
-			$skin->setVar('label', $child['node']);
+			$tpl->setVar('label', $child['node']);
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					if ($details['inoverview']) {
 						$value = $database->getField($field, $child['node']);
 						if (isset($details['url']))
-							$skin->setVar('extrafield', '<a href="'.htmlentities(sprintf($details['url'], $value)).'">'.htmlentities($value).'</a>');
+							$tpl->setVar('extrafield', '<a href="'.htmlentities(sprintf($details['url'], $value)).'">'.htmlentities($value).'</a>');
 						else
-							$skin->setVar('extrafield', htmlentities($value));
-						$skin->parse('extrafielddata');
+							$tpl->setVar('extrafield', htmlentities($value));
+						$tpl->parse('extrafielddata');
 					}
 				}
 			if (count($config->extratables)>0)
@@ -143,31 +141,31 @@ class main {
 					 if (isset($details['inoverview']) && $details['inoverview'] &&
 						 isset($details['linkaddress']) && $details['linkaddress']) {
 						 $item = $database->getItem($table, $child['node']);
-						 $skin->setVar('extratable', $item['item']);
-						 $skin->parse('extratabledata');
+						 $tpl->setVar('extratable', $item['item']);
+						 $tpl->parse('extratabledata');
 					 }
 
-			$skin->setVar('description', htmlentities($child['description']));
-			$skin->setVar('class', isset($child['unused']) ? ' class="unused"' : '');
-			$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').
+			$tpl->setVar('description', htmlentities($child['description']));
+			$tpl->setVar('class', isset($child['unused']) ? ' class="unused"' : '');
+			$tpl->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').
 						  (isset($child['unused']) ? ' unused' : '').'"');
-			$skin->parse('child');
+			$tpl->parse('child');
 			$even = !$even;
 		}
 		if (count($config->extrafields)>0)
 			foreach ($config->extrafields as $field=>$details)
 				if ($details['inoverview']) {
-					$skin->setVar('extrafield', $field);
-					$skin->parse('extrafieldheader');
+					$tpl->setVar('extrafield', $field);
+					$tpl->parse('extrafieldheader');
 				}
 		if (count($config->extratables)>0)
 			foreach ($config->extratables as $table=>$details)
 				if (isset($details['inoverview']) && $details['inoverview'] &&
 					isset($details['linkaddress']) && $details['linkaddress']) {
-					$skin->setVar('extratable', $table);
-					$skin->parse('extratableheader');
+					$tpl->setVar('extratable', $table);
+					$tpl->parse('extratableheader');
 				}
-		return $skin->get();
+		return $tpl->get();
 	}
 
 

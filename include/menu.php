@@ -28,31 +28,30 @@ class Menu {
 
 		global $config, $session;
 		if ($session->authenticated) {
-			$skin = new Skin($config->skin);
-			$skin->setFile('menu.html');
-			$skin->setVar('item', '<a href="'.me().'?page=main&amp;node=::/0">The World</a>');
-			$skin->parse('menuitem');
+			$tpl = new Template('menu.html');
+			$tpl->setVar('item', '<a href="'.me().'?page=main&amp;node=::/0">The World</a>');
+			$tpl->parse('menuitem');
 			if (count($config->extratables)>0) {
 				$submenu = '<a href="">Tables<ul>';
 				foreach ($config->extratables as $table=>$details)
 					$submenu .= '<li><a href="'.me().'?page=extratable&amp;table='.$table.
 						'">'.$details['description'].'</a></li>';
 				$submenu .= '</ul></a>';
-				$skin->setVar('item', $submenu);
-				$skin->parse('menuitem');
+				$tpl->setVar('item', $submenu);
+				$tpl->parse('menuitem');
 			}
-			$skin->setVar('item', '<a href="'.me().'?page=history">History</a>');
-			$skin->parse('menuitem');
-			$skin->setVar('item', '<a href="'.me().'?page=account">My account</a>');
-			$skin->parse('menuitem');
+			$tpl->setVar('item', '<a href="'.me().'?page=history">History</a>');
+			$tpl->parse('menuitem');
+			$tpl->setVar('item', '<a href="'.me().'?page=account">My account</a>');
+			$tpl->parse('menuitem');
 			if ($session->username=='admin') {
-				$skin->setVar('item', '<a href="'.me().'?page=users">Users</a>');
-				$skin->parse('menuitem');
+				$tpl->setVar('item', '<a href="'.me().'?page=users">Users</a>');
+				$tpl->parse('menuitem');
 			}
-			$skin->setVar('item', '<a href="'.me().'?page=login&amp;action=logout" remote="remote">Logout</a>');
-			$skin->parse('menuitem');
-			$skin->setVar('search', request('search'));
-			return $skin->get();
+			$tpl->setVar('item', '<a href="'.me().'?page=login&amp;action=logout" remote="remote">Logout</a>');
+			$tpl->parse('menuitem');
+			$tpl->setVar('search', request('search'));
+			return $tpl->get();
 		}
 		return '';
 	}

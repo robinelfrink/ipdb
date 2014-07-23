@@ -26,28 +26,26 @@ class account {
 
 	public function get() {
 		global $database, $session, $config;
-		$skin = new Skin($config->skin);
-		$skin->setFile('account.html');
-
-		$skin->setVar('username', htmlentities($session->username));
-		$skin->setVar('name', htmlentities($session->name));
+		$tpl = new Template('account.html');
+		$tpl->setVar('username', htmlentities($session->username));
+		$tpl->setVar('name', htmlentities($session->name));
 
 		if ($session->islocal)
-			$skin->parse('localuser');
+			$tpl->parse('localuser');
 		else
-			$skin->hideBlock('localuser');
+			$tpl->hideBlock('localuser');
 
 		$user = $database->getUser($session->username);
 		if (is_array($user['access']) && (count($user['access'])>0)) {
 			foreach ($user['access'] as $access) {
-				$skin->setVar('node', $access['node']);
-				$skin->setVar('access', ($access['access']=='w' ? 'write' : 'read-only'));
-				$skin->parse('network');
+				$tpl->setVar('node', $access['node']);
+				$tpl->setVar('access', ($access['access']=='w' ? 'write' : 'read-only'));
+				$tpl->parse('network');
 			}
-			$skin->parse('access');
+			$tpl->parse('access');
 		}
 
-		$content = $skin->get();
+		$content = $tpl->get();
 
 		return array('title'=>'IPDB :: My account',
 					 'content'=>$content);

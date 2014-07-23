@@ -29,8 +29,7 @@ class history {
 
 	public function get() {
 		global $database, $config;
-		$skin = new Skin($config->skin);
-		$skin->setFile('history.html');
+		$tpl = new Template('history.html');
 
 		$history = $database->getLog(request('historysearch'));
 

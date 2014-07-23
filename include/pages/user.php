@@ -29,31 +29,30 @@ class user {
 
 	public function get() {
 		global $database, $session, $config;
-		$skin = new Skin($config->skin);
-		$skin->setFile('user.html');
+		$tpl = new Template('user.html');
 
 		$user = $database->getUser(request('user'));
 
-		$skin->setVar('user', htmlentities($user['username']));
-		$skin->setVar('name', htmlentities($user['name']));
+		$tpl->setVar('user', htmlentities($user['username']));
+		$tpl->setVar('name', htmlentities($user['name']));
 
 		if ($database->isAdmin($session->username)) {
 			if (is_array($user['access']) &&
 				(count($user['access'])>0)) {
 				foreach ($user['access'] as $access) {
-					$skin->setVar('node', $access['node']);
-					$skin->setVar('readonly_checked', $access['access']=='r' ? ' checked="checked"' : '');
-					$skin->setVar('write_checked', $access['access']=='w' ? ' checked="checked"' : '');
-					$skin->parse('network');
+					$tpl->setVar('node', $access['node']);
+					$tpl->setVar('readonly_checked', $access['access']=='r' ? ' checked="checked"' : '');
+					$tpl->setVar('write_checked', $access['access']=='w' ? ' checked="checked"' : '');
+					$tpl->parse('network');
 				}
-				$skin->parse('access');
+				$tpl->parse('access');
 			}
-			$skin->setVar('prefixes', htmlentities(request('prefixes')));
-			$skin->parse('addaccess');
+			$tpl->setVar('prefixes', htmlentities(request('prefixes')));
+			$tpl->parse('addaccess');
 		}
 
 
-		$content = $skin->get();
+		$content = $tpl->get();
 
 		return array('title'=>'IPDB :: User '.request('user'),
 					 'content'=>$content);

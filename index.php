@@ -36,7 +36,7 @@ require_once 'include/config.php';
 require_once 'include/database.php';
 require_once 'include/menu.php';
 require_once 'include/session.php';
-require_once 'include/skin.php';
+require_once 'include/template.php';
 require_once 'include/tree.php';
 
 

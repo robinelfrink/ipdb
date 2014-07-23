@@ -120,9 +120,6 @@ function send($data) {
 			$data['content'] = '<p class="error">'.$error.'</p><br />';
 	}
 
-	$skin = new Skin($config->skin);
-	if ($skin->error)
-		exit('Error: '.$skin->error);
 	if (request('remote')=='remote') {
 		if (preg_match('/^(add|delete|change)/', request('action')) &&
 			!isset($data['tree']) &&
@@ -147,28 +144,28 @@ function send($data) {
 	} else if (request('page')=='login') {
 		echo $data['content'];
 	} else {
-		$skin->setFile('index.html');
-		$skin->setVar('title', $data['title']);
-		$skin->setVar('version', $version);
-		$skin->setVar('meta', '<script type="text/javascript" src="js/ipdb.js"></script>
+		$tpl = new Template('index.html');
+		$tpl->setVar('title', $data['title']);
+		$tpl->setVar('version', $version);
+		$tpl->setVar('meta', '<script type="text/javascript" src="js/ipdb.js"></script>
 <script type="text/javascript">
 <!--
 	var timeout = '.$session->expire.';
 //-->
 </script>');
-		$skin->setVar('menu', Menu::get());
+		$tpl->setVar('menu', Menu::get());
 		if ($session->authenticated &&
 			!$database->hasUpgrade()) {
-			$skin->setVar('tree', Tree::getHtml('::/0', request('node', NULL)));
-			$skin->parse('treediv');
+			$tpl->setVar('tree', Tree::getHtml('::/0', request('node', NULL)));
+			$tpl->parse('treediv');
 		}
 
 		if ($config->debug) {
-			$skin->setVar('debug', $debugstr);
-			$skin->parse('debugdiv');
+			$tpl->setVar('debug', $debugstr);
+			$tpl->parse('debugdiv');
 		} else {
-			$skin->setVar('debugdiv', '');
-			$skin->hideBlock('debugdiv');
+			$tpl->setVar('debugdiv', '');
+			$tpl->hideBlock('debugdiv');
 		}
 
 		if (isset($data['commands']))
@@ -176,8 +173,8 @@ function send($data) {
 <script type="text/javascript">
 	'.$data['commands'].'
 </script>';
-		$skin->setVar('content', $data['content']);
-		echo $skin->get();
+		$tpl->setVar('content', $data['content']);
+		echo $tpl->get();
 	}
 	exit;
 }
