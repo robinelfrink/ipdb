@@ -51,7 +51,6 @@ class Menu {
 			$tpl->setVar('item', '<a href="'.me().'?page=login&amp;action=logout" remote="remote">Logout</a>');
 			$tpl->parse('menuitem');
 			$tpl->setVar('search', request('search'));
-			error_log($tpl->get());
 			return $tpl->get();
 		}
 		return '';
