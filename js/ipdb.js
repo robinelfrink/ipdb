@@ -365,4 +365,17 @@ function dofade(fadediv, opacity) {
 	fadediv.style.filter = 'alpha(opacity='+opacity+')';
 }
 
+
+/* Toggle mobile menu */
+function togglemenu() {
+	var bodies = document.getElementsByTagName('body');
+	if (bodies.length>0) {
+		if (bodies[0].className.match(/(?:^|\s)menuactive(?!\S)/)) {
+			bodies[0].className = bodies[0].className.replace(/(?:^|\s)menuactive(?!\S)/g, '');
+		} else {
+			bodies[0].className += ' menuactive';
+		}
+	}
+}
+
 window.onload = initialize;

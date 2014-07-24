@@ -44,7 +44,7 @@ class main {
 			}
 			$tpl->setvar('address', preg_replace('/\/.*/', '', $data['node']));
 			$tpl->setvar('bits', preg_replace('/.*\//', '', $data['node']));
-			$children = $database->getChildren($data['node']);
+			$children = $database->getChildren($data['node'], true);
 			if (preg_match('/^[\.0-9]+\/32$/', $data['node']) ||
 				preg_match('/^[:0-9a-f]+\/128$/', $data['node'])) {
 				$tpl->setvar('label', 'host '.preg_replace('/\/.*/', '', $data['node']));
@@ -91,25 +91,27 @@ class main {
 
 			$access = $database->getAccess($data['node'], $session->username);
 			if (($session->username=='admin') || ($access['access']=='w')) {
-				$links = '
-<a href="'.me().'?page=addnode&amp;node='.$data['node'].'" remote="remote">add</a> |
-<a href="'.me().'?page=deletenode&amp;node='.$data['node'].'" remote="remote">delete</a> |
-<a href="'.me().'?page=changenode&amp;node='.$data['node'].'" remote="remote">change</a>';
+				$links = '<p>
+	<a href="'.me().'?page=addnode&amp;node='.$data['node'].'" remote="remote">add</a> |
+	<a href="'.me().'?page=deletenode&amp;node='.$data['node'].'" remote="remote">delete</a> |
+	<a href="'.me().'?page=changenode&amp;node='.$data['node'].'" remote="remote">change</a>';
 				if ($session->username=='admin')
 					$links .= ' |
 	<a href="'.me().'?page=nodeaccess&amp;node='.$data['node'].'" remote="remote">access</a>';
+				$links .= '
+</p>';
 			} else {
 				$links = '';
 			}
 			$tpl->setVar('links', $links);
 			$content = $tpl->get();
-			$children = $database->getChildren($data['node'], false, request('showunused')=='yes');
 			if (count($children)>0)
-				$content .= $this->listchildren($children);
+				$content .= $this->listchildren(request('showunused')=='yes' ?
+					$database->getChildren($data['node'], true, true) : $children);
 		} else {
 			global $searchresult;
 			$node = 'The World';
-			$nodes = $searchresult ? $searchresult : $database->getChildren('::/0', false, request('showunused')=='yes');
+			$nodes = $searchresult ? $searchresult : $database->getChildren('::/0', false, request('showunused')=='no');
 			$content = $this->listchildren($nodes);
 		}
 		return array('title'=>'IPDB :: '.$node,

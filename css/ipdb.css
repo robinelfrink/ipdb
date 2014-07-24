@@ -224,7 +224,7 @@ nav li:hover li {
 		background-color: #000;
 	}
 	.container {
-		transition: .2s margin ease;
+		transition: .1s margin ease;
 	}
 	nav li {
 		display: block;

@@ -28,14 +28,14 @@ class login {
 
 
 	public function get() {
-		global $session, $config;
+		global $session, $config, $version;
 		$tpl = new Template('login.html');
 		if ($session->error) {
 			$tpl->setVar('error', $session->error);
 			$tpl->parse('errorheader');
 		}
 		$tpl->setVar('username', request('username', isset($_SESSION['username']) ? $_SESSION['username'] : ''));
-		$tpl->setVar('meta', '<script type="text/javascript" src="js/ipdb.js"></script>');
+		$tpl->setVar('version', $version);
 
 		$content = $tpl->get();
 		$commands = "

@@ -32,11 +32,11 @@ class Menu {
 			$tpl->setVar('item', '<a href="'.me().'?page=main&amp;node=::/0">The World</a>');
 			$tpl->parse('menuitem');
 			if (count($config->extratables)>0) {
-				$submenu = '<a href="">Tables<ul>';
+				$submenu = '<a href="#">Tables</a><ul>';
 				foreach ($config->extratables as $table=>$details)
 					$submenu .= '<li><a href="'.me().'?page=extratable&amp;table='.$table.
 						'">'.$details['description'].'</a></li>';
-				$submenu .= '</ul></a>';
+				$submenu .= '</ul>';
 				$tpl->setVar('item', $submenu);
 				$tpl->parse('menuitem');
 			}
@@ -51,6 +51,7 @@ class Menu {
 			$tpl->setVar('item', '<a href="'.me().'?page=login&amp;action=logout" remote="remote">Logout</a>');
 			$tpl->parse('menuitem');
 			$tpl->setVar('search', request('search'));
+			error_log($tpl->get());
 			return $tpl->get();
 		}
 		return '';

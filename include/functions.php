@@ -147,8 +147,7 @@ function send($data) {
 		$tpl = new Template('index.html');
 		$tpl->setVar('title', $data['title']);
 		$tpl->setVar('version', $version);
-		$tpl->setVar('meta', '<script type="text/javascript" src="js/ipdb.js"></script>
-<script type="text/javascript">
+		$tpl->setVar('meta', '<script type="text/javascript">
 <!--
 	var timeout = '.$session->expire.';
 //-->

@@ -1,40 +1,47 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html>
 	<head>
 		<title>{title}</title>
+		<meta charset='utf-8'>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico" />
-		<style type="text/css"> /* <![CDATA[ */
-			@import "css/style.css";
-		/* ]]> */</style>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		{meta}
+		<link href="css/normalize.css" media="all" rel="stylesheet" type="text/css" />
+		<link href="css/grid.css" media="all" rel="stylesheet" type="text/css" />
+		<link href="css/ipdb.css" media="all" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="js/ipdb.js"></script>
 	</head>
 	<body>
-		<div id="wrapper">
+		<div class="container">
 			<!-- BEGIN debugdiv -->
-			<div id="debugwrapper">
-				<a href="#">debug<span id="debug">{debug}</span></a>
+			<div class="debug">
+				<a href="#">debug<span>{debug}</span></a>
 			</div>
 			<!-- END debugdiv -->
-			<div id="header">
-				<div id="menu">
-					{menu}
+			<header>
+				<div class="title loggedin"><a href="{me}">IP Database</a></div>
+				<div class="menubutton"><a href="#" onclick="togglemenu();">&#9776;</a></div>
+				<div class="searchform">
+					<form method="post" action="" remote="remote">
+						<input type="text" size="16" class="search" name="search" value="{search}" />
+						<input type="hidden" name="action" value="search" />
+					</form>
 				</div>
-				<div><h2>IP Database</h2></div>
-			</div>
+				<nav>
+					{menu}
+				</nav>
+				<div class="clearfix"></div>
+			</header>
 			<!-- BEGIN treediv -->
-			<div id="tree">
+			<div id="tree" class="tree">
 				{tree}
 			</div>
 			<!-- END treediv -->
-			<div id="content">
+			<div class="content">
 				{content}
 			</div>
-			<div id="break">&nbsp;</div>
+			<footer>
+				<a href="https://github.com/robinelfrink/ipdb">IP Database</a> version {version} &copy;2011-2014
+			</footer>
 		</div>
-		<div id="footer">
-			<a href="http://15augustus.nl/ip-database/">IP Database</a> {version} &copy;2011 Previder bv (http://www.previder.nl)
-		</div>
-		<div id="blanker">&nbsp;</div>
 	</body>
 </html>

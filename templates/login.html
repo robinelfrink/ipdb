@@ -1,45 +1,52 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html>
 	<head>
 		<title>{title}</title>
+		<meta charset='utf-8'>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico" />
-		<style type="text/css"> /* <![CDATA[ */
-			@import "css/style.css";
-		/* ]]> */</style>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		{meta}
+		<link href="css/normalize.css" media="all" rel="stylesheet" type="text/css" />
+		<link href="css/grid.css" media="all" rel="stylesheet" type="text/css" />
+		<link href="css/ipdb.css" media="all" rel="stylesheet" type="text/css" />
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'>
+		<script type="text/javascript" src="js/ipdb.js"></script>
 	</head>
 	<body>
-		<div id="wrapper">
+		<div class="container">
 			<!-- BEGIN debugdiv -->
-			<div id="debugwrapper">
-				<a href="#">debug<span id="debug">{debug}</span></a>
+			<div class="debug">
+				<a href="#">debug<span>{debug}</span></a>
 			</div>
 			<!-- END debugdiv -->
-			<div id="header">
-				<div><h2>IP Database</h2></div>
-			</div>
-			<div id="login">
-				<form method="post" action="" remote="remote">
-					<input type="hidden" name="action" value="login" />
-					<table id="login">
-						<thead><tr><th colspan="2">Login</th></tr></thead>
-						<tbody>
-							<!-- BEGIN errorheader -->
-							<tr><td class="error" colspan="2">{error}</td></tr>
-							<!-- END errorheader -->
-							<tr>
-								<td class="label">Username:</td>
-								<td><input id="username" size="20" type="text" name="username" value="{username}" /></td>
-							</tr>
-							<tr>
-								<td class="label">Password:</td>
-								<td><input size="20" type="password" name="password" /></td>
-							</tr>
-							<tr><td></td><td><input type="submit" value="login" /></td></tr>
-						</tbody>
-					</table>
-				</form>
+			<header>
+				<div class="title"><a href="{me}">IP Database</a></div>
+			</header>
+			<div class="loginwrapper">
+				<div class="login">
+					<form method="post" action="" remote="remote">
+						<input type="hidden" name="action" value="login" />
+						<table class="login">
+							<thead>
+								<tr><th colspan="2">Login</th></tr>
+							</thead>
+							<tbody>
+								<!-- BEGIN errorheader -->
+								<tr><td class="error" colspan="2">{error}</td></tr>
+								<!-- END errorheader -->
+								<tr><td colspan="2">&nbsp;</td></tr>
+								<tr>
+									<td class="label">Username:</td>
+									<td><input id="username" size="20" type="text" name="username" value="{username}" /></td>
+								</tr>
+								<tr>
+									<td class="label">Password:</td>
+									<td><input size="20" type="password" name="password" /></td>
+								</tr>
+								<tr><td></td><td><input type="submit" value="login" /></td></tr>
+							</tbody>
+						</table>
+					</form>
+				</div>
 			</div>
 			<script type="text/javascript">
 			<!--
@@ -49,9 +56,9 @@
 				}
 			//-->
 			</script>
-		</div>
-		<div id="footer">
-			<a href="http://15augustus.nl/ip-database/">IP Database</a> {version} &copy;2011 Previder bv (http://www.previder.nl)
+			<footer>
+				<a href="https://github.com/robinelfrink/ipdb">IP Database</a> version {version} &copy;2011-2014
+			</footer>
 		</div>
 	</body>
 </html>
