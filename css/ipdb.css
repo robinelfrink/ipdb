@@ -34,12 +34,6 @@
 
 
 /*
- * Override font sizes
- */
-html { font-size: 100%; }
-
-
-/*
  * Responsive sticky footer (http://www.joshrcook.com/a-responsive-sticky-footer/)
  */
 html, body {
@@ -262,7 +256,7 @@ nav li:hover li {
 	.tree {
 		display: block;
 		float: left;
-		font-size: 85%;
+		font-size: 80%;
 		width: 18em;
 		background-color: #ebf2f9;
 		margin: 0.5em;
@@ -321,6 +315,7 @@ nav li:hover li {
 .content {
 	color: #3a628a;
 	float: left;
+	font-size: 90%;
 }
 .content a {
 	color: #623a8a;
