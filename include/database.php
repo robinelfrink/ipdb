@@ -534,8 +534,10 @@ class Database {
 			if (!$lastbroadcast ||
 				(strcmp($result['address'], $lastbroadcast)>0)) {
 				$lastbroadcast = self::_broadcast($result['address'], $result['bits']);
-				$children[] = array('node'=>self::_address2node($result['address'], $result['bits']),
-									'description'=>$result['description']);
+				if ($hosts ||
+					($result['bits']<128))
+					$children[] = array('node'=>self::_address2node($result['address'], $result['bits']),
+										'description'=>$result['description']);
 			}
 		return $unused ? self::findUnused($node, $children) : $children;
 	}
