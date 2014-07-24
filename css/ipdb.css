@@ -1,0 +1,340 @@
+/*
+ * Base grid layout courtesy of https://github.com/aekaplan/grid.
+ *
+ * This file contains IPDB-specific changes and additions.
+ */
+
+
+/*
+ * The Open Sans font (https://www.google.com/fonts)
+ */
+@font-face {
+	font-family: 'Open Sans';
+	font-style: normal;
+	font-weight: 400;
+	src: local('Open Sans'), local('OpenSans'), url(fonts/OpenSans.woff) format('woff');
+}
+@font-face {
+	font-family: 'Open Sans';
+	font-style: normal;
+	font-weight: 600;
+	src: local('Open Sans Semibold'), local('OpenSans-Semibold'), url(fonts/OpenSansSemibold.woff) format('woff');
+}
+
+
+/*
+ * The Entypo font (http://www.entypo.com/)
+ */
+@font-face {
+	font-family: 'Entypo';
+	font-style: normal;
+	font-weight: 400;
+	src: local('Entypo'), url(fonts/Entypo.woff) format('woff');
+}
+
+
+/*
+ * Override font sizes
+ */
+html { font-size: 100%; }
+
+
+/*
+ * Responsive sticky footer (http://www.joshrcook.com/a-responsive-sticky-footer/)
+ */
+html, body {
+	height: 100%;
+}
+.container {
+	display: table;
+	height: 100%;
+	width: 100%;
+}
+footer {
+	display: table-row;
+	height: 1px;
+}
+header, footer {
+	background-color: #000;
+	color: #fff;
+}
+
+
+/*
+ * Header
+ */
+header .title.loggedin {
+	display: none;
+}
+header .title {
+	font-size: 130%;
+}
+header .title a {
+	color: inherit;
+	text-decoration: none;
+}
+header div {
+	padding: 0 0.5em;
+}
+@media (min-width: 40rem) {
+	header .title.loggedin {
+		display: block;
+		float: left;
+	}
+}
+
+
+/*
+ * Footer
+ */
+footer {
+	font-size: 75%;
+	text-align: center;
+}
+
+
+/*
+ * Debug window
+ */
+
+.debug {
+	display: none;
+}
+@media (min-width: 40rem) {
+	.debug {
+		display: block;
+		background-color: #eee;
+		position: absolute;
+		left: 2em;
+		top: 2em;
+		font-family: mono;
+		font-size: 80%;
+		padding: 0.5em;
+		border: 1px solid #000;
+		z-index: 2000;
+	}
+	.debug a, .debug a:hover, .debug a:link {
+		color: #000;
+		text-decoration: none;
+	}
+	.debug span {
+		display: none;
+		margin-top: 1em;
+		font-family: monospace;
+		white-space: pre;
+	}
+	.debug:hover span, .debug a:hover span {
+		display: block;
+	}
+}
+
+
+/*
+ * Login screen
+ */
+.loginwrapper {
+	display: table;
+	height: 100%;
+	margin: 0 auto;
+}
+.login {
+	display: table-cell;
+	vertical-align: middle;
+	padding-bottom: 2em;
+}
+.login td {
+	padding: 0 0.3em;
+}
+.loginwrapper .error {
+	text-align: center;
+	color: #d00;
+}
+
+
+/*
+ * Menu, inspired by http://responsivenavigation.net/examples/off-canvas-slide/index.html
+ */
+
+.menubutton {
+	display: none;
+}
+nav {
+	font-size: 80%;
+	float: right;
+	width: auto;
+	margin: 0;
+	color: #fff;
+}
+nav ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+nav li {
+	display: inline-block;
+}
+nav a {
+	display: block;
+	text-decoration: none;
+	color: #fff;
+	padding: 0.5em;
+}
+nav a:hover {
+	background-color: #555;
+}
+nav li li a {
+	background-color: #333;
+}
+nav li ul {
+	position: absolute;
+	display: none;
+}
+nav li:hover ul {
+	display: block;
+}
+nav li:hover li {
+	display: block;
+}
+@media (max-width: 64rem) {
+	nav {
+		font-size: 80%;
+	}
+}
+@media (max-width: 46rem) {
+	nav {
+		font-size: 70%;
+	}                   
+}
+@media (max-width: 40rem) {
+	.menubutton {
+		display: block;
+		float: left;
+		font-size: 1.5em;
+	}
+	.menubutton a {
+		text-decoration: none;
+		color: #fff;
+	}
+	nav {
+		font-size: 100%;
+		position: absolute;
+		margin-left: -80%;
+		width: 80%;
+		z-index: 1;
+		background-color: #000;
+	}
+	.container {
+		transition: .2s margin ease;
+	}
+	nav li {
+		display: block;
+	}
+	nav li ul {
+		display: block;
+		position: relative;
+	}
+	nav li li a {
+		padding-left: 2em;
+	}
+	body.menuactive .container {
+		margin-left: 80%;
+	}
+}
+
+
+/*
+ * Search form
+ */
+.searchform {
+	display: block;
+	float: right;
+	margin: 0.1em;
+}
+
+
+/*
+ * Tree
+ */
+.tree {
+	display: none;
+}
+@media (min-width: 40rem) {
+	.tree {
+		display: block;
+		float: left;
+		font-size: 85%;
+		width: 18em;
+		background-color: #ebf2f9;
+		margin: 0.5em;
+		margin-left: 0;
+	}
+	.tree ul {
+		list-style-type: none;
+		padding-left: 1em;
+		margin: 0;
+	}
+	.tree li div {
+		background-repeat: no-repeat;
+		background-position: left;
+		padding-left: 16px;
+	}
+	.tree li.collapsed>div {
+		background-image: url('../images/plus.png');
+	}
+	.tree li.collapsed ul {
+		display: none;
+	}
+	.tree li.expanded>div {
+		background-image: url('../images/minus.png');
+	}
+	.tree a {
+		position: relative;
+		text-decoration: none;
+		color: inherit;
+		z-index: 24;
+		width: 0;
+		height: 0;
+		outline: 0;
+	}
+	.tree a:hover {
+		z-index: 25;
+	}
+	.tree a span {
+		display: none;
+	}
+	.tree a:hover span {
+		display: block;
+		position: absolute;
+		padding: 0.2em;
+		border: 1px solid;
+		top: 2em;
+		left: 4em;
+		background-color: #ffc;
+		white-space: nowrap;
+	}
+}
+
+
+/*
+ * Content
+ */
+.content {
+	color: #3a628a;
+	float: left;
+}
+.content a {
+	color: #623a8a;
+}
+.content .unused a {
+	color: #628a3a;
+}
+.content table {
+	border-collapse: separate;
+	border: 1px solid #3a628a;
+	border-radius: 5px;
+	padding: 0.5em;
+	margin: 1em 0;
+}
+.content td, .content th {
+	padding: 0 0.5em;
+}
