@@ -59,17 +59,17 @@ class history {
 
 		$even = true;
 		foreach ($history as $entry) {
-			$skin->setVar('timestamp', $entry['stamp']);
-			$skin->setVar('username', $entry['username']);
-			$skin->setVar('action', $entry['action']);
-			$skin->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
-			$skin->parse('entry');
+			$tpl->setVar('timestamp', $entry['stamp']);
+			$tpl->setVar('username', $entry['username']);
+			$tpl->setVar('action', $entry['action']);
+			$tpl->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
+			$tpl->parse('entry');
 			$even = !$even;
 		}
 
-		$skin->setVar('historysearch', request('historysearch'));
-		$skin->setVar('navigation', $navigation);
-		$content = $skin->get();
+		$tpl->setVar('historysearch', request('historysearch'));
+		$tpl->setVar('navigation', $navigation);
+		$content = $tpl->get();
 
 		return array('title'=>'IPDB :: History',
 					 'content'=>$content);
