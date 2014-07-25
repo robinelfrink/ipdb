@@ -31,7 +31,7 @@ $(function () {
 
 /* Set timeout */
 function settimeout() {
-	if (timeout>0) {
+	if ((typeof timeout != 'undefined') && (timeout!=0)) {
 		if (timer!=undefined) {
 			clearTimeout(timer);
 		}
