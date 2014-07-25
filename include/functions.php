@@ -143,11 +143,7 @@ function send($data) {
 		$tpl = new Template('index.html');
 		$tpl->setVar('title', $data['title']);
 		$tpl->setVar('version', $version);
-		$tpl->setVar('meta', '<script type="text/javascript">
-<!--
-	var timeout = '.$session->expire.';
-//-->
-</script>');
+		$tpl->setVar('timeout', $session->expire);
 		$tpl->setVar('menu', Menu::get());
 		if ($session->authenticated &&
 			!$database->hasUpgrade()) {

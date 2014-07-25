@@ -31,7 +31,7 @@ $(function () {
 
 /* Set timeout */
 function settimeout() {
-	if ((typeof timeout != 'undefined') && (timeout!=0)) {
+	if (timeout>0) {
 		if (timer!=undefined) {
 			clearTimeout(timer);
 		}
@@ -140,6 +140,7 @@ function ajaxrequest(vars) {
 		if (json.debug)
 			$('.debug').html(json.debug);
 		ajaxify();
+		settimeout();
 	});
 }
 

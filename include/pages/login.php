@@ -38,7 +38,7 @@ class login {
 		$tpl->setVar('version', $version);
 
 		$content = $tpl->get();
-		$commands = "$('#username').select()";
+		$commands = array("$('#username').select()");
 		return array('title'=>'IPDB :: Login',
 					 'content'=>$content,
 					 'commands'=>$commands);
