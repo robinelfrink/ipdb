@@ -244,6 +244,10 @@ nav li:hover li {
 	float: right;
 	margin: 0.1em;
 }
+.searchform input.search {
+	color: #000;
+	font-size: 90%;
+}
 
 
 /*
@@ -259,8 +263,8 @@ nav li:hover li {
 		font-size: 80%;
 		width: 18em;
 		background-color: #ebf2f9;
-		margin: 0.5em;
-		margin-left: 0;
+		margin: 0.5em 0;
+		border-radius: 0.3em;
 	}
 	.tree ul {
 		list-style-type: none;
@@ -316,6 +320,7 @@ nav li:hover li {
 	color: #3a628a;
 	float: left;
 	font-size: 90%;
+	margin-left: 0.5em;
 }
 .content a {
 	color: #623a8a;
@@ -326,7 +331,7 @@ nav li:hover li {
 .content table {
 	border-collapse: separate;
 	border: 1px solid #3a628a;
-	border-radius: 5px;
+	border-radius: 0.3em;
 	padding: 0.5em;
 	margin: 1em 0;
 }
