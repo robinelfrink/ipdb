@@ -125,22 +125,15 @@ function send($data) {
 			!isset($data['tree']) &&
 			!$database->hasUpgrade())
 			$data['tree'] = Tree::getHtml('::/0', request('node', NULL));
+		$data['commands'] = 'timeout = '.$session->expire.';';
 		$data['debug'] = $debugstr;
-		header('Content-type: text/xml; charset=utf-8');
+		header('Content-type: application/json; charset=utf-8');
 		header('Cache-Control: no-cache, must-revalidate');
 		header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
-		echo '<?xml version="1.0" encoding="UTF-8"?>
-<content>';
 		if (request('page')=='login')
-			echo '
-	<commands>'.escape('document.location = document.URL.replace(/\?.*/, \'\');').'</commands>';
+			echo json_encode(array('commands'=>array('document.location = document.URL.replace(/\?.*/, \'\')')));
 		else
-			foreach ($data as $key=>$content)
-				echo '
-	<'.$key.'>'.implode('</'.$key.'><'.$key.'>', str_split(escape($content), 1024)).'</'.$key.'>';
-		echo '
-	<commands>timeout = '.$session->expire.';</commands>
-</content>';
+			echo json_encode($data);
 	} else if (request('page')=='login') {
 		echo $data['content'];
 	} else {

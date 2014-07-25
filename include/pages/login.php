@@ -38,11 +38,7 @@ class login {
 		$tpl->setVar('version', $version);
 
 		$content = $tpl->get();
-		$commands = "
-if (getElement('username')) {
-	getElement('username').focus();
-	getElement('username').select();
-}";
+		$commands = "$('#username').select()";
 		return array('title'=>'IPDB :: Login',
 					 'content'=>$content,
 					 'commands'=>$commands);
