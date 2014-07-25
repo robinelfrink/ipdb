@@ -30,7 +30,7 @@ function acton($action) {
 		  if ($session->authenticated) {
 			  request('action', false, true);
 			  if (request('remote')=='remote')
-				  send(array('commands'=>'location.href=\''.me().'\';'));
+				  send(array('commands'=>array('location.href=\''.me().'\';')));
 		  	  else {
 				  request('page', 'main', true);
 				  header('Location: '.me());
@@ -47,7 +47,7 @@ function acton($action) {
 		  break;
 	  case 'getsubtree':
 		  if ($session->authenticated)
-			  send(array('commands'=>'expandtree(\''.request('leaf').'\', \''.escape(Tree::getHtml(request('leaf'))).'\');'));
+			  send(array('commands'=>array('expandtree(\''.request('leaf').'\', \''.escape(Tree::getHtml(request('leaf'))).'\');')));
 		  break;
 	  case 'addnode':
 		  if ($session->authenticated) {

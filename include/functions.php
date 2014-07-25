@@ -125,13 +125,16 @@ function send($data) {
 			!isset($data['tree']) &&
 			!$database->hasUpgrade())
 			$data['tree'] = Tree::getHtml('::/0', request('node', NULL));
-		$data['commands'] = 'timeout = '.$session->expire.';';
+		if (isset($data['commands']))
+			$data['commands'][] = 'timeout = '.$session->expire.';';
+		else
+			$data['commands'] = array('timeout = '.$session->expire.';');
 		$data['debug'] = $debugstr;
 		header('Content-type: application/json; charset=utf-8');
 		header('Cache-Control: no-cache, must-revalidate');
 		header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
 		if (request('page')=='login')
-			echo json_encode(array('commands'=>array('document.location = document.URL.replace(/\?.*/, \'\')')));
+			echo json_encode(array('commands'=>array('document.location = document.URL.replace(/\?.*/, \'\');')));
 		else
 			echo json_encode($data);
 	} else if (request('page')=='login') {
@@ -163,7 +166,7 @@ function send($data) {
 		if (isset($data['commands']))
 			$data['content'] .= '
 <script type="text/javascript">
-	'.$data['commands'].'
+	'.implode("\n\t", $data['commands']).'
 </script>';
 		$tpl->setVar('content', $data['content']);
 		echo $tpl->get();

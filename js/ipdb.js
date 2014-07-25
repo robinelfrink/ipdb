@@ -42,7 +42,7 @@ function settimeout() {
 
 /* Do dummy call after timeout */
 function timeoutdummy() {
-	ajaxrequest(location.href.replace(/.*\?/, 'dummy=dummy'));
+	ajaxrequest({ dummy: 'dummy'});
 }
 
 
@@ -67,12 +67,7 @@ function ajaxify() {
 
 /* Click on an anchor */
 function clicka(event) {
-	var href = $(event.target).attr('href');
-	if (href.match(/\?/))
-		href = href.replace(/\?/, '?remote=remote&');
-	else
-		href = href+'?remote=remote';
-	ajaxrequest(href.replace(/.*\?/, ''));
+	ajaxrequest($(event.target).attr('href').replace(/.*\?/, ''));
 	return false;
 }
 
@@ -112,10 +107,11 @@ function clicktree(event) {
 
 /* Expand a tree node */
 function expand(address) {
-	ajaxrequest('action=getsubtree&leaf='+address);
+	ajaxrequest({ action: 'getsubtree', leaf: address });
 	return false;
 }
 function expandtree(address, content) {
+	$('.tree li[id="a_'+address+'"] ul').remove();
 	$('.tree li[id="a_'+address+'"]').append(unescape(content)).addClass('expanded').removeClass('collapsed');
 }
 
@@ -128,14 +124,19 @@ function collapse(address) {
 
 
 /* Send an AJAX request */
-function ajaxrequest(args) {
-	$.ajax(document.URL.replace(/\?.*$/, '')+'?remote=remote&'+args).done(function(json) {
+function ajaxrequest(vars) {
+	if (typeof vars == 'string')
+		vars = vars.replace(/^[\?]?/, '?remote=remote&');
+	else
+		vars['remote'] = 'remote';
+	$.ajax({ data: vars }).done(function(json) {
+		console.log(json);
 		if (json.content)
 			$('.content').html(json.content);
 		if (json.title)
 			document.title = json.title;
 		if (json.commands)
-			eval(json.commands);
+			$.each(json.commands, function(index, command) { eval(command); });
 		if (json.debug)
 			$('.debug').html(json.debug);
 		ajaxify();
