@@ -715,7 +715,9 @@ class Database {
 			// Ignore the error.
 		}
 		try {
-			$sql = "SELECT DISTINCT `address`, `bits`, `parent`, `description` ".
+			$sql = "SELECT DISTINCT `".$this->prefix."ip`.`address`, ".
+					"`".$this->prefix."ip`.`bits`, ".
+					"`".$this->prefix."ip`.`description` ".
 				"FROM `".$this->prefix."ip` ".
 				"LEFT JOIN `".$this->prefix."extrafields` ".
 				"ON `".$this->prefix."extrafields`.`address`=`".$this->prefix."ip`.`address` ".

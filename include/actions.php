@@ -121,15 +121,15 @@ function acton($action) {
 				  request('node', 0, true);
 				  request('page', 'main', true);
 			  } else {
-				  $searchresult = $database->search(request('search'));
+				  $searchresult = $database->searchDb(request('search'));
 				  if (count($searchresult)>0) {
 					  request('node', -1, true);
 					  request('page', 'main', true);
 				  } else {
 					  $error = 'Search result is empty.';
-					  $ip = address2ip(request('search'));
-					  if (strcmp($ip, request('search'))!=0) {
-						  request('node', $database->getParent($ip), true);
+					  if (($node = $database->getNode(request('node'))) ||
+						  ($node = $database->getParent(request('node')))) {
+						  request('node', $node['node'], true);
 						  request('page', 'main', true);
 					  }
 				  }
