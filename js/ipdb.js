@@ -130,7 +130,6 @@ function ajaxrequest(vars) {
 	else
 		vars['remote'] = 'remote';
 	$.ajax({ data: vars }).done(function(json) {
-		console.log(json);
 		if (json.content)
 			$('.content').html(json.content);
 		if (json.title)
