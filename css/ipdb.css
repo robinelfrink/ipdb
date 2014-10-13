@@ -338,3 +338,23 @@ nav li:hover li {
 .content td, .content th {
 	padding: 0 0.5em;
 }
+
+
+/*
+ * Table item hover
+ */
+td.extraitem a {
+	text-decoration: none;
+	position: relative;
+}
+td.extraitem a span {
+	display: none;
+	position: absolute;
+	background-color: #efe;
+	border: 1px solid #3a628a;
+	border-radius: 0.3em;
+	padding: 0.3em;
+}
+td.extraitem a:hover span {
+	display: block;
+}
