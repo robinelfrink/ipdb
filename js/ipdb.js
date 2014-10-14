@@ -126,10 +126,10 @@ function collapse(address) {
 /* Send an AJAX request */
 function ajaxrequest(vars) {
 	if (typeof vars == 'string')
-		vars = vars.replace(/^[\?]?/, '?remote=remote&');
+		vars = vars.replace(/^[\?]?/, 'remote=remote&');
 	else
 		vars['remote'] = 'remote';
-	$.ajax({ data: vars }).done(function(json) {
+	$.ajax(location.href.replace(/\?.*/, ''), { data: vars }).done(function(json) {
 		if (json.content)
 			$('.content').html(json.content);
 		if (json.title)
