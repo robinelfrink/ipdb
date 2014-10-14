@@ -34,6 +34,14 @@
 
 
 /*
+ * Default font size
+ */
+html, body {
+	font-size: 1rem;
+}
+
+
+/*
  * Responsive sticky footer (http://www.joshrcook.com/a-responsive-sticky-footer/)
  */
 html, body {
@@ -61,7 +69,7 @@ header .title.loggedin {
 	display: none;
 }
 header .title {
-	font-size: 130%;
+	font-size: 140%;
 }
 header .title a {
 	color: inherit;
@@ -82,7 +90,7 @@ header div {
  * Footer
  */
 footer {
-	font-size: 75%;
+	font-size: 85%;
 	text-align: center;
 }
 
