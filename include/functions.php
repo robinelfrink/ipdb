@@ -179,13 +179,12 @@ function randstr($length, $base = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRS
 }
 
 
-function fatal($str) {
-	global $xml;
-	if ($xml) {
-		require_once 'include/xml.php';
-		XML::fatal($str);
-	} else
+function fatal($str, $code = 500) {
+	global $rest;
+	if (!$rest)
 		exit('Error: '.$str);
+	http_response_code($code);
+	exit(json_encode(array('error'=>$str), JSON_PRETTY_PRINT));
 }
 
 

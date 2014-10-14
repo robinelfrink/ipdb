@@ -21,14 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-/* Request for xsd schema */
-if (isset($_REQUEST['xsd'])) {
-	header('Content-type: text/xml');
-	readfile('include/xmlschema.xsd');
-	exit;
-}
-
-
 /* Include necessary files */
 require_once 'include/actions.php';
 require_once 'include/functions.php';
@@ -59,10 +51,9 @@ $root = dirname(__FILE__);
 $version = 0.1;
 
 
-/* Check for incoming XML request */
-$xml = (isset($HTTP_RAW_POST_DATA) && preg_match('/^<\?xml version=/', $HTTP_RAW_POST_DATA) ?
-		$HTTP_RAW_POST_DATA :
-		null);
+/* Check for incoming RESTful request */
+$rest = preg_match('/^(get|post|put|delete)\/+(.*)/i', $_SERVER["QUERY_STRING"], $matches) ?
+	array('type'=>strtolower($matches[1]), 'request'=>explode('/', $matches[2])) : false;
 
 
 /* Read configuration file */
@@ -82,11 +73,13 @@ $database = new Database($config->database);
 if ($database->error)
 	fatal($database->error);
 
-if ($xml) {
-	require_once 'include/xml.php';
-	XML::handle($xml);
+
+/* Handle RESTful API request */
+if ($rest) {
+	require_once 'include/rest.php';
 	exit;
 }
+
 
 if (!$database->hasDatabase())
 	request('page', 'initdb', true);
