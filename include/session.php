@@ -80,7 +80,7 @@ class Session {
 			$this->error = 'Login failed';
 			return false;
 		}
-		if (md5(trim(request('password')))!=$result['password']) {
+		if (md5(trim($password))!=$result['password']) {
 			$this->error = 'Login failed';
 			return false;
 		}
