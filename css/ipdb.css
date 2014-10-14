@@ -346,6 +346,9 @@ nav li:hover li {
 .content td, .content th {
 	padding: 0 0.5em;
 }
+.content a {
+	color: #000;
+}
 
 
 /*
