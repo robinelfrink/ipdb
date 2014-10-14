@@ -90,7 +90,7 @@ if ($xml) {
 
 if (!$database->hasDatabase())
 	request('page', 'initdb', true);
-else if (!$session->authenticate())
+else if (!$session->start_websession())
 	request('page', 'login', true);
 else if ($database->hasUpgrade())
 	request('page', 'upgradedb', true);
