@@ -98,12 +98,16 @@ class Database {
 		$sql = "SELECT `version` FROM `".$this->prefix."version`";
 		try {
 			$stmt = $this->db->prepare($sql);
+		} catch (PDOException $e) {
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		try {
 			$stmt->execute();
 			if ($stmt->fetch())
 				return true;
 			return false;
 		} catch (PDOException $e) {
-			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
 	}
@@ -154,16 +158,13 @@ class Database {
 								"`address` varchar(32) NOT NULL,".
 								"`bits` INT UNSIGNED NOT NULL,".
 								"`description` varchar(255),".
-								"PRIMARY KEY (`id`)".
+								"PRIMARY KEY (`address`, `bits`)".
 							")");
 			$this->db->exec("CREATE UNIQUE INDEX `addressbits` ON `".$this->prefix."ip` (`address`, `bits`)");
-			$this->db->exec("CREATE INDEX `address` ON `".$this->prefix."ip` (`address`)");
-			$this->db->exec("CREATE INDEX `bits` ON `".$this->prefix."ip` (`bits`)");
-			$this->db->exec("CREATE INDEX `parent` ON `".$this->prefix."ip` (`parent`)");
-			$this->db->exec("INSERT INTO `".$this->prefix."ip` (`id`, `address`, `bits`, `parent`, `description`) ".
-							"VALUES(1, 'fc030000000000000000000000000000', 16, 0, 'Default IPv6 network.')");
-			$this->db->exec("INSERT INTO `".$this->prefix."ip` (`id`, `address`, `bits`, `parent`, `description`) ".
-							"VALUES(2, '000000000000000000000000C0A80300', 120, 0, 'Default IPv4 network.')");
+			$this->db->exec("INSERT INTO `".$this->prefix."ip` (`address`, `bits`, `description`) ".
+							"VALUES('fc030000000000000000000000000000', 16, 'Default IPv6 network.')");
+			$this->db->exec("INSERT INTO `".$this->prefix."ip` (`address`, `bits`, `description`) ".
+							"VALUES('000000000000000000000000C0A80300', 120, 'Default IPv4 network.')");
 
 			/* users */
 			$this->db->exec("CREATE TABLE `".$this->prefix."users` (".

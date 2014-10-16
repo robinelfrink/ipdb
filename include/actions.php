@@ -137,7 +137,7 @@ function acton($action) {
 		  }
 		  break;
 	  case 'createdb':
-		  $database->initialize();
+		  $database->initializeDb();
 		  if ($database->error)
 			  $error = $database->error;
 		  break;
