@@ -137,7 +137,7 @@ function ajaxrequest(vars) {
 		if (json.commands)
 			$.each(json.commands, function(index, command) { eval(command); });
 		if (json.debug)
-			$('.debug').html(json.debug);
+			$('.debug span').html(json.debug);
 		ajaxify();
 		settimeout();
 	});
