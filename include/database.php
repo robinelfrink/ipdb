@@ -911,6 +911,13 @@ class Database {
 			return false;
 		}
 
+		/* Check if not changing ipv4 <> ipv6 */
+		if (preg_match('/^000000000000000000000000/', $block['address']) !=
+			preg_match('/^000000000000000000000000/', $newblock['address'])) {
+			$this->error = 'Cannot renumber ipv4 to ipv6 and vice versa';
+			return false;
+		}
+
 		try {
 			// Change node
 			$sql = "UPDATE `".$this->prefix."ip` ".
