@@ -903,18 +903,7 @@ class Database {
 			return false;
 		}
 
-		if (($newblock = self::_node2address($newnode)) &&
-			(($block['address']!=$newblock['address']) ||
-			 ($block['bits']!=$newblock['bits']))) {
-			$this->error = 'Node '.$newnode.' already exists';
-			return false;
-		}
-
-		/* Prepare for stupidity */
-		if ($newblock['address']=='00000000000000000000000000000000') {
-			$this->error = 'The World already exists';
-			return false;
-		}
+		$newblock = self::_node2address($newnode);
 
 		/* Check if network address matches bitmask */
 		if (strcmp($newblock['address'], self::_network($newblock['address'], $newblock['bits']))!=0) {
@@ -923,7 +912,8 @@ class Database {
 		}
 
 		try {
-			$sql = "UPDATE`".$this->prefix."ip` ".
+			// Change node
+			$sql = "UPDATE `".$this->prefix."ip` ".
 				"SET `address`=:newaddress, `bits`=:newbits, `description`=:newdescription ".
 				"WHERE `address`=:address AND `bits`=:bits";
 			$stmt = $this->db->prepare($sql);
@@ -931,6 +921,15 @@ class Database {
 			$stmt->bindParam(':newbits', $newblock['bits'], PDO::PARAM_INT);
 			$stmt->bindParam(':newdescription', $description, PDO::PARAM_STR);
 			$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
+			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
+			$stmt->execute();
+			// Change children
+			$sql = "UPDATE `".$this->prefix."ip` ".
+				"SET `address`=REPLACE(`address`, :base, :newbase) ".
+				"WHERE `address` LIKE (CONCAT(:base, '%')) AND `bits`>:bits";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':base', preg_replace('/0+$/', '', self::_network($block['address'], $block['bits'])), PDO::PARAM_STR);
+			$stmt->bindParam(':newbase', preg_replace('/0+$/', '', self::_network($newblock['address'], $newblock['bits'])), PDO::PARAM_STR);
 			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
 			$stmt->execute();
 			$this->log('Changed node '.$node);
