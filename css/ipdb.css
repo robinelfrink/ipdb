@@ -137,12 +137,11 @@ footer {
 .loginwrapper {
 	display: table;
 	height: 100%;
-	margin: 0 auto;
+	margin: 25% auto;
 }
 .login {
 	display: table-cell;
 	vertical-align: middle;
-	padding-bottom: 50%;
 }
 .login table {
 	border-collapse: separate;
@@ -335,9 +334,11 @@ nav li:hover li {
  */
 .content {
 	color: #3a628a;
-	float: left;
 	font-size: 90%;
-	margin-left: 0.5em;
+	width: 100%;
+}
+.tree ~ .content {
+	width: 63.7%;
 }
 .content a {
 	color: #623a8a;
