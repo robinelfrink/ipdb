@@ -131,6 +131,7 @@ class Session {
 			if (!($name = $this->authenticate($username, request('password'))))
 				return false;
 
+			$_SESSION['username'] = $username;
 			$_SESSION['name'] = $name;
 			$page = 'main';
 		}
