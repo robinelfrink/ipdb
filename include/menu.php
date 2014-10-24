@@ -29,33 +29,37 @@ class Menu {
 		global $config, $session;
 		if ($session->authenticated) {
 			$tpl = new Template('menu.html');
-			$tpl->setVar('item', '<a href="'.me().'?page=main&amp;node=::/0">The World</a>');
-			$tpl->parse('menuitem');
+			$menu = array('The World'=>'page=main&node=::/0');
 			if (count($config->extratables)>0) {
-				$submenu = '<a href="#">Tables</a><ul>';
+				$menu['Tables'] = array();
 				foreach ($config->extratables as $table=>$details)
-					$submenu .= '<li><a href="'.me().'?page=extratable&amp;table='.$table.
-						'">'.$details['description'].'</a></li>';
-				$submenu .= '</ul>';
-				$tpl->setVar('item', $submenu);
-				$tpl->parse('menuitem');
+					$menu['Tables'][$details['description']] = 'page=table&table='.$table;
 			}
-			$tpl->setVar('item', '<a href="'.me().'?page=history">History</a>');
-			$tpl->parse('menuitem');
-			$tpl->setVar('item', '<a href="'.me().'?page=account">My account</a>');
-			$tpl->parse('menuitem');
+			$menu['History'] = 'page=history';
+			$menu['Options'] = array('My account'=>'page=account');
 			if ($session->username=='admin') {
-				$tpl->setVar('item', '<a href="'.me().'?page=users">Users</a>');
-				$tpl->parse('menuitem');
+				$menu['Options']['Users'] = 'page=users';
+				$menu['Options']['Fields'] = 'page=fields';
+				$menu['Options']['Tables'] = 'page=tables';
 			}
-			$tpl->setVar('item', '<a href="'.me().'?page=login&amp;action=logout" remote="remote">Logout</a>');
-			$tpl->parse('menuitem');
-			$tpl->setVar('search', request('search'));
-			return $tpl->get();
+			$menu['Logout'] = 'page=login&action=logout&remote=remote';
+			return self::makeHtml($menu);
 		}
 		return '';
 	}
 
+	private static function makeHtml($menu) {
+		$tpl = new Template('menu.html');
+		foreach ($menu as $title=>$details) {
+			if (is_array($details))
+				$tpl->setVar('item', '<a href="#">'.htmlentities($title).'</a>'.self::makeHtml($details));
+			else
+				$tpl->setVar('item', '<a href="?'.$details.'">'.htmlentities($title).'</a>');
+			$tpl->parse('menuitem');
+		}
+		return $tpl->get();
+	}
+			
 
 }
 
