@@ -335,10 +335,9 @@ nav li:hover li {
 .content {
 	color: #3a628a;
 	font-size: 90%;
-	width: 100%;
 }
-.tree ~ .content {
-	width: 63.7%;
+.tree[style*="display:none"] ~ .content {
+	width: 100%;
 }
 .content a {
 	color: #623a8a;
