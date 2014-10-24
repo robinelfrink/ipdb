@@ -96,6 +96,7 @@ function acton($action) {
 								  break;
 							  }
 					  if (!$error) {
+						  request('node', request('address').'/'.request('bits'), true);
 						  request('page', 'main', true);
 					  }
 				  }
