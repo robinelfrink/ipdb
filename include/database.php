@@ -690,17 +690,16 @@ class Database {
 			"FROM `".$this->prefix."ip` ".
 			"WHERE address<=:address AND bits<=:bits AND ".
 				"NOT (address=:address AND bits=:bits) ".
-			"ORDER BY address DESC, bits DESC ".
-			"LIMIT 1";
+			"ORDER BY address DESC, bits DESC";
 		$stmt = $this->db->prepare($sql);
 		$stmt->bindValue('address', $block['address']);
 		$stmt->bindValue('bits', $block['bits']);
 		$stmt->execute();
-		if (($result = $stmt->fetch(PDO::FETCH_ASSOC)) &&
-			(self::_network($result['address'], $result['bits'])<=self::_network($block['address'], $block['bits'])) &&
-			(self::_broadcast($result['address'], $result['bits'])>=self::_broadcast($block['address'], $block['bits'])))
-			return array('node'=>self::_address2node($result['address'], $result['bits']),
-						 'description'=>$result['description']);
+		while ($result = $stmt->fetch(PDO::FETCH_ASSOC))
+			if ((self::_network($result['address'], $result['bits'])<=self::_network($block['address'], $block['bits'])) &&
+				(self::_broadcast($result['address'], $result['bits'])>=self::_broadcast($block['address'], $block['bits'])))
+				return array('node'=>self::_address2node($result['address'], $result['bits']),
+							 'description'=>$result['description']);
 		return array('node'=>'::/0',
 					 'description'=>_('The World'));
 	}
