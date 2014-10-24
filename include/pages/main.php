@@ -115,6 +115,7 @@ class main {
 			$node = 'The World';
 			$children = $database->getChildren('::/0', false, request('showunused')=='no');
 			$tpl = new Template('world.html');
+			$tpl->setVar('count', count($children));
 			$content = $tpl->get().$this->listchildren($children);
 		}
 		return array('title'=>'IPDB :: '.$node,
