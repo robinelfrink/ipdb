@@ -130,7 +130,7 @@ class main {
 		foreach ($children as $child) {
 			$tpl->setVar('link', '?page='.(isset($child['unused']) ? 'addnode' : 'main').
 								  '&node='.$child['node']);
-			$tpl->setVar('label', $child['node']);
+			$tpl->setVar('label', preg_match('/(\..+\/32|:.+\/128)$/', $child['node']) ? preg_replace('/\/.*/', '', $child['node']) : $child['node']);
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
 					if ($details['inoverview']) {
