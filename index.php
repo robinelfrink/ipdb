@@ -21,6 +21,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
+/* Set logging to ./log/ipdb.log */
+ini_set('error_log', 'log/ipdb.log');
+ini_set('log_errors', 'on');
+ini_set('display_errors','off');
+error_reporting(E_ALL);
+
+
 /* Include necessary files */
 require_once 'include/actions.php';
 require_once 'include/functions.php';
@@ -35,10 +42,6 @@ require_once 'include/tree.php';
 /* Set some settings */
 ini_set('session.bug_compat_warn', 0);
 ini_set('session.bug_compat_42', 0);
-ini_set('error_log', 'logs/errors');
-ini_set('log_errors', 'on');
-ini_set('display_errors','off');
-error_reporting(E_ALL);
 $error = false;
 $debugstr = '';
 
