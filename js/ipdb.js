@@ -130,6 +130,8 @@ function ajaxrequest(vars) {
 	else
 		vars['remote'] = 'remote';
 	$.ajax(location.href.replace(/\?.*/, ''), { data: vars }).done(function(json) {
+		if (json.tree)
+			$('.tree').html(json.tree);
 		if (json.content)
 			$('.content').html(json.content);
 		if (json.title)
