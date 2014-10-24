@@ -341,6 +341,15 @@ nav li:hover li {
 	font-size: 110%;
 	padding: 0.5em;
 }
+.content p.error {
+	color: #c00;
+	background-color: #fef;
+	font-size: 110%;
+	padding: 0.5em;
+	border: 1px solid #c00;
+	border-radius: 0.3em;
+	margin-top: 0.5em;
+}
 .tree[style*="display:none"] ~ .content {
 	width: 100%;
 }
