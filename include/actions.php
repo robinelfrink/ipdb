@@ -83,18 +83,25 @@ function acton($action) {
 					  $error = $database->error;
 				  } else {
 					  if (count($config->extrafields)>0)
-						  foreach ($config->extrafields as $field=>$details)
-							  if (!$database->setField($field, request('node'), request('field-'.$field), (request('field-'.$field.'-recursive')=='on' ? true : false))) {
+						  foreach ($config->extrafields as $field=>$details) {
+							  $value = $database->getField($field, request('node'));
+							  if ((($value!=request('field-'.$field)) ||
+								   (request('field-'.$field.'-recursive')=='on')) &&
+								  $database->setField($field, request('node'), request('field-'.$field), (request('field-'.$field.'-recursive')=='on'))) {
 								  $error = $database->error;
 								  break;
 							  }
+						  }
 					  if (count($config->extratables)>0)
-						  foreach ($config->extratables as $table=>$details)
+						  foreach ($config->extratables as $table=>$details) {
+						  	  $item = $database->getItem($table, request('node'));
 							  if ($details['linkaddress'] &&
-								  !$database->setItem($table, request('node'), request('table-'.$table), (request('table-'.$table.'-recursive')=='on' ? true : false))) {
+								  ($item['item']!=request('table-'.$table)) &&
+								  !$database->setItem($table, request('node'), request('table-'.$table), (request('table-'.$table.'-recursive')=='on'))) {
 								  $error = $database->error;
 								  break;
 							  }
+						  }
 					  if (!$error) {
 						  request('node', request('address').'/'.request('bits'), true);
 						  request('page', 'main', true);
