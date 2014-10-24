@@ -150,7 +150,8 @@ function send($data) {
 		if ($session->authenticated &&
 			!$database->hasUpgrade()) {
 			$tpl->setVar('tree', Tree::getHtml('::/0', request('node', NULL)));
-			$tpl->parse('treediv');
+			if (!preg_match('/^(extratable|history|account|users)$/', request('page')))
+				$tpl->parse('treediv');
 		}
 
 		if ($config->debug) {
