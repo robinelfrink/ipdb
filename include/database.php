@@ -696,7 +696,9 @@ class Database {
 		$stmt->bindValue('address', $block['address']);
 		$stmt->bindValue('bits', $block['bits']);
 		$stmt->execute();
-		if ($result = $stmt->fetch(PDO::FETCH_ASSOC))
+		if (($result = $stmt->fetch(PDO::FETCH_ASSOC)) &&
+			(self::_network($result['address'], $result['bits'])<=self::_network($block['address'], $block['bits'])) &&
+			(self::_broadcast($result['address'], $result['bits'])>=self::_broadcast($block['address'], $block['bits'])))
 			return array('node'=>self::_address2node($result['address'], $result['bits']),
 						 'description'=>$result['description']);
 		return array('node'=>'::/0',
