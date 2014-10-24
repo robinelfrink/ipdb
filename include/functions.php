@@ -23,8 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 function debug($mixed) {
 	global $config, $debugstr;
-	if ($config->debug)
+	if ($config->debug) {
 		$debugstr .= preg_replace('/\{/', '&#123;', htmlentities(var_export($mixed, true))).'<hr />';
+		error_log('debug: '.var_export($mixed, true));
+	}
 }
 
 
