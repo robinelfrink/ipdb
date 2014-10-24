@@ -935,8 +935,10 @@ class Database {
 				"SET `address`=REPLACE(`address`, :base, :newbase) ".
 				"WHERE `address` LIKE (CONCAT(:base, '%')) AND `bits`>:bits";
 			$stmt = $this->db->prepare($sql);
-			$stmt->bindParam(':base', preg_replace('/0+$/', '', self::_network($block['address'], $block['bits'])), PDO::PARAM_STR);
-			$stmt->bindParam(':newbase', preg_replace('/0+$/', '', self::_network($newblock['address'], $newblock['bits'])), PDO::PARAM_STR);
+			$base = preg_replace('/0+$/', '', self::_network($block['address'], $block['bits']));
+			$newbase = preg_replace('/0+$/', '', self::_network($newblock['address'], $newblock['bits']));
+			$stmt->bindParam(':base', $base, PDO::PARAM_STR);
+			$stmt->bindParam(':newbase', $newbase, PDO::PARAM_STR);
 			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
 			$stmt->execute();
 			$this->log('Changed node '.$node);
