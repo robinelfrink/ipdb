@@ -467,7 +467,7 @@ class Database {
 	 * to the internal representation.
 	 */
 	private static function _node2address($node) {
-		if (false==($address = inet_pton(preg_replace('/\/.*/', '', $node))))
+		if (false==($address = @inet_pton(preg_replace('/\/.*/', '', $node))))
 			throw new Exception(sprintf(_('%s is not a valid IP address'), $node));
 		$address = str_pad(unpack('H*', $address)[1], 32, '0', STR_PAD_LEFT);
 		$bits = preg_replace('/.*\/([0-9]+)$/', '\1', $node);
@@ -736,7 +736,11 @@ class Database {
 				$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
 			}
 			$stmt->execute();
-			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+			$result = array();
+			while ($node = $stmt->fetch(PDO::FETCH_ASSOC))
+				$result[] = array('node'=>self::_address2node($node['address'], $node['bits']),
+								  'description'=>$node['description']);
+			return $result;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');

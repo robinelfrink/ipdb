@@ -124,7 +124,7 @@ function acton($action) {
 			  } else {
 				  $searchresult = $database->searchDb(request('search'));
 				  if (count($searchresult)>0) {
-					  request('node', -1, true);
+					  request('node', null, true);
 					  request('page', 'main', true);
 				  } else {
 					  $error = 'Search result is empty.';

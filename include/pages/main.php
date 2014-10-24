@@ -28,8 +28,11 @@ class main {
 
 
 	public function get() {
-		global $config, $database, $session;
-		if (($node = request('node')) &&
+		global $config, $database, $session, $searchresult;
+		if ($searchresult) {
+			$node = 'Search result';
+			$content = $this->listchildren($searchresult);
+		} else if (($node = request('node')) &&
 			($node!='::/0') &&
 			($data = $database->getNode($node))) {
 			$tpl = new Template('netinfo.html');
@@ -109,10 +112,10 @@ class main {
 				$content .= $this->listchildren(request('showunused')=='yes' ?
 					$database->getChildren($data['node'], true, true) : $children);
 		} else {
-			global $searchresult;
 			$node = 'The World';
-			$nodes = $searchresult ? $searchresult : $database->getChildren('::/0', false, request('showunused')=='no');
-			$content = $this->listchildren($nodes);
+			$children = $database->getChildren('::/0', false, request('showunused')=='no');
+			$tpl = new Template('world.html');
+			$content = $tpl->get().$this->listchildren($children);
 		}
 		return array('title'=>'IPDB :: '.$node,
 					 'content'=>$content);
