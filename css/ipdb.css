@@ -350,7 +350,7 @@ nav li:hover li {
 	border-radius: 0.3em;
 	margin-top: 0.5em;
 }
-.tree[style*="display:none"] ~ .content {
+.tree[style*="display:none"] ~ .content, header + .content {
 	width: 100%;
 }
 .content a {
