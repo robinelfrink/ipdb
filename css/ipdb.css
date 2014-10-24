@@ -336,6 +336,11 @@ nav li:hover li {
 	color: #3a628a;
 	font-size: 90%;
 }
+.content p.message {
+	color: #3a628a;
+	font-size: 110%;
+	padding: 0.5em;
+}
 .tree[style*="display:none"] ~ .content {
 	width: 100%;
 }
