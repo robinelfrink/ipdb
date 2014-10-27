@@ -53,8 +53,17 @@ class Menu {
 		foreach ($menu as $title=>$details) {
 			if (is_array($details))
 				$tpl->setVar('item', '<a href="#">'.htmlentities($title).'</a>'.self::makeHtml($details));
-			else
-				$tpl->setVar('item', '<a href="?'.$details.'">'.htmlentities($title).'</a>');
+			else {
+				$remote = '';
+				parse_str($details, $vars);
+				if (isset($vars['remote']) &&
+					($vars['remote']=='remote')) {
+					$remote = ' remote="remote"';
+					unset($vars['remote']);
+					$details = http_build_query($vars);
+				}
+				$tpl->setVar('item', '<a href="?'.$details.'"'.$remote.'>'.htmlentities($title).'</a>');
+			}
 			$tpl->parse('menuitem');
 		}
 		return $tpl->get();
