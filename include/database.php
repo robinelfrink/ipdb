@@ -789,11 +789,11 @@ class Database {
 					"`".$this->prefix."ip`.`bits`, ".
 					"`".$this->prefix."ip`.`description` ".
 				"FROM `".$this->prefix."ip` ".
-				"LEFT JOIN `".$this->prefix."extrafields` ".
-				"ON `".$this->prefix."extrafields`.`address`=`".$this->prefix."ip`.`address` ".
-					"AND `".$this->prefix."extrafields`.`bits`=`".$this->prefix."ip`.`bits` ".
+				"LEFT JOIN `".$this->prefix."fieldvalue` ".
+				"ON `".$this->prefix."fieldvalues`.`address`=`".$this->prefix."ip`.`address` ".
+					"AND `".$this->prefix."fieldvalues`.`bits`=`".$this->prefix."ip`.`bits` ".
 				"WHERE `description` LIKE CONCAT('%', :search, '%') ".
-					"OR `".$this->prefix."extrafields`.`value` LIKE CONCAT('%', :search, '%') ".
+					"OR `".$this->prefix."fieldvalues`.`value` LIKE CONCAT('%', :search, '%') ".
 					($block ? "OR (`".$this->prefix."ip`.`address`=:address AND `".$this->prefix."ip`.`bits`=:bits) " : "").
 				"ORDER BY `address`";
 			$stmt = $this->db->prepare($sql);
@@ -907,7 +907,7 @@ class Database {
 
 		$block = self::_node2address($node);
 		try {
-			foreach (array('ip', 'extrafields', 'tablenode', 'access') as $table) {
+			foreach (array('ip', 'fielditems', 'tablenode', 'access') as $table) {
 				$sql = "DELETE FROM `".$this->prefix.$table."` ".
 					"WHERE `address`=:address AND `bits`=:bits";
 				$stmt = $this->db->prepare($sql);
@@ -1082,18 +1082,48 @@ class Database {
 
 
 	/*
+	 * Get extra table definition.
+	 */
+	public function getExtraDefinition($table) {
+		try {
+			$sql = "SELECT * FROM `".$this->prefix."tables` WHERE `table`=:table ";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->execute();
+			if (!($details = $stmt->fetch(PDO::FETCH_ASSOC)))
+				throw new PDOException('Table '.$table.' not found.');
+			$details['columns'] = array();
+			$sql = "SELECT * FROM `".$this->prefix."tablecolumns` WHERE `table`=:table ";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->execute();
+			while ($column = $stmt->fetch(PDO::FETCH_ASSOC))
+				if ($column['column']=='__pkey')
+					$details['type'] = $column['type'];
+				else
+					$details['columns'][$column['column']] = $column['type'];
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return $details;
+	}
+
+
+	/*
 	 * Get extra table item.
 	 */
 	public function getExtra($table, $item = null) {
-		global $config;
+		$details = $this->getExtraDefinition($table);
 		if ($item===null)
 			try {
-				$sql = "SELECT * FROM `".$this->prefix."extratables` ".
+				$sql = "SELECT * FROM `".$this->prefix."tableitems` ".
 					"WHERE `table`=:table ";
-				if ($config->extratables[$table]['type']=='integer')
+				if ($details['type']=='integer')
 					$sql .= "ORDER BY CAST(`item` AS SIGNED)";
 				else
-					$sql .= "ORDER BY `".$this->prefix."extratables`.`item`";
+					$sql .= "ORDER BY `".$this->prefix."tableitems`.`item`";
 				$stmt = $this->db->prepare($sql);
 				$stmt->bindParam(':table', $table, PDO::PARAM_STR);
 				$stmt->execute();
@@ -1104,7 +1134,7 @@ class Database {
 				return false;
 			}
 		try {
-			$sql = "SELECT * FROM `".$this->prefix."extratables` ".
+			$sql = "SELECT * FROM `".$this->prefix."tableitems` ".
 				"WHERE `table`=:table AND `item`=:item";
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
@@ -1135,21 +1165,27 @@ class Database {
 	 * Search through extra table items.
 	 */
 	public function findExtra($table, $search = null) {
-		global $config;
+		$details = $this->getExtraDefinition($table);
 		if (empty($search))
 			return $this->getExtra($table);
 		try {
-			$sql = "SELECT DISTINCT `".$this->prefix."extratables`.`item` ".
-				"FROM `".$this->prefix."extratables` ".
+			$sql = "SELECT * FROM `".$this->prefix."tables` ".
+					"WHERE `table`=:table ";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->execute();
+			$details = $stmt->fetch(PDO::FETCH_ASSOC);
+			$sql = "SELECT DISTINCT `".$this->prefix."tableitems`.`item` ".
+				"FROM `".$this->prefix."tableitems` ".
 				"LEFT JOIN `".$this->prefix."tablecolumn` ".
-				"ON `".$this->prefix."extratables`.`table`=`".$this->prefix."tablecolumn`.`table` ".
-				"AND `".$this->prefix."extratables`.`item`=`".$this->prefix."tablecolumn`.`item` ".
-				"WHERE `".$this->prefix."extratables`.`table`=:table ".
-				"AND (`".$this->prefix."extratables`.`item` LIKE CONCAT('%', :search, '%') ".
-				"OR `".$this->prefix."extratables`.`description` LIKE CONCAT('%', :search, '%') ".
+				"ON `".$this->prefix."tableitems`.`table`=`".$this->prefix."tablecolumn`.`table` ".
+				"AND `".$this->prefix."tableitems`.`item`=`".$this->prefix."tablecolumn`.`item` ".
+				"WHERE `".$this->prefix."tableitems`.`table`=:table ".
+				"AND (`".$this->prefix."tableitems`.`item` LIKE CONCAT('%', :search, '%') ".
+				"OR `".$this->prefix."tableitems`.`description` LIKE CONCAT('%', :search, '%') ".
 				"OR `".$this->prefix."tablecolumn`.`value` LIKE CONCAT('%', :search, '%') ".
 				"ORDER BY ";
-			if ($config->extratables[$table]['type']=='integer')
+			if ($details['type']=='integer')
 				$sql .= "CAST(`".$this->prefix."tablecolumn`.`item` AS SIGNED)";
 			else
 				$sql .= "`".$this->prefix."tablecolumn`.`item`";
@@ -1177,13 +1213,9 @@ class Database {
 	 * Add extra item to a table.
 	 */
 	public function addExtra($table, $item, $description, $comments, $columndata = null) {
-		global $config;
-		if (!isset($config->extratables[$table])) {
-			$this->error = 'Unknown table '.$table;
-			return false;
-		}
+		$details = $this->getExtraDefinition($table);
 		try {
-			$sql = "INSERT INTO `".$this->prefix."extratables` (`table`, `item`, `description`, `comments`) ".
+			$sql = "INSERT INTO `".$this->prefix."tableitems` (`table`, `item`, `description`, `comments`) ".
 				"VALUES(:table, :item, :description, :comments)";
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
@@ -1197,15 +1229,17 @@ class Database {
 			return false;
 		}
 		if (is_array($columndata) && (count($columndata)>0))
-			foreach ($columndata as $column=>$data)
+			foreach ($columndata as $column=>$value)
 				try {
+					if (!isset($details['columns'][$column]))
+						throw new PDOException('Column not found in table.');
 					$sql = "INSERT INTO `".$this->prefix."tablecolumn` (`table`, `item`, `column`, `value`) ".
 						"VALUES(:table, :item, :column, :value)";
 					$stmt = $this->db->prepare($sql);
 					$stmt->bindParam(':table', $table, PDO::PARAM_STR);
 					$stmt->bindParam(':item', $item, PDO::PARAM_STR);
 					$stmt->bindParam(':column', $column, PDO::PARAM_STR);
-					$stmt->bindParam(':data', $data, PDO::PARAM_STR);
+					$stmt->bindParam(':value', $value, PDO::PARAM_STR);
 					$stmt->execute();
 				} catch (PDOException $e) {
 					$this->error = $e->getMessage();
@@ -1221,9 +1255,9 @@ class Database {
 	 * Change extra table item.
 	 */
 	public function changeExtra($table, $olditem, $item, $description, $comments, $columndata) {
-		global $config;
+		$details = $this->getExtraDefinition($table);
 		try {
-			$sql = "UPDATE `".$this->prefix."extratables` ".
+			$sql = "UPDATE `".$this->prefix."tableitems` ".
 				"SET `item`=:item, `description`=:description, `comments`=:comments ".
 				"WHERE `item`=:olditem AND `table`=:table";
 			$stmt = $this->db->prepare($sql);
@@ -1265,6 +1299,8 @@ class Database {
 				if (!isset($entry['column']) ||
 					($data!=$entry[$column])) {
 					try {
+						if (!isset($details['columns'][$column]))
+							throw new PDOException('Column not found in table.');
 						$sql = "REPLACE INTO `".$this->prefix."tablecolumn` (`table`, `item`, `column`, `value`) ".
 							"VALUES(:table, :item, :column, :value)";
 						$stmt = $this->db->prepare($sql);
@@ -1278,7 +1314,7 @@ class Database {
 						error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 						return false;
 					}
-					if ($config->extratables[$table]['columns'][$column]=='password')
+					if ($details['columns'][$column]=='password')
 						$changes[] = 'old password';
 					else if (isset($entry[$column]))
 						$changes[] = $column.'='.$entry[$column];
@@ -1294,7 +1330,7 @@ class Database {
 	 */
 	public function deleteExtra($table, $item) {
 		try {
-			$sql = "DELETE FROM `".$this->prefix."extratables` ".
+			$sql = "DELETE FROM `".$this->prefix."tableitems` ".
 				"WHERE `item`=:item AND `table`=:table";
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
@@ -1328,11 +1364,11 @@ class Database {
 		$block = self::_node2address($node);
 		try {
 			$sql = "SELECT `".$this->prefix."tablenode`.`item` AS `item`, ".
-					"`".$this->prefix."extratables`.`description` AS `description` ".
+					"`".$this->prefix."tableitems`.`description` AS `description` ".
 				"FROM `".$this->prefix."tablenode` ".
-				"LEFT JOIN `".$this->prefix."extratables` ".
-					"ON `".$this->prefix."tablenode`.`item`=`".$this->prefix."extratables`.`item` ".
-					"AND `".$this->prefix."tablenode`.`table`=`".$this->prefix."extratables`.`table` ".
+				"LEFT JOIN `".$this->prefix."tableitems` ".
+					"ON `".$this->prefix."tablenode`.`item`=`".$this->prefix."tableitems`.`item` ".
+					"AND `".$this->prefix."tablenode`.`table`=`".$this->prefix."tableitems`.`table` ".
 				"WHERE `address`=:address ".
 					"AND `bits`=:bits ".
 					"AND `".$this->prefix."tablenode`.`table`=:table";
