@@ -42,7 +42,7 @@ class Database {
 	private $db = null;
 	public $error = null;
 	private $provider = null;
-	private $dbversion = '7';
+	private $dbversion = '8';
 	private $prefix = '';
 
 	/*
@@ -124,7 +124,7 @@ class Database {
 	/*
 	 * Check database version.
 	 */
-	private function getVersion() {
+	public function getVersion() {
 		$this->error = null;
 		$sql = "SELECT `version` FROM `".$this->prefix."version`";
 		try {
@@ -149,8 +149,8 @@ class Database {
 		try {
 			if (in_array($this->db->getAttribute(PDO::ATTR_DRIVER_NAME), array('mysql', 'sqlite')))
 				/* Drop old tables, even though we're pretty sure they don't exist. */
-				foreach (array('ip', 'version', 'extrafields', 'extratables',
-							   'tablenode', 'tablecolumn', 'log', 'access') as $table)
+				foreach (array('ip', 'version', 'fields', 'fieldvalues', 'tables', 'tablecolumns',
+							   'tableitems', 'tablenode', 'tablecolumn', 'log', 'access') as $table)
 					$this->db->exec("DROP TABLE IF EXISTS `".$this->prefix.$table."`");
 
 			/* ip */
@@ -184,8 +184,18 @@ class Database {
 			$this->db->exec("INSERT INTO `".$this->prefix."version` (`version`) ".
 							"VALUES(".$this->dbversion.")");
 
-			/* extrafields */
-			$this->db->exec("CREATE TABLE `".$this->prefix."extrafields` (".
+			/* fields */
+			$this->db->exec("CREATE TABLE `".$this->prefix."fields` (".
+								"`field` varchar(15) NOT NULL,".
+								"`type` varchar(10) NOT NULL DEFAULT 'text',".
+								"`description` varchar(80) NOT NULL,".
+								"`url` varchar(255) NOT NULL,".
+								"`inoverview` BOOLEAN NOT NULL DEFAULT TRUE,".
+								"PRIMARY KEY(`field`)".
+							")");
+
+			/* fieldvalues */
+			$this->db->exec("CREATE TABLE `".$this->prefix."fieldvalues` (".
 								"`address` varchar(32) NOT NULL,".
 								"`bits` INT UNSIGNED NOT NULL,".
 								"`field` varchar(15) NOT NULL,".
@@ -193,8 +203,24 @@ class Database {
 								"PRIMARY KEY(`address`, `bits`, `field`)".
 							")");
 
-			/* extratables */
-			$this->db->exec("CREATE TABLE `".$this->prefix."extratables` (".
+			/* tables */
+			$this->db->exec("CREATE TABLE `".$this->prefix."tables` (".
+								"`table` varchar(15) NOT NULL,".
+								"`description` varchar(80) NOT NULL,".
+								"`linkaddress` BOOLEAN NOT NULL DEFAULT TRUE,".
+								"PRIMARY KEY(`table`)".
+							")");
+
+			/* tablecolumns */
+			$this->db->exec("CREATE TABLE `".$this->prefix."tablecolumns` (".
+								"`table` varchar(15) NOT NULL,".
+								"`column` varchar(15) NOT NULL,".
+								"`type` varchar(10) NOT NULL DEFAULT 'text',".
+								"PRIMARY KEY(`table`, `column`)".
+							")");
+
+			/* tableitems */
+			$this->db->exec("CREATE TABLE `".$this->prefix."tableitems` (".
 								"`table` varchar(15) NOT NULL,".
 								"`item` varchar(50) NOT NULL,".
 								"`description` varchar(80) NOT NULL,".
@@ -247,7 +273,7 @@ class Database {
 	/*
 	 * Upgrade the database structure.
 	 */
-	public function upgradeDb() {
+	public function upgradeDb($config) {
 		global $session;
 		if (!$this->isAdmin($session->username)) {
 			$this->error = 'Access denied';
@@ -338,6 +364,48 @@ class Database {
 								"DROP INDEX `addressbits`");
 				$this->db->exec("ALTER TABLE `".$this->prefix."ip` ".
 								"ADD PRIMARY KEY(`address`, `bits`)");
+			}
+			if ($version<8) {
+				$this->db->exec("ALTER TABLE `".$this->prefix."extrafields` RENAME TO `".$this->prefix."fieldvalues`");
+				$this->db->exec("ALTER TABLE `".$this->prefix."extratables` RENAME TO `".$this->prefix."tableitems`");
+				$this->db->exec("CREATE TABLE `".$this->prefix."fields` (".
+									"`field` varchar(15) NOT NULL,".
+									"`type` varchar(10) NOT NULL DEFAULT 'text',".
+									"`description` varchar(80) NOT NULL,".
+									"`url` varchar(255) NOT NULL,".
+									"`inoverview` BOOLEAN NOT NULL DEFAULT TRUE,".
+									"PRIMARY KEY(`field`)".
+								")");
+				$this->db->exec("CREATE TABLE `".$this->prefix."tables` (".
+									"`table` varchar(15) NOT NULL,".
+									"`description` varchar(80) NOT NULL,".
+									"`linkaddress` BOOLEAN NOT NULL DEFAULT TRUE,".
+									"`inoverview` BOOLEAN NOT NULL DEFAULT TRUE,".
+									"PRIMARY KEY(`table`)".
+								")");
+				$this->db->exec("CREATE TABLE `".$this->prefix."tablecolumns` (".
+									"`table` varchar(15) NOT NULL,".
+									"`column` varchar(15) NOT NULL,".
+									"`type` varchar(10) NOT NULL DEFAULT 'text',".
+									"PRIMARY KEY(`table`, `column`)".
+								")");
+				if (property_exists($config, 'extrafields'))
+					foreach ($config->extrafields as $field=>$details)
+						if (!$this->addField($field,
+											 $details['type'],
+											 isset($details['description']) ? $details['description'] : '',
+											 isset($details['url']) ? $details['url'] : '',
+											 isset($details['inoverview']) ? $details['inoverview'] : true))
+							return false;
+				if (property_exists($config, 'extratables'))
+					foreach ($config->extratables as $table=>$details)
+						if (!$this->addTable($table,
+											 $details['type'],
+											 isset($details['description']) ? $details['description'] : '',
+											 isset($details['inoverview']) ? $details['inoverview'] : true,
+											 isset($details['linkaddress']) ? $details['linkaddress'] : true,
+											 isset($details['columns']) ? $details['columns'] : array()))
+							return false;
 			}
 			$sql = "UPDATE `".$this->prefix."version` SET version=:version";
 			$stmt = $this->db->prepare($sql);
@@ -866,7 +934,7 @@ class Database {
 			return false;
 		try {
 			$sql = "SELECT `value` ".
-				"FROM `".$this->prefix."extrafields` ".
+				"FROM `".$this->prefix."fieldvalues` ".
 				"WHERE `address`=:address ".
 				"AND `bits`=:bits ".
 				"AND `field`=:field";
@@ -964,13 +1032,13 @@ class Database {
 		$block = self::_node2address($node);
 		try {
 			if ($recursive)
-				$sql = "DELETE FROM `".$this->prefix."extrafields` ".
+				$sql = "DELETE FROM `".$this->prefix."fieldvalues` ".
 					"WHERE `address`>=:address ".
 						"AND `address`<=:broadcast ".
 						"AND `bits`>=:bits ".
 						"AND `field`=:field";
 			else
-				$sql = "DELETE FROM `".$this->prefix."extrafields` ".
+				$sql = "DELETE FROM `".$this->prefix."fieldvalues` ".
 					"WHERE `address`=:address ".
 						"AND `bits`=:bits ".
 						"AND `field`=:field";
@@ -984,7 +1052,7 @@ class Database {
 			}
 			$stmt->execute();
 
-			$sql = "INSERT INTO `".$this->prefix."extrafields` (`address`, `bits`, `field`, `value`) ".
+			$sql = "INSERT INTO `".$this->prefix."fieldvalues` (`address`, `bits`, `field`, `value`) ".
 				"VALUES(:address, :bits, :field, :value)";
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
@@ -995,7 +1063,7 @@ class Database {
 			if ($recursive)
 				foreach ($this->getChildren($node) as $child) {
 					$block = self::_node2address($child['node']);
-					$sql = "INSERT INTO `".$this->prefix."extrafields` (`address`, `bits`, `field`, `value`) ".
+					$sql = "INSERT INTO `".$this->prefix."fieldvalues` (`address`, `bits`, `field`, `value`) ".
 						"VALUES(:address, :bits, :field, :value)";
 					$stmt = $this->db->prepare($sql);
 					$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
@@ -1623,6 +1691,109 @@ class Database {
 			}
 		}
 		return false;
+	}
+
+
+	public function addField($field, $type, $description = '', $url = '', $inoverview = true) {
+		if (!in_array($type, array('text', 'integer', 'boolean', 'url'))) {
+			$this->error = 'New field type unknown.';
+			return false;
+		}
+		try {
+			$sql = "INSERT INTO `".$this->prefix."fields` (`field`, `type`, `description`, `url`, `inoverview`) ".
+				"VALUES(:field, :type, :description, :url, :inoverview)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':field', $field, PDO::PARAM_STR);
+			$stmt->bindParam(':type', $type, PDO::PARAM_STR);
+			$stmt->bindParam(':description', $description, PDO::PARAM_STR);
+			$stmt->bindParam(':url', $url, PDO::PARAM_STR);
+			$stmt->bindParam(':inoverview', $inoverview, PDO::PARAM_BOOL);
+			$stmt->execute();
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return true;
+	}
+
+
+	public function removeField($field) {
+		try {
+			$sql = "DELETE FROM `".$this->prefix."fields` WHERE `field`=:field";
+			$stmt->bindParam(':field', $field, PDO::PARAM_STR);
+			$stmt->execute();
+			$sql = "DELETE FROM `".$this->prefix."fieldvalues` WHERE `field`=:field";
+			$stmt->bindParam(':field', $field, PDO::PARAM_STR);
+			$stmt->execute();
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return true;
+	}
+
+
+	public function addTable($table, $type, $description, $inoverview = true, $linkaddress = true, $columns = array()) {
+		if (!in_array($type, array('text', 'integer'))) {
+			$this->error = 'New table key type unknown.';
+			return false;
+		}
+		try {
+			$sql = "INSERT INTO `".$this->prefix."tables` (`table`, `description`, `inoverview`, `linkaddress`) ".
+				"VALUES(:table, :description, :inoverview, :linkaddress)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->bindParam(':description', $description, PDO::PARAM_STR);
+			$stmt->bindParam(':inoverview', $inoverview, PDO::PARAM_BOOL);
+			$stmt->bindParam(':linkaddress', $linkaddress, PDO::PARAM_BOOL);
+			$stmt->execute();
+			$sql = "INSERT INTO `".$this->prefix."tablecolumns` (`table`, `column`, `type`) ".
+				"VALUES(:table, '__pkey', :type)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->bindParam(':type', $type, PDO::PARAM_STR);
+			$stmt->execute();
+			foreach ($columns as $column=>$columntype) {
+				if (!in_array($columntype, array('text', 'integer', 'password'))) {
+					$this->error = 'New table column type unknown.';
+					return false;
+				}
+				$sql = "INSERT INTO `".$this->prefix."tablecolumns` (`table`, `column`, `type`) ".
+					"VALUES(:table, :column, :type)";
+				$stmt = $this->db->prepare($sql);
+				$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+				$stmt->bindParam(':column', $column, PDO::PARAM_STR);
+				$stmt->bindParam(':type', $columntype, PDO::PARAM_STR);
+				$stmt->execute();
+			}
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return true;
+	}
+
+
+	function removeTable($table) {
+		try {
+			$sql = "DELETE FROM `".$this->prefix."tables` WHERE `table`=:table";
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->execute();
+			$sql = "DELETE FROM `".$this->prefix."tableitems` WHERE `table`=:table";
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->execute();
+			$sql = "DELETE FROM `".$this->prefix."tablecolumns` WHERE `table`=:table";
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->execute();
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return true;
 	}
 
 

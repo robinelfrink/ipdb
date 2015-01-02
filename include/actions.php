@@ -150,7 +150,7 @@ function acton($action) {
 			  $error = $database->error;
 		  break;
 	  case 'upgradedb':
-		  $database->upgradeDb();
+		  $database->upgradeDb($config);
 		  if ($database->error)
 			  $error = $database->error;
 		  break;
