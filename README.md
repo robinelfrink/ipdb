@@ -2,10 +2,16 @@
 
 ## An IP address management database
 
+### Status
+
+Work in progress:
+* Layout improvements.
+* Extra table/field configuration dialogs.
+
 ### Requirements
 
-* A web server
-* PHP >= 5.4
+* A web server.
+* PHP >= 5.4.
 
 ### Installation
 
