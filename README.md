@@ -14,6 +14,7 @@ In general: Works fine, but has an 'unfinished' feel.
 
 * A web server.
 * PHP >= 5.4.
+* A database (only mysql has been tested).
 
 ### Installation
 
