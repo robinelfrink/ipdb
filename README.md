@@ -8,6 +8,8 @@ Work in progress:
 * Layout improvements.
 * Extra table/field configuration dialogs.
 
+In general: Works fine, but has an 'unfinished' feel.
+
 ### Requirements
 
 * A web server.
