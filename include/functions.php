@@ -86,7 +86,7 @@ function request($name, $default = NULL, $set = false) {
 		$value = (get_magic_quotes_gpc() ?
 				stripslashes(is_utf8($_REQUEST[$name]) ? $_REQUEST[$name] : utf8_encode($_REQUEST[$name])) :
 				(is_utf8($_REQUEST[$name]) ? $_REQUEST[$name] : utf8_encode($_REQUEST[$name])));
-		if (!preg_match('/^(action|remote)$/', $name))
+		if (!preg_match('/^(action|remote|dummy)$/', $name))
 			$_SESSION[$name] = $value;
 		return $value;
 	} else if (isset($_SESSION[$name]))
@@ -146,6 +146,7 @@ function send($data) {
 		$tpl->setVar('title', $data['title']);
 		$tpl->setVar('version', $version);
 		$tpl->setVar('timeout', $session->expire);
+		$tpl->setVar('page', $page);
 		$tpl->setVar('menu', Menu::get());
 		if ($session->authenticated &&
 			!$database->hasUpgrade()) {
