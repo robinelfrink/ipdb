@@ -23,17 +23,6 @@
 
 
 /*
- * The Entypo font (http://www.entypo.com/)
- */
-@font-face {
-	font-family: 'Entypo';
-	font-style: normal;
-	font-weight: 400;
-	src: local('Entypo'), url(fonts/Entypo.woff) format('woff');
-}
-
-
-/*
  * Default font size
  */
 html, body {
