@@ -112,7 +112,7 @@ function unescape($string) {
 
 
 function send($data) {
-	global $database, $debugstr, $error, $session, $config, $version;
+	global $database, $debugstr, $error, $session, $config, $version, $page;
 
 	/* Check if we had an error */
 	if ($error) {
