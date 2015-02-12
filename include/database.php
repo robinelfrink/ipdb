@@ -42,7 +42,7 @@ class Database {
 	private $db = null;
 	public $error = null;
 	private $provider = null;
-	private $dbversion = '8';
+	private $dbversion = '9';
 	private $prefix = '';
 
 	/*
@@ -157,6 +157,7 @@ class Database {
 			$this->db->exec("CREATE TABLE `".$this->prefix."ip` (".
 								"`address` varchar(32) NOT NULL,".
 								"`bits` INT UNSIGNED NOT NULL,".
+								"`name` varchar(50),".
 								"`description` varchar(255),".
 								"PRIMARY KEY (`address`, `bits`)".
 							")");
@@ -407,6 +408,11 @@ class Database {
 											 isset($details['columns']) ? $details['columns'] : array()))
 							return false;
 			}
+			if ($version<9) {
+				$this->db->exec("ALTER TABLE `".$this->prefix."ip` ADD `name` varchar(50) AFTER `bits`");
+				$this->db->exec("CREATE INDEX `ipname` ON `".$this->prefix."ip`(`name`)");
+				$this->db->exec("UPDATE `".$this->prefix."ip` SET `name`=TRIM(LEFT(`description`, 50))");
+			}
 			$sql = "UPDATE `".$this->prefix."version` SET version=:version";
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':version', $this->dbversion, PDO::PARAM_INT);
@@ -565,7 +571,7 @@ class Database {
 	 */
 	public function getNode($node) {
 		$block = self::_node2address($node);
-		$sql = "SELECT `address`, `bits`, `description` ".
+		$sql = "SELECT `address`, `bits`, `name`, `description` ".
 			"FROM `".$this->prefix."ip` ".
 			"WHERE `address`=:address AND `bits`=:bits";
 		$stmt = $this->db->prepare($sql);
@@ -574,6 +580,7 @@ class Database {
 		$stmt->execute();
 		if ($result = $stmt->fetch(PDO::FETCH_ASSOC))
 			return array('node'=>self::_address2node($result['address'], $result['bits']),
+						 'name'=>$result['name'],
 						 'description'=>$result['description']);
 		return false;	
 	}
@@ -587,7 +594,7 @@ class Database {
 		/* Get all children and grandchildren. Filter out
 		 * grandchildren, until we find a way to do that
 		 * using sql. */
-		$sql = "SELECT `address`, `bits`, `description` ".
+		$sql = "SELECT `address`, `bits`, `name`, `description` ".
 			"FROM `".$this->prefix."ip` ".
 			"WHERE `address`>=:address AND `address`<=:broadcast AND `bits`>:bits ".
 			"ORDER BY `address`, `bits`";
@@ -606,6 +613,7 @@ class Database {
 				if ($hosts ||
 					($result['bits']<128))
 					$children[] = array('node'=>self::_address2node($result['address'], $result['bits']),
+										'name'=>$result['name'],
 										'description'=>$result['description']);
 			}
 		return $unused ? self::findUnused($node, $children) : $children;
@@ -628,6 +636,7 @@ class Database {
 			if ($bits<129)
 				$blocks[] = array('node'=>self::_address2node($address, $bits),
 								  'unused'=>true,
+								  'name'=>'',
 								  'description'=>'');
 			$address = self::_add(self::_broadcast($address, $bits), 1);
 		} while (strcmp($address, $nextaddress)<0);
@@ -754,7 +763,7 @@ class Database {
 	 */
 	public function getParent($node) {
 		$block = self::_node2address($node);
-		$sql = "SELECT `address`, `bits`, `description` ".
+		$sql = "SELECT `address`, `bits`, `name`, `description` ".
 			"FROM `".$this->prefix."ip` ".
 			"WHERE address<=:address AND bits<=:bits AND ".
 				"NOT (address=:address AND bits=:bits) ".
@@ -767,9 +776,11 @@ class Database {
 			if ((self::_network($result['address'], $result['bits'])<=self::_network($block['address'], $block['bits'])) &&
 				(self::_broadcast($result['address'], $result['bits'])>=self::_broadcast($block['address'], $block['bits'])))
 				return array('node'=>self::_address2node($result['address'], $result['bits']),
+							 'name'=>$result['name'],
 							 'description'=>$result['description']);
 		return array('node'=>'::/0',
-					 'description'=>_('The World'));
+					 'name'=>'The World',
+					 'description'=>'');
 	}
 
 
@@ -787,12 +798,14 @@ class Database {
 		try {
 			$sql = "SELECT DISTINCT `".$this->prefix."ip`.`address`, ".
 					"`".$this->prefix."ip`.`bits`, ".
+					"`".$this->prefix."ip`.`name`, ".
 					"`".$this->prefix."ip`.`description` ".
 				"FROM `".$this->prefix."ip` ".
 				"LEFT JOIN `".$this->prefix."fieldvalue` ".
 				"ON `".$this->prefix."fieldvalues`.`address`=`".$this->prefix."ip`.`address` ".
 					"AND `".$this->prefix."fieldvalues`.`bits`=`".$this->prefix."ip`.`bits` ".
-				"WHERE `description` LIKE CONCAT('%', :search, '%') ".
+				"WHERE `name` LIKE CONCAT('%', :search, '%') ".
+					"OR `description` LIKE CONCAT('%', :search, '%') ".
 					"OR `".$this->prefix."fieldvalues`.`value` LIKE CONCAT('%', :search, '%') ".
 					($block ? "OR (`".$this->prefix."ip`.`address`=:address AND `".$this->prefix."ip`.`bits`=:bits) " : "").
 				"ORDER BY `address`";
@@ -806,6 +819,7 @@ class Database {
 			$result = array();
 			while ($node = $stmt->fetch(PDO::FETCH_ASSOC))
 				$result[] = array('node'=>self::_address2node($node['address'], $node['bits']),
+								  'name'=>$node['name'],
 								  'description'=>$node['description']);
 			return $result;
 		} catch (PDOException $e) {
@@ -819,7 +833,7 @@ class Database {
 	/*
 	 * Add a node to the database.
 	 */
-	public function addNode($node, $description) {
+	public function addNode($node, $name='', $description='') {
 		global $session;
 
 		$block = self::_node2address($node);
@@ -865,11 +879,12 @@ class Database {
 
 		/* Add new node */
 		try {
-			$sql = "INSERT INTO `".$this->prefix."ip` (`address`, `bits`, `description`) ".
-				"VALUES(:address, :bits, :description)";
+			$sql = "INSERT INTO `".$this->prefix."ip` (`address`, `bits`, `name`, `description`) ".
+				"VALUES(:address, :bits, :name, :description)";
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
 			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
+			$stmt->bindParam(':name', $name, PDO::PARAM_STR);
 			$stmt->bindParam(':description', $description, PDO::PARAM_STR);
 			$stmt->execute();
 		} catch (PDOException $e) {
@@ -879,7 +894,7 @@ class Database {
 		}
 
 		$this->log('Added node '.$node.
-				   (empty($description) ? '' : ' ('.$description.')'));
+				   (empty($name) ? '' : ' ('.$name.')'));
 		return $node;
 	}
 
@@ -955,9 +970,9 @@ class Database {
 
 
 	/*
-	 * Change a node's address and/or description.
+	 * Change a node's address and/or name/description.
 	 */
-	public function changeNode($node, $newnode, $description) {
+	public function changeNode($node, $newnode, $name='', $description='') {
 		global $config, $session;
 
 		/* Check for access */
@@ -994,11 +1009,12 @@ class Database {
 		try {
 			// Change node
 			$sql = "UPDATE `".$this->prefix."ip` ".
-				"SET `address`=:newaddress, `bits`=:newbits, `description`=:newdescription ".
+				"SET `address`=:newaddress, `bits`=:newbits, `name`=:newname, `description`=:newdescription ".
 				"WHERE `address`=:address AND `bits`=:bits";
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':newaddress', $newblock['address'], PDO::PARAM_STR);
 			$stmt->bindParam(':newbits', $newblock['bits'], PDO::PARAM_INT);
+			$stmt->bindParam(':newname', $name, PDO::PARAM_STR);
 			$stmt->bindParam(':newdescription', $description, PDO::PARAM_STR);
 			$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
 			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
@@ -1395,6 +1411,7 @@ class Database {
 		try {
 			$sql = "SELECT `".$this->prefix."ip`.`address`, ".
 					"`".$this->prefix."ip`.`bits`, ".
+					"`".$this->prefix."ip`.`name`, ".
 					"`".$this->prefix."ip`.`description` ".
 				"FROM `".$this->prefix."ip` ".
 				"LEFT JOIN `".$this->prefix."tablenode` ".
@@ -1408,6 +1425,7 @@ class Database {
 			$nodes = array();
 			foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $node)
 				$nodes[] = array('node'=>self::_address2node($node['address'], $node['bits']),
+								 'name'=>$node['name'],
 								 'description'=>$node['description']);
 			return $nodes;
 		} catch (PDOException $e) {
@@ -1702,13 +1720,14 @@ class Database {
 				$childblock = array('address'=>self::_add(self::_broadcast($block['address'], $block['bits']), 1),
 									'bits'=>128);
 				$children[] = array('node'=>self::_address2node($childblock['address'], $childblock['bits']),
+									'name'=>'',
 									'description'=>'');
 				foreach ($children as $child) {
 					$unused = self::_findunused($address, $child['address']);
 					if (is_array($unused) && (count($unused)>0)) {
 						foreach ($unused as $free)
 							if ($free['bits']<=$bits) {
-								$freeblock = array('node'=>'', 'description'=>'');
+								$freeblock = array('node'=>'', 'name'=>'', 'description'=>'');
 								if (($bits==128) && ($free['bits']<128) &&
 									(preg_match('/00$/', $free['address'])))
 									$freeblock['node'] = self::_address2node(self::_add($free['address'], 1), $bits);
@@ -1723,6 +1742,7 @@ class Database {
 				}
 			} else {
 				return array('node'=>self::_address2node($block['address'], $bits),
+							 'name'=>'',
 							 'description'=>'');
 			}
 		}

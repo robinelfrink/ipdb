@@ -65,6 +65,7 @@ class changenode {
 					}
 			$tpl->setVar('address', preg_replace('/\/.*/', '', $node['node']));
 			$tpl->setVar('bits', preg_replace('/.*\//', '', $node['node']));
+			$tpl->setVar('name', htmlentities($node['name']));
 			$tpl->setVar('description', htmlentities($node['description']));
 			$tpl->setVar('node', $node['node']);
 		}

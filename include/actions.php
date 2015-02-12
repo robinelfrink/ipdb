@@ -51,7 +51,7 @@ function acton($action) {
 		  break;
 	  case 'addnode':
 		  if ($session->authenticated) {
-			  if (!($node = $database->addNode(request('address').'/'.request('bits'), request('description')))) {
+			  if (!($node = $database->addNode(request('address').'/'.request('bits'), request('name'), request('description')))) {
 				  $error = $database->error;
 				  break;
 			  }
@@ -78,7 +78,7 @@ function acton($action) {
 			  if ($database->error) {
 				  $error = $database->error;
 			  } else {
-				  $database->changeNode(request('node'), request('address').'/'.request('bits'), request('description'));
+				  $database->changeNode(request('node'), request('address').'/'.request('bits'), request('name'), request('description'));
 				  if ($database->error) {
 					  $error = $database->error;
 				  } else {
@@ -274,7 +274,7 @@ function acton($action) {
 			  $node = $database->getNode(request('node'));
 			  header('Content-Type: text/plain');
 			  header('Content-Disposition: attachment; filename="'.$node['node'].'.txt"');
-			  echo $node['node'].'    '.$node['description']."\n\n";
+			  echo $node['node']."\t".$node['name']."\t".$node['description']."\n\n";
 			  echo Tree::getTxt(request('node'));
 			  exit;
 		  }

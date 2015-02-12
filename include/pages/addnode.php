@@ -30,6 +30,7 @@ class addnode {
 	public function get() {
 		global $config, $database;
 		$tpl = new Template('node.html');
+		$tpl->setVar('name', request('name'));
 		$tpl->setVar('description', request('description'));
 		if (!($basenode = $database->getNode(request('node'))))
 			$basenode = $database->getParent(request('node'));

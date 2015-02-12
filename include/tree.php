@@ -42,6 +42,7 @@ class Tree {
 					$class = 'class="collapsed"';
 				}
 				$tpl->setVar('node', $child['node']);
+				$tpl->setVar('name', $child['name']);
 				$tpl->setVar('description', htmlentities($child['description']));
 				$tpl->setVar('subtree', $subtree);
 				$tpl->setVar('class', $class);
@@ -60,6 +61,7 @@ class Tree {
 		if (count($children))
 			foreach ($children as $child) {
 				$txt .= str_pad('', ($level+1)*2, ' ').$child['node'].
+					str_pad('      ', ($level+1)*2, ' ').$child['name'].
 					str_pad('      ', ($level+1)*2, ' ').$child['description']."\n";
 				$txt .= Tree::getTxt($child['node'], 1);
 			}
