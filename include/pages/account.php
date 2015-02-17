@@ -24,6 +24,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 class account {
 
 
+	public $error = null;
+
+
 	public function get() {
 		global $database, $session, $config;
 		$tpl = new Template('account.html');
