@@ -3,7 +3,7 @@
 <p>{navigation}</p>
 
 <form method="post" action="" remote="remote">
-    <input type="text" class="search" name="extrasearch" value="{extrasearch}" />
+    <p><input type="text" class="search" name="extrasearch" value="{extrasearch}" /></p>
 	<!-- BEGIN noitems -->
 	<p class="message">There are no items defined in table {table}.</p>
 	<!-- END noitems -->
@@ -17,14 +17,14 @@
 			<tr{oddeven}>
 				<td class="extraitem"><a>{item}{comments}</a></td>
 				<td>{description}</td>
-				<td><a href="?page=changeextra&amp;item={item}" remote="remote">change</a></td>
-				<td><a href="?page=deleteextra&amp;item={item}" remote="remote">delete</a></td>
+				<td><a class="button" href="?page=changeextra&amp;item={item}" remote="remote">change</a></td>
+				<td><a class="button" href="?page=deleteextra&amp;item={item}" remote="remote">delete</a></td>
 			</tr>
 			<!-- END itemrow -->
 		</tbody>
 	</table>
 	<!-- END items -->
-	<a href="?page=addextra" remote="remote">add</a> an item
+	<p><a class="button" href="?page=addextra" remote="remote">add</a> an item</p>
 </form>
 
 <p>{navigation}</p>

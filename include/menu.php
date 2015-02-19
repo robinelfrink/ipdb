@@ -48,11 +48,11 @@ class Menu {
 		return '';
 	}
 
-	private static function makeHtml($menu) {
+	private static function makeHtml($menu, $level=1) {
 		$tpl = new Template('menu.html');
 		foreach ($menu as $title=>$details) {
 			if (is_array($details))
-				$tpl->setVar('item', '<a href="#">'.htmlentities($title).'</a>'.self::makeHtml($details));
+				$tpl->setVar('item', '<a href="#" class="more" onclick="$(this).toggleClass(\'open\'); $(this).siblings(\'ul\').toggleClass(\'active\');">'.htmlentities($title).'</a>'.self::makeHtml($details, $level+1));
 			else {
 				$remote = '';
 				parse_str($details, $vars);
@@ -66,6 +66,8 @@ class Menu {
 			}
 			$tpl->parse('menuitem');
 		}
+		if ($level==1)
+			$tpl->parse('searchform');
 		return $tpl->get();
 	}
 			

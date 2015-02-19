@@ -30,22 +30,13 @@ class login {
 	public function get() {
 		global $session, $config, $version;
 		$tpl = new Template('login.html');
-		if ($session->error) {
-			$tpl->setVar('error', $session->error);
-			$tpl->parse('errorheader');
-		}
 		$tpl->setVar('username', request('username', isset($_SESSION['username']) ? $_SESSION['username'] : ''));
-		$login = $tpl->get();
-
-		$tpl = new Template('index.html');
-		$tpl->setVar('content', $login);
-		$tpl->setVar('version', $version);
-		$content = $tpl->get();
-
-		$commands = array("$('#username').select()");
 		return array('title'=>'IPDB :: Login',
-					 'content'=>$content,
-					 'commands'=>$commands);
+					 'content'=>$tpl->get(),
+					 'notify'=>($session->error ? array('type'=>'error', 'message'=>$session->error) : false),
+					 'commands'=>array("$('#username').select()",
+									   "$('#tree').remove()",
+									   "$('nav ul').remove()"));
 	}
 
 

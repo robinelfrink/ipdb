@@ -351,8 +351,12 @@ class Database {
 				}
 				$this->db->exec("ALTER TABLE `".$this->prefix."access` ".
 								"ADD PRIMARY KEY(`address`, `bits`, `username`)");
+				$this->db->exec("DELETE FROM `".$this->prefix."extrafields` ".
+								"WHERE `address`=''");
 				$this->db->exec("ALTER TABLE `".$this->prefix."extrafields` ".
 								"ADD PRIMARY KEY(`address`, `bits`, `field`)");
+				$this->db->exec("DELETE FROM `".$this->prefix."tablenode` ".
+								"WHERE `address`=''");
 				$this->db->exec("ALTER TABLE `".$this->prefix."tablenode` ".
 								"ADD PRIMARY KEY(`table`, `item`, `address`, `bits`)");
 				$this->db->exec("ALTER TABLE `".$this->prefix."ip` ".

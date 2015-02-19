@@ -54,14 +54,14 @@ function escapeplus(str) {
 
 /* AJAXify the anchors and forms */
 function ajaxify() {
-	$('.tree a').off('click').click(clicktree);
-	$('.tree li[id^="a_"]').off('click').click(clicktree);
-	$('.menu a[remote="remote"]').off('click').click(clicka);
-	$('.menu form[remote="remote"]').off('submit').submit(submitform);
-	$('.menu form[remote="remote"] input[name="cancel"]').off('click').click(function() { ajaxrequest(location.href.replace(/.*\?/, '')); return false; });
-	$('.content a[remote="remote"]').off('click').click(clicka);
-	$('.content form[remote="remote"]').off('submit').submit(submitform);
-	$('.content form[remote="remote"] input[name="cancel"]').off('click').click(function() { ajaxrequest(location.href.replace(/.*\?/, '')); return false; });
+	$('#tree a').off('click').click(clicktree);
+	$('#tree li[id^="a_"]').off('click').click(clicktree);
+	$('#menu a[remote="remote"]').off('click').click(clicka);
+	$('#menu form[remote="remote"]').off('submit').submit(submitform);
+	$('#menu form[remote="remote"] input[name="cancel"]').off('click').click(function() { ajaxrequest(location.href.replace(/.*\?/, '')); return false; });
+	$('#content a[remote="remote"]').off('click').click(clicka);
+	$('#content form[remote="remote"]').off('submit').submit(submitform);
+	$('#content form[remote="remote"] input[name="cancel"]').off('click').click(function() { ajaxrequest(location.href.replace(/.*\?/, '')); return false; });
 }
 
 
@@ -111,15 +111,15 @@ function expand(address) {
 	return false;
 }
 function expandtree(address, content) {
-	$('.tree li[id="a_'+address+'"] ul').remove();
-	$('.tree li[id="a_'+address+'"]').append(unescape(content)).addClass('expanded').removeClass('collapsed');
+	$('#tree li[id="a_'+address+'"] ul').remove();
+	$('#tree li[id="a_'+address+'"]').append(unescape(content)).addClass('expanded').removeClass('collapsed');
 }
 
 
 /* Collapse a tree node */
 function collapse(address) {
-	$('.tree li[id="a_'+address+'"]').addClass('collapsed').removeClass('expanded');
-	$('.tree li[id="a_'+address+'"] ul').remove();
+	$('#tree li[id="a_'+address+'"]').addClass('collapsed').removeClass('expanded');
+	$('#tree li[id="a_'+address+'"] ul').remove();
 }
 
 
@@ -130,18 +130,44 @@ function ajaxrequest(vars) {
 	else
 		vars['remote'] = 'remote';
 	$.ajax(location.href.replace(/\?.*/, ''), { data: vars }).done(function(json) {
+		if (json.notify)
+			notify($.extend({}, json.notify, { container: 'main' }));
 		if (json.tree)
-			$('.tree').html(json.tree);
+			$('#tree').html(json.tree);
 		if (json.content)
-			$('.content').html(json.content);
+			$('#content').html(json.content);
 		if (json.title)
 			document.title = json.title;
 		if (json.commands)
 			$.each(json.commands, function(index, command) { eval(command); });
 		if (json.debug)
-			$('.debug span').html(json.debug);
+			$('#debug span').html(json.debug);
 		ajaxify();
 		settimeout();
 	});
 }
 
+
+/* Display notification */
+notify = function(options) {
+
+	var defaults = {
+		type: 'notify',
+		message: 'Default message',
+	}
+
+	options = $.extend({}, defaults, options);
+
+	var element = $('.notify');
+	if (!element.length) {
+		element = $('<div class="notify"></div>');
+		$('body').append(element);
+	}
+	element.removeClass('error').removeClass('success').addClass(options.type);
+	element.html(options.message);
+	element.slideDown(300);
+	setTimeout(function() {
+		element.slideUp(300);
+	}, 3000);
+
+};

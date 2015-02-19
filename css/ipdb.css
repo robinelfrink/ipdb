@@ -1,11 +1,4 @@
 /*
- * Base grid layout courtesy of https://github.com/aekaplan/grid.
- *
- * This file contains IPDB-specific changes and additions.
- */
-
-
-/*
  * The Open Sans font (https://www.google.com/fonts)
  * Courtesy of Google Webfonts Helper (https://google-webfonts-helper.herokuapp.com/fonts)
  */
@@ -35,77 +28,166 @@
 }
 
 
+
 /*
- * Default font size
+ * Base styles
  */
+html {
+	font-family: 'Open Sans', Helvetica, Arial, sans;
+}
 html, body {
-	font-size: 1rem;
+	background-color: #fff;
+	color: #002b40;
 }
-
-
-/*
- * Responsive sticky footer (http://www.joshrcook.com/a-responsive-sticky-footer/)
- */
-html, body {
-	height: 100%;
-}
-.container {
-	display: table;
-	height: 100%;
-	width: 100%;
-}
-footer {
-	display: table-row;
-	height: 1px;
-}
-header, footer {
-	background-color: #000;
-	color: #fff;
-}
-
-
-/*
- * Header
- */
-header .title.loggedin {
-	display: none;
-}
-header .title {
-	font-size: 140%;
-}
-header .title a {
+a {
 	color: inherit;
 	text-decoration: none;
 }
-header div {
-	padding: 0 0.5em;
+a.button {
+	border: 1px solid #002b40;
+	border-radius: 3px;
+	padding: 0 0.3rem;
+	background-color: #e6f0f5;
 }
-@media (min-width: 40rem) {
-	header .title.loggedin {
-		display: block;
-		float: left;
+.round {
+	border: 1px solid #002b40;
+	border-radius: 3px;
+}
+div#content table {
+	border-radius: 3px;
+	border-style: hidden;
+	box-shadow: 0 0 0 1px #002b40;
+}
+div#content th, div#content td {
+	padding: 0.2rem 0.5rem;
+}
+
+
+
+/*
+ * Font sizing with rem (http://snook.ca/archives/html_and_css/font-size-with-rem)
+ */
+html {
+	font-size: 62.5%;
+}
+body {
+	font-size: 1.6rem;
+}
+
+
+
+/*
+ * Responsive layout
+ */
+div#wrapper {
+	display: table;
+	margin: 0 auto;
+	width: 970px;
+	height: 100%;
+}
+div#tree, div#content {
+	float: left;
+	margin: 0.5rem 0;
+}
+div#content {
+	height: 100%;
+	margin-left: 1rem;
+}
+div#content:first-child {
+	width: 100%;
+	margin: 0.5rem 0;
+}
+div#tree {
+	font-size: 80%;
+	width: 30rem;
+}
+@media only screen and (max-width: 985px) {
+	div#wrapper {
+		width: 100%;
+	}
+	div#tree {
+		margin-left: 0.5rem;
+	}
+	div#content, div#content:first-child {
+		margin: 0.5rem 0.5rem 0.5rem 1rem;
+	}
+}
+@media only screen and (max-width: 799px) {
+	div#tree {
+		display: none;
+	}
+	div#content, div#content:first-child {
+		margin-left: 0.5rem;
+	}
+}
+@media only screen and (max-width: 330px) {
+	div#content {
+		font-size: 1.4rem;
 	}
 }
 
 
+
 /*
- * Footer
+ * Responsive sticky header and footer (http://galengidman.com/2014/03/25/responsive-flexible-height-sticky-footers-in-css/)
+ */
+html, body {
+	height: 100%;
+}
+body {
+	display: table;
+	width: 100%;
+}
+header, main, footer {
+	display: table-row;
+	height: 1px;
+}
+main {
+	height: 100%;
+}
+
+
+
+/*
+ * The header
+ */
+header {
+	background-color: #002b40;
+	color: #fff;
+}
+header div#title {
+	font-size: 2.6rem;
+	line-height: 3.8rem;
+	padding: 0 1rem;
+	float: left;
+}
+nav {
+	float: right;
+}
+
+
+
+
+/*
+ * The footer
  */
 footer {
-	font-size: 85%;
+	background-color: #002b40;
+	color: #fff;
 	text-align: center;
+	font-size: 1.2rem;
 }
+
 
 
 /*
- * Debug window
+ * The debug window
  */
-
-.debug {
-	display: none;
+#debug {
+		display: none;
 }
-@media (min-width: 40rem) {
-	.debug {
+@media (min-width: 985px) {
+	#debug {
 		display: block;
 		background-color: #eee;
 		position: absolute;
@@ -117,85 +199,112 @@ footer {
 		border: 1px solid #000;
 		z-index: 2000;
 	}
-	.debug a, .debug a:hover, .debug a:link {
+	#debug a, #debug a:hover, #debug a:link {
 		color: #000;
 		text-decoration: none;
 	}
-	.debug span {
+	#debug span {
 		display: none;
 		margin-top: 1em;
 		font-family: monospace;
 		white-space: pre;
 	}
-	.debug:hover span, .debug a:hover span {
+	#debug:hover span, #debug a:hover span {
 		display: block;
 	}
 }
 
 
+
 /*
- * Login screen
+ * Login
  */
-.loginwrapper {
+div#loginwrapper {
 	display: table;
 	height: 100%;
-	margin: 25% auto;
+	margin: 0 auto;
 }
-.login {
+div#login {
 	display: table-cell;
 	vertical-align: middle;
 }
-.login table {
-	border-collapse: separate;
-	border: 1px solid #3a628a;
-	border-radius: 0.3em;
-	border-spacing: 0.3em;
-	padding: 0.5em;
-	margin: 1em 0;
+div#login td.error {
+	text-align: center;
+	background-color: #cc0000;
+	color: #fff;
 }
 
-.login td {
-	padding: 0 0.3em;
-}
-.loginwrapper .error {
-	text-align: center;
-	color: #d00;
-}
 
 
 /*
- * Menu, inspired by http://responsivenavigation.net/examples/off-canvas-slide/index.html
+ * Notifications
  */
-
-.menubutton {
+.notify {
 	display: none;
+	position: fixed;
+	top: 0;
+	left: 50%;
+	margin-left: -485px;
+	width: 970px;
+	z-index: 9999;
+	background-color: #000;
+	color: #000;
+	font-size: 2rem;
+	line-height: 2em;
+	text-align: center;
 }
-nav {
-	font-size: 80%;
-	float: right;
-	width: auto;
-	margin: 0;
+@media only screen and (max-width: 985px) {
+	.notify {
+		left: 0;
+		width: 100%;
+		margin: 0;
+	}
+}
+.notify.error {
+	background-color: #c00;
 	color: #fff;
 }
-nav ul {
+.notify.success {
+	background-color: #0c1;
+}
+
+
+
+/*
+ * The menu
+ */
+nav {
+	font-size: 1.4rem;
+}
+nav ul, nav li, nav a {
 	list-style: none;
 	padding: 0;
 	margin: 0;
 }
+nav ul {
+	background-color: #002b40;
+}
 nav li {
-	display: inline-block;
+	display: block;
+	float: left;
+	border-left: 1px solid #66808c;
+}
+nav li:first-child {
+	border: none;
+}
+nav li:hover {
+	background-color: #66808c;
+}
+nav li:hover:last-child {
+	background-color: inherit;
 }
 nav a {
-	display: block;
-	text-decoration: none;
-	color: #fff;
-	padding: 0.5em;
+	display: inline-block;
+	padding: 1rem;
 }
-nav a:hover {
-	background-color: #555;
-}
-nav li li a {
-	background-color: #333;
+nav li li {
+	border: none;
+	float: none;
 }
 nav li ul {
 	position: absolute;
@@ -204,194 +313,114 @@ nav li ul {
 nav li:hover ul {
 	display: block;
 }
-nav li:hover li {
-	display: block;
+nav li form input {
+	margin: 0.5rem;
+	margin-top: 0.7rem;
 }
-@media (max-width: 64rem) {
-	nav {
-		font-size: 80%;
-	}
+nav .menubutton {
+	display: none;
 }
-@media (max-width: 46rem) {
-	nav {
-		font-size: 70%;
-	}                   
-}
-@media (max-width: 40rem) {
-	.menubutton {
+@media only screen and (max-width: 799px) {
+	nav .menubutton {
+		font-size: 2.2rem;
 		display: block;
-		float: left;
-		font-size: 1.5em;
-	}
-	.menubutton a {
-		text-decoration: none;
+		float: right;
 		color: #fff;
 	}
-	nav {
-		font-size: 100%;
+	nav .menubutton a {
+		padding: 0.5rem;
+	}
+	nav ul {
+		display: none;
+	}
+	nav ul.active ul {
+		display: none;
+	}
+	nav ul.active {
+		display: block;
 		position: absolute;
-		margin-left: -80%;
-		width: 80%;
-		z-index: 1;
-		background-color: #000;
+		right: 0;
+		top: 4.0rem;
 	}
-	.container {
-		transition: .1s margin ease;
+	nav ul.active li {
+		float: none;
 	}
-	nav li {
+	nav ul a {
+		width: 100%;
+	}
+	nav ul.active a.more:after {
+		content: '\25b8';
+		padding-left: 1rem;
+		line-height: 2rem;
+	}
+	nav ul.active a.more.open:after {
+		content: '\25be';
+	}
+	nav ul.active ul.active {
 		display: block;
-	}
-	nav li ul {
-		display: block;
-		position: relative;
-	}
-	nav li li a {
-		padding-left: 2em;
-	}
-	body.menuactive .container {
-		margin-left: 80%;
+		position: static;
+		padding-left: 2rem;
 	}
 }
+
 
 
 /*
- * Search form
+ * The tree
  */
-.searchform {
-	display: block;
-	float: right;
-	margin: 0.1em;
+div#tree {
+	background-color: #e6f0f5;
 }
-.searchform input.search {
-	color: #000;
-	font-size: 90%;
+div#tree ul {
+	list-style-type: none;
+	padding-left: 1em;
+	margin: 0;
 }
-
-
-/*
- * Tree
- */
-.tree {
+div#tree li div {
+	background-repeat: no-repeat;
+	background-position: left;
+	padding-left: 16px;
+}
+div#tree li.collapsed>div {
+	background-image: url('../images/plus.png');
+}
+div#tree li.collapsed ul {
 	display: none;
 }
-@media (min-width: 40rem) {
-	.tree {
-		display: block;
-		float: left;
-		font-size: 90%;
-		width: 18em;
-		background-color: #ebf2f9;
-		margin: 0.5em 0;
-		border-radius: 0.3em;
-	}
-	.tree ul {
-		list-style-type: none;
-		padding-left: 1em;
-		margin: 0;
-	}
-	.tree li div {
-		background-repeat: no-repeat;
-		background-position: left;
-		padding-left: 16px;
-	}
-	.tree li.collapsed>div {
-		background-image: url('../images/plus.png');
-	}
-	.tree li.collapsed ul {
-		display: none;
-	}
-	.tree li.expanded>div {
-		background-image: url('../images/minus.png');
-	}
-	.tree a {
-		position: relative;
-		text-decoration: none;
-		color: inherit;
-		z-index: 24;
-		width: 0;
-		height: 0;
-		outline: 0;
-	}
-	.tree a:hover {
-		z-index: 25;
-	}
-	.tree a span {
-		display: none;
-	}
-	.tree a:hover span {
-		display: block;
-		position: absolute;
-		padding: 0.2em;
-		border: 1px solid;
-		top: 2em;
-		left: 4em;
-		background-color: #ffc;
-		white-space: nowrap;
-	}
+div#tree li.expanded>div {
+	background-image: url('../images/minus.png');
 }
-
-
-/*
- * Content
- */
-.content {
-	color: #3a628a;
-	font-size: 90%;
-}
-.content p.message {
-	color: #3a628a;
-	font-size: 110%;
-	padding: 0.5em;
-}
-.content p.error {
-	color: #c00;
-	background-color: #fef;
-	font-size: 110%;
-	padding: 0.5em;
-	border: 1px solid #c00;
-	border-radius: 0.3em;
-	margin-top: 0.5em;
-}
-.tree[style*="display:none"] ~ .content, header + .content {
-	width: 100%;
-}
-.content a {
-	color: #623a8a;
-}
-.content .unused a {
-	color: #628a3a;
-}
-.content table {
-	border-collapse: separate;
-	border: 1px solid #3a628a;
-	border-radius: 0.3em;
-	border-spacing: 0.3em;
-	padding: 0.5em;
-	margin: 1em 0;
-}
-.content td, .content th {
-	padding: 0 0.5em;
-}
-.content a {
-	color: #000;
-}
-
-
-/*
- * Table item hover
- */
-td.extraitem a {
-	text-decoration: none;
+div#tree a {
 	position: relative;
+	text-decoration: none;
+	color: inherit;
+	z-index: 24;
+	width: 0;
+	height: 0;
+	outline: 0;
 }
-td.extraitem a span {
+div#tree a:hover {
+	z-index: 25;
+}
+div#tree a span {
 	display: none;
-	position: absolute;
-	background-color: #efe;
-	border: 1px solid #3a628a;
-	border-radius: 0.3em;
-	padding: 0.3em;
 }
-td.extraitem a:hover span {
+div#tree a:hover span {
 	display: block;
+	position: absolute;
+	padding: 0.2em;
+	border: 1px solid;
+	top: 2em;
+	left: 4em;
+	background-color: #ffc;
+	white-space: nowrap;
+}
+
+
+
+/*
+ * Main content
+ */
+tr.unused {
+	color: #008720;
 }

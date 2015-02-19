@@ -6,7 +6,6 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico" />
 		<link href="css/normalize.css" media="all" rel="stylesheet" type="text/css" />
-		<link href="css/grid.css" media="all" rel="stylesheet" type="text/css" />
 		<link href="css/ipdb.css" media="all" rel="stylesheet" type="text/css" />
 		<script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
 		<script type="text/javascript">
@@ -15,37 +14,32 @@
 		<script type="text/javascript" src="js/ipdb.js"></script>
 	</head>
 	<body>
-		<div class="container">
-			<!-- BEGIN debugdiv -->
-			<div class="debug">
-				<a href="#">debug<span>{debug}</span></a>
-			</div>
-			<!-- END debugdiv -->
+		<div id="wrapper">
 			<header>
-				<div class="title loggedin"><a href="{me}">IP Database</a></div>
-				<div class="menubutton"><a href="#" onclick="$('body').toggleClass('menuactive');">&#9776;</a></div>
-				<div class="searchform">
-					<form method="post" action="" remote="remote">
-						<input type="text" size="16" class="search" name="search" value="{search}" />
-						<input type="hidden" name="action" value="search" />
-					</form>
-				</div>
+				<div id="title"><a href="{me}">IP Database</a></div>
 				<nav>
+					<div class="menubutton"><a href="#" onclick="$('nav>ul').toggleClass('active');">&#9776;</a></div>
 					{menu}
 				</nav>
-				<div class="clearfix"></div>
 			</header>
-			<!-- BEGIN treediv -->
-			<div id="tree" class="tree column third">
-				{tree}
-			</div>
-			<!-- END treediv -->
-			<div class="content column">
-				{content}
-			</div>
+			<main>
+				<!-- BEGIN treediv -->
+				<div id="tree" class="round">
+					{tree}
+				</div>
+				<!-- END treediv -->
+				<div id="content">
+					{content}
+				</div>
+			</main>
 			<footer>
 				<a href="https://github.com/robinelfrink/ipdb">IP Database</a> version {version} &copy;2011-2014
 			</footer>
 		</div>
+		<!-- BEGIN debugdiv -->
+		<div id="debug">
+		<a href="#">debug<span>{debug}</span></a>
+		</div>
+		<!-- END debugdiv -->
 	</body>
 </html>

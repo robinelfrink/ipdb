@@ -114,14 +114,6 @@ function unescape($string) {
 function send($data) {
 	global $database, $debugstr, $error, $session, $config, $version, $page;
 
-	/* Check if we had an error */
-	if ($error) {
-		if (isset($data['content']))
-			$data['content'] = '<p class="error">'.$error.'</p><br />'.$data['content'];
-		else
-			$data['content'] = '<p class="error">'.$error.'</p><br />';
-	}
-
 	if (request('remote')=='remote') {
 		if (preg_match('/^(add|delete|change)/', request('action')) &&
 			!isset($data['tree']) &&
@@ -132,15 +124,12 @@ function send($data) {
 		else
 			$data['commands'] = array('timeout = '.$session->expire.';');
 		$data['debug'] = $debugstr;
+		if ($error)
+			$data['notify'] = array('type'=>'error', 'message'=>$error);
 		header('Content-type: application/json; charset=utf-8');
 		header('Cache-Control: no-cache, must-revalidate');
 		header('Expires: Fri, 15 Aug 2003 15:00:00 GMT'); /* Remember my wedding day */
-		if (request('page')=='login')
-			echo json_encode(array('commands'=>array('document.location = document.URL.replace(/\?.*/, \'\');')));
-		else
-			echo json_encode($data);
-	} else if (request('page')=='login') {
-		echo $data['content'];
+		echo json_encode($data);
 	} else {
 		$tpl = new Template('index.html');
 		$tpl->setVar('title', $data['title']);
@@ -154,6 +143,10 @@ function send($data) {
 			if (!preg_match('/^(table|tables|fields|history|account|users)$/', request('page')))
 				$tpl->parse('treediv');
 		}
+
+		if ($error)
+			$data['content'] = '<p class="error">'.$error.'</p><br />'.
+				(isset($data['content']) ? $data['content'] : '');
 
 		if ($config->debug) {
 			$tpl->setVar('debug', $debugstr);

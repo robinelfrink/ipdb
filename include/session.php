@@ -127,10 +127,11 @@ class Session {
 
 		if (request('action')=='login') {
 			global $page;
-
-			if (!($name = $this->authenticate($username, request('password'))))
+			if (!($name = $this->authenticate($username, request('password')))) {
+				unset($_SESSION);
+				session_destroy();
 				return false;
-
+			}
 			$_SESSION['username'] = $username;
 			$_SESSION['name'] = $name;
 			$page = 'main';
