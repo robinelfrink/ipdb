@@ -47,7 +47,7 @@ class main {
 			}
 			$tpl->setvar('address', preg_replace('/\/.*/', '', $data['node']));
 			$tpl->setvar('bits', preg_replace('/.*\//', '', $data['node']));
-			$children = $database->getChildren($data['node'], true);
+			$children = $database->getChildren($data['node'], true, request('showunused')=='yes');
 			if (preg_match('/^[\.0-9]+\/32$/', $data['node']) ||
 				preg_match('/^[:0-9a-f]+\/128$/', $data['node'])) {
 				$tpl->setvar('label', 'host '.preg_replace('/\/.*/', '', $data['node']));
@@ -110,11 +110,10 @@ class main {
 			$tpl->setVar('links', $links);
 			$content = $tpl->get();
 			if (count($children)>0)
-				$content .= $this->listchildren(request('showunused')=='yes' ?
-					$database->getChildren($data['node'], true, true) : $children);
+				$content .= $this->listchildren($children);
 		} else {
 			$node = 'The World';
-			$children = $database->getChildren('::/0', false, request('showunused')=='no');
+			$children = $database->getChildren('::/0', false);
 			$tpl = new Template('world.html');
 			$tpl->setVar('count', count($children));
 			$content = $tpl->get().$this->listchildren($children);

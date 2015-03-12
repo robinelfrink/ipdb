@@ -22,17 +22,63 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 /*
- * Calculating network and broadcast addresses in SQL:
+ * Calculating network and broadcast addresses in SQL is tricky.
+ * Below is how we can do it in mysql. In theory this should work
+ * in any ANSI-SQL implementation.
  *
+ * Mysql does calculations with a maximum of 64 bits, so we need to split
+ * up the address. To prevent problems with signed/unsigned, we work on
+ * parts of 32 bits each.
+ *
+ *
+ * -- Our test-prefix
  * SET @address='000000000000000000000000c0a80300';
  * SET @bits=120;
- * -- network address
- * ...
- * -- broadcast address
- * SELECT LPAD(LOWER(CONV(CONV(REPEAT('1', 128-@bits), 2, 10) | CONV(@address, 16,10), 10, 16)), 32, '0') AS broadcast;
  *
- * Unfortunately MySQL won't handle this with numbers >64 bits, so moving
- * calculations to SQL is still under investigation.
+ * -- Calculate prefix bits per part
+ * SET @bits1=LEAST(32, @bits);
+ * SET @bits2=LEAST(32, GREATEST(32, @bits)-32);
+ * SET @bits3=LEAST(32, GREATEST(64, @bits)-64);
+ * SET @bits4=LEAST(32, GREATEST(96, @bits)-96);
+ *
+ * -- Decimal representation of each part
+ * SET @part1 = CONV(SUBSTR(@address, 1, 8), 16, 10);
+ * SET @part2 = CONV(SUBSTR(@address, 9, 8), 16, 10);
+ * SET @part3 = CONV(SUBSTR(@address, 17, 8), 16, 10);
+ * SET @part4 = CONV(SUBSTR(@address, 25, 8), 16, 10);
+ *
+ * -- Bitmask per part, used in calculating network address,
+ * -- converted to decimal
+ * SET @bmask1=CONV(RPAD(RPAD('0', @bits1+1, '1'), 33, '0'), 2, 10);
+ * SET @bmask2=CONV(RPAD(RPAD('0', @bits2+1, '1'), 33, '0'), 2, 10);
+ * SET @bmask3=CONV(RPAD(RPAD('0', @bits3+1, '1'), 33, '0'), 2, 10);
+ * SET @bmask4=CONV(RPAD(RPAD('0', @bits4+1, '1'), 33, '0'), 2, 10);
+ *
+ * -- Netmask per part, used in calculating broadcast address,
+ * -- converted to decimal
+ * SET @nmask1=CONV(RPAD('0', 33-@bits1, '1'), 2, 10);
+ * SET @nmask2=CONV(RPAD('0', 33-@bits2, '1'), 2, 10);
+ * SET @nmask3=CONV(RPAD('0', 33-@bits3, '1'), 2, 10);
+ * SET @nmask4=CONV(RPAD('0', 33-@bits4, '1'), 2, 10);
+ *
+ * -- Network address parts
+ * SET @network1=LPAD(HEX(@part1 & @bmask1), 8, '0');
+ * SET @network2=LPAD(HEX(@part2 & @bmask2), 8, '0');
+ * SET @network3=LPAD(HEX(@part3 & @bmask3), 8, '0');
+ * SET @network4=LPAD(HEX(@part4 & @bmask4), 8, '0');
+ *
+ * -- Broadcast address parts
+ * SET @broadcast1=LPAD(HEX(@part1 | @nmask1), 8, '0');
+ * SET @broadcast2=LPAD(HEX(@part2 | @nmask2), 8, '0');
+ * SET @broadcast3=LPAD(HEX(@part3 | @nmask3), 8, '0');
+ * SET @broadcast4=LPAD(HEX(@part4 | @nmask4), 8, '0');
+ *
+ * -- Finaly the network and broadcast addresses
+ * SET @network=CONCAT(@network1, @network2, @network3, @network4);
+ * SET @broadcast=CONCAT(@broadcast1, @broadcast2, @broadcast3, @broadcast4);
+ *
+ * SELECT @address, @bits, @network, @broadcast;
+ *
  */
 
 
@@ -44,6 +90,8 @@ class Database {
 	private $provider = null;
 	private $dbversion = '9';
 	private $prefix = '';
+
+	private $broadcastsql;
 
 	/*
 	 * Constructor. Set some sane database defaults.
@@ -59,6 +107,9 @@ class Database {
 				/* Set default character set */
 				$this->db->exec("SET collation_connection = utf8_unicode_ci");
 				$this->db->exec("SET NAMES utf8");
+				/* The part that calculates broadcast from address and bits. It's
+				 * quite long and we need it in various places. */
+				$this->broadcastsql = "CONCAT(LPAD(HEX(CONV(SUBSTR(`address`, 1, 8), 16, 10) | CONV(RPAD('0', 33-LEAST(32, `bits`), '1'), 2, 10)), 8, '0'), LPAD(HEX(CONV(SUBSTR(`address`, 9, 8), 16, 10) | CONV(RPAD('0', 33-LEAST(32, GREATEST(32, `bits`)-32), '1'), 2, 10)), 8, '0'),LPAD(HEX(CONV(SUBSTR(`address`, 17, 8), 16, 10) | CONV(RPAD('0', 33-LEAST(32, GREATEST(64, `bits`)-64), '1'), 2, 10)), 8, '0'), LPAD(HEX(CONV(SUBSTR(`address`, 25, 8), 16, 10) | CONV(RPAD('0', 33-LEAST(32, GREATEST(96, `bits`)-96), '1'), 2, 10)), 8, '0'))";
 			}
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
@@ -490,22 +541,24 @@ class Database {
 		$block = self::_node2address($node);
 		try {
 			if ($username) {
+				$broadcast = self::_broadcast($block['address'], $block['bits']);
 				$sql = "SELECT `username`, `address`, `bits`, `access` ".
 					"FROM `".$this->prefix."access` ".
 					"WHERE `username`=:username ".
 						"AND `address`<=:address ".
-						"AND `bits`<=:bits ".
-						"ORDER BY `address` DESC, `bits` DESC";
+						"AND ".$this->broadcastsql.">=:broadcast ".
+						"AND `bits`>=:bits ".
+						"ORDER BY `address` DESC, `bits` DESC ".
+						"LIMIT 1";
 				$stmt = $this->db->prepare($sql);
 				$stmt->bindParam(':username', $username, PDO::PARAM_STR);
 				$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
+				$stmt->bindParam(':broadcast', $broadcast, PDO::PARAM_STR);
 				$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
 				$stmt->execute();
-				$broadcast = self::_broadcast($block['address'], $block['bits']);
-				while ($access = $stmt->fetch(PDO::FETCH_ASSOC))
-					if (strcmp($broadcast, self::_broadcast($access['address'], $access['bits']))<=0)
-						return array('node'=>$access['address'].'/'.$access['bits'],
-									 'access'=>$access['access']);
+				if ($access = $stmt->fetch(PDO::FETCH_ASSOC))
+					return array('node'=>$access['address'].'/'.$access['bits'],
+								 'access'=>$access['access']);
 				return array('node'=>'::/0',
 							 'access'=>'r');
 			}
@@ -566,7 +619,7 @@ class Database {
 		if ($bits && !is_numeric($bits))
 			throw new Exception(sprintf(_('%s is not a valid number of bits'), $bits));
 		return strtolower(inet_ntop(pack('H*', preg_replace('/^[0]{24}/', '', $address)))).
-			($bits ? '/'.(strpos($address, '000000000000000000000000')==0 ? $bits-96 : $bits) : '');
+			($bits ? '/'.(preg_match('/^000000000000000000000000/', $address) ? $bits-96 : $bits) : '');
 	}
 
 
@@ -595,31 +648,52 @@ class Database {
 	 */
 	public function getChildren($node, $hosts = true, $unused = false) {
 		$block = self::_node2address($node);
-		/* Get all children and grandchildren. Filter out
-		 * grandchildren, until we find a way to do that
-		 * using sql. */
-		$sql = "SELECT `address`, `bits`, `name`, `description` ".
-			"FROM `".$this->prefix."ip` ".
-			"WHERE `address`>=:address AND `address`<=:broadcast AND `bits`>:bits ".
-			"ORDER BY `address`, `bits`";
-		$stmt = $this->db->prepare($sql);
 		$broadcast = self::_broadcast($block['address'], $block['bits']);
-		$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
-		$stmt->bindParam(':broadcast', $broadcast, PDO::PARAM_STR);
-		$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
+		if ($block['bits']) {
+			$sql = "SELECT `address`, `bits`, `name`, `description` ".
+				"FROM `".$this->prefix."ip` ".
+				"LEFT JOIN ".
+				"  ( SELECT `address` AS `p_address`, `bits` AS `p_bits` ".
+				"      FROM `".$this->prefix."ip` ".
+				"      WHERE `address`>=:address AND ".
+				"            `bits`>:bits AND ".
+				"            `address`<=:broadcast ) `y` ".
+				"  ON `address`>=`p_address` AND ".
+				"     `bits`>`p_bits` ".
+				"WHERE `p_address` IS NULL AND ".
+				"      `address`>=:address AND ".
+				"      `bits`>:bits AND ".
+				"      `address`<=:broadcast";
+		} else {
+			// The world
+			$sql = "SELECT `address`, `bits`, `name`, `description` ".
+				"FROM `".$this->prefix."ip` ".
+				"LEFT JOIN ".
+				"  ( SELECT `address` AS `p_address`, `bits` AS `p_bits`, ".$this->broadcastsql." AS `p_broadcast` ".
+				"      FROM `".$this->prefix."ip` ".
+				"      ORDER BY `p_address` DESC, `p_bits` DESC ) `y` ".
+				"  ON `address`>=`p_address` AND ".
+				"     `bits`>`p_bits` AND ".
+				"     ".$this->broadcastsql."<=`p_broadcast` ".
+				"WHERE `p_address` IS NULL AND `p_bits` IS NULL";
+		}
+		if (!$hosts)
+			$sql .= " AND `bits`<128";
+		$sql .= " ORDER BY `address`, `bits`";
+		$stmt = $this->db->prepare($sql);
+		if ($block['bits']) {
+			$parentmatch = $block['address']+dechex(256+$block['bits']);
+			$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
+			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
+			$stmt->bindParam(':broadcast', $broadcast, PDO::PARAM_STR);
+			$stmt->bindParam(':parent', $parentmatch, PDO::PARAM_STR);
+		}
 		$stmt->execute();
 		$children = array();
-		$lastbroadcast = null;
 		while ($result = $stmt->fetch(PDO::FETCH_ASSOC))
-			if (!$lastbroadcast ||
-				(strcmp($result['address'], $lastbroadcast)>0)) {
-				$lastbroadcast = self::_broadcast($result['address'], $result['bits']);
-				if ($hosts ||
-					($result['bits']<128))
-					$children[] = array('node'=>self::_address2node($result['address'], $result['bits']),
-										'name'=>$result['name'],
-										'description'=>$result['description']);
-			}
+			$children[] = array('node'=>self::_address2node($result['address'], $result['bits']),
+								'name'=>$result['name'],
+								'description'=>$result['description']);
 		return $unused ? self::findUnused($node, $children) : $children;
 	}
 
@@ -767,21 +841,21 @@ class Database {
 	 */
 	public function getParent($node) {
 		$block = self::_node2address($node);
+		$broadcast = self::_broadcast($block['address'], $block['bits']);
 		$sql = "SELECT `address`, `bits`, `name`, `description` ".
 			"FROM `".$this->prefix."ip` ".
-			"WHERE address<=:address AND bits<=:bits AND ".
-				"NOT (address=:address AND bits=:bits) ".
+			"WHERE address<=:address AND bits<:bits ".
+			"  AND ".$this->broadcastsql.">=:broadcast ".
 			"ORDER BY address DESC, bits DESC";
 		$stmt = $this->db->prepare($sql);
-		$stmt->bindValue('address', $block['address']);
-		$stmt->bindValue('bits', $block['bits']);
+		$stmt->bindParam('address', $block['address'], PDO::PARAM_STR);
+		$stmt->bindParam('broadcast', $broadcast, PDO::PARAM_STR);
+		$stmt->bindParam('bits', $block['bits'], PDO::PARAM_INT);
 		$stmt->execute();
-		while ($result = $stmt->fetch(PDO::FETCH_ASSOC))
-			if ((self::_network($result['address'], $result['bits'])<=self::_network($block['address'], $block['bits'])) &&
-				(self::_broadcast($result['address'], $result['bits'])>=self::_broadcast($block['address'], $block['bits'])))
-				return array('node'=>self::_address2node($result['address'], $result['bits']),
-							 'name'=>$result['name'],
-							 'description'=>$result['description']);
+		if ($result = $stmt->fetch(PDO::FETCH_ASSOC))
+			return array('node'=>self::_address2node($result['address'], $result['bits']),
+						 'name'=>$result['name'],
+						 'description'=>$result['description']);
 		return array('node'=>'::/0',
 					 'name'=>'The World',
 					 'description'=>'');

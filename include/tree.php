@@ -26,26 +26,31 @@ class Tree {
 
 	public $error = null;
 
-	public static function getHtml($parent, $node = null) {
+	public static function getHtml($parent, $node = null, $children = null) {
 		global $config, $database;
-		$children = $database->getChildren($parent, false);
+		if (!$children)
+			$children = $database->getChildren($parent, false);
 		$tpl = new Template('tree.html');
 		if (count($children)) {
 			foreach ($children as $child) {
-				$subtree = Tree::getHtml($child['node'], $node);
-				if (empty($subtree)) {
-					$class = '';
-				} else if ($node && (Database::isSame($node, $child['node']) ||
-									 Database::isChild($node, $child['node']))) {
-					$class = 'class="expanded"';
+				$grandchildren = $database->getChildren($child['node'], false);
+				$subtree = '';
+				if (count($grandchildren)) {
+					if ($node && (Database::isSame($node, $child['node']) ||
+								  Database::isChild($node, $child['node']))) {
+						$class = 'class="expanded"';
+						$subtree = Tree::getHtml($child['node'], $node, $grandchildren);
+					} else {
+						$class = 'class="collapsed"';
+					}
 				} else {
-					$class = 'class="collapsed"';
+					$class = '';
 				}
 				$tpl->setVar('node', $child['node']);
 				$tpl->setVar('name', $child['name']);
 				$tpl->setVar('description', htmlentities($child['description']));
-				$tpl->setVar('subtree', $subtree);
 				$tpl->setVar('class', $class);
+				$tpl->setVar('subtree', $subtree);
 				$tpl->parse('network');
 			}
 			return $tpl->get();
