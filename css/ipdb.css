@@ -92,6 +92,7 @@ div#tree, div#content {
 div#content {
 	height: 100%;
 	margin-left: 1rem;
+	width: 70rem;
 }
 div#content:first-child {
 	width: 100%;
@@ -99,7 +100,7 @@ div#content:first-child {
 }
 div#tree {
 	font-size: 80%;
-	width: 30rem;
+	width: 25rem;
 }
 @media only screen and (max-width: 985px) {
 	div#wrapper {
@@ -421,6 +422,6 @@ div#tree a:hover span {
 /*
  * Main content
  */
-tr.unused {
+div#content tr.unused {
 	color: #008720;
 }
