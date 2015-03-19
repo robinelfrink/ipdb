@@ -162,6 +162,9 @@ header div#title {
 	padding: 0 1rem;
 	float: left;
 }
+header input.search {
+	color: #002b40;
+}
 nav {
 	float: right;
 }
