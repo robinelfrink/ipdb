@@ -879,7 +879,7 @@ class Database {
 					"`".$this->prefix."ip`.`name`, ".
 					"`".$this->prefix."ip`.`description` ".
 				"FROM `".$this->prefix."ip` ".
-				"LEFT JOIN `".$this->prefix."fieldvalue` ".
+				"LEFT JOIN `".$this->prefix."fieldvalues` ".
 				"ON `".$this->prefix."fieldvalues`.`address`=`".$this->prefix."ip`.`address` ".
 					"AND `".$this->prefix."fieldvalues`.`bits`=`".$this->prefix."ip`.`bits` ".
 				"WHERE `name` LIKE CONCAT('%', :search, '%') ".
@@ -992,21 +992,33 @@ class Database {
 			}
 		}
 
-		/* Check for children */
-		$children = $this->getChildren($node);
-		if (count($children) && $removechildren)
-			foreach ($children as $child)
-				$this->deleteNode(self::_address2node($child['address'], $child['bits']));
-
 		$block = self::_node2address($node);
 		try {
-			foreach (array('ip', 'fielditems', 'tablenode', 'access') as $table) {
-				$sql = "DELETE FROM `".$this->prefix.$table."` ".
-					"WHERE `address`=:address AND `bits`=:bits";
-				$stmt = $this->db->prepare($sql);
-				$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
-				$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
-				$stmt->execute();
+			if ($removechildren) {
+				$broadcast = self::_broadcast($block['address'], $block['bits']);
+				foreach (array('ip', 'fieldvalues', 'tablenode', 'access') as $table) {
+					$sql = "DELETE ".
+						"FROM `".$this->prefix.$table."` ".
+						"WHERE `address`>=:address AND ".
+							"`bits`>=:bits AND ".
+							$this->broadcastsql."<=:broadcast";
+					$stmt = $this->db->prepare($sql);
+					$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
+					$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
+					$stmt->bindParam(':broadcast', $broadcast, PDO::PARAM_STR);
+					$stmt->execute();
+				}
+			} else {
+				foreach (array('ip', 'fieldvalues', 'tablenode', 'access') as $table) {
+					$sql = "DELETE ".
+						"FROM `".$this->prefix.$table."` ".
+						"WHERE `address`=:address AND ".
+						"`bits`=:bits";
+					$stmt = $this->db->prepare($sql);
+					$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
+					$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
+					$stmt->execute();
+				}
 			}
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
@@ -1097,17 +1109,30 @@ class Database {
 			$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
 			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
 			$stmt->execute();
+			foreach (array('fieldvalues', 'tablenode', 'access') as $table) {
+				$sql = "UPDATE `".$this->prefix.$table."` ".
+					"SET `address`=:newaddress, `bits`=:newbits ".
+					"WHERE `address`=:address AND `bits`=:bits";
+				$stmt = $this->db->prepare($sql);
+				$stmt->bindParam(':newaddress', $newblock['address'], PDO::PARAM_STR);
+				$stmt->bindParam(':newbits', $newblock['bits'], PDO::PARAM_INT);
+				$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
+				$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
+				$stmt->execute();
+			}
 			// Change children
-			$sql = "UPDATE `".$this->prefix."ip` ".
-				"SET `address`=REPLACE(`address`, :base, :newbase) ".
-				"WHERE `address` LIKE (CONCAT(:base, '%')) AND `bits`>:bits";
-			$stmt = $this->db->prepare($sql);
-			$base = preg_replace('/0+$/', '', self::_network($block['address'], $block['bits']));
-			$newbase = preg_replace('/0+$/', '', self::_network($newblock['address'], $newblock['bits']));
-			$stmt->bindParam(':base', $base, PDO::PARAM_STR);
-			$stmt->bindParam(':newbase', $newbase, PDO::PARAM_STR);
-			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
-			$stmt->execute();
+			foreach (array('ip', 'fieldvalues', 'tablenode', 'access') as $table) {
+				$sql = "UPDATE `".$this->prefix.$table."` ".
+					"SET `address`=REPLACE(`address`, :base, :newbase) ".
+					"WHERE `address` LIKE (CONCAT(:base, '%')) AND `bits`>:bits";
+				$stmt = $this->db->prepare($sql);
+				$base = preg_replace('/0+$/', '', self::_network($block['address'], $block['bits']));
+				$newbase = preg_replace('/0+$/', '', self::_network($newblock['address'], $newblock['bits']));
+				$stmt->bindParam(':base', $base, PDO::PARAM_STR);
+				$stmt->bindParam(':newbase', $newbase, PDO::PARAM_STR);
+				$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
+				$stmt->execute();
+			}
 			$this->log('Changed node '.$node);
 			return true;
 		} catch (PDOException $e) {
