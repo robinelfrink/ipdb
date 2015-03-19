@@ -66,7 +66,7 @@ class main {
 					$tpl->parse('haschildren');
 				}
 			}
-			$tpl->setvar('name', htmlentities($data['name']));
+			$tpl->setvar('nodename', htmlentities($data['name']));
 			$tpl->setvar('description', htmlentities($data['description']));
 			if (count($config->extrafields)>0)
 				foreach ($config->extrafields as $field=>$details) {
@@ -151,7 +151,7 @@ class main {
 						 $tpl->parse('extratabledata');
 					 }
 
-			$tpl->setVar('name', htmlentities($child['name']));
+			$tpl->setVar('nodename', htmlentities($child['name']));
 			$tpl->setVar('description', htmlentities($child['description']));
 			$tpl->setVar('class', isset($child['unused']) ? ' class="unused"' : '');
 			$tpl->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').

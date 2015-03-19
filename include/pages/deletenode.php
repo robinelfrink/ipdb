@@ -34,7 +34,7 @@ class deletenode {
 			$children = $database->getChildren($node['node']);
 			if (count($children))
 				$tpl->parse('children');
-			$tpl->setVar('name', $node['name']);
+			$tpl->setVar('nodename', $node['name']);
 			$tpl->setVar('description', $node['description']);
 			$tpl->setVar('node', $node['node']);
 			$content = $tpl->get();

@@ -47,7 +47,7 @@ class Tree {
 					$class = '';
 				}
 				$tpl->setVar('node', $child['node']);
-				$tpl->setVar('name', $child['name']);
+				$tpl->setVar('nodename', $child['name']);
 				$tpl->setVar('description', htmlentities($child['description']));
 				$tpl->setVar('class', $class);
 				$tpl->setVar('subtree', $subtree);
