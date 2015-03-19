@@ -49,29 +49,38 @@ class Session {
 		$this->error = null;
 		$_SESSION['islocal'] = true;
 
-		if ($config->session['auth']=='ldap') {
-			if (($ldap = @ldap_connect($config->session['ldap_url']))===false) {
+		if ($config->session['auth']['type']=='ldap') {
+			$auth = $config->session['auth'];
+			if (($ldap = @ldap_connect($auth['url']))===false) {
 				$this->error = 'Unable to connect to LDAP';
 				return false;
 			}
 			ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
-			if (!@ldap_bind($ldap, $config->session['ldap_binddn'], $config->session['ldap_bindpw'])) {
+			$a_username = isset($auth['username']) ? $auth['username'] : 'uid';
+			$a_name = isset($auth['name']) ? $auth['name'] : 'gecos';
+			$basedn = $auth['basedn'];
+			$binddn = isset($auth['binddn']) ? preg_replace('/%u/', $username, $auth['binddn']) :
+				$a_username.'='.$username.','.$basedn;
+			$bindpw = isset($auth['bindpw']) ? $auth['bindpw'] : $password;
+			if (!@ldap_bind($ldap, $binddn, $bindpw)) {
 				$this->error = ldap_error($ldap);
+				error_log($this->error.' in '.__FILE__.' line '.__LINE__);
 				return false;
 			}
-			if (!($rsc = @ldap_search($ldap, $config->session['ldap_basedn'],
-									  'uid='.$username, array('dn', 'gecos')))) {
+			if (!($rsc = @ldap_search($ldap, $basedn, $a_username.'='.$username, array('dn', $a_name)))) {
 				$this->error = ldap_error($ldap);
+				error_log($this->error.' in '.__FILE__.' line '.__LINE__);
 				return false;
 			}
 			$entries = ldap_get_entries($ldap, $rsc);
 			if ($entries['count']>0) {
 				if (!@ldap_bind($ldap, $entries[0]['dn'], trim($password))) {
 					$this->error = 'Login failed';
+					error_log($this->error.' in '.__FILE__.' line '.__LINE__);
 					return false;
 				}
 				$_SESSION['islocal'] = false;
-				return $entries[0]['gecos'][0];
+				return $entries[0][$a_name][0];
 			}
 			@ldap_unbind($ldap);
 		}

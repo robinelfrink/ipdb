@@ -210,7 +210,7 @@ function acton($action) {
 		  break;
 	  case 'deleteuser':
 		  if ($session->authenticated && $database->isAdmin($session->username))
-			  if (!$database->deleteUser(request('username')))
+			  if (!$database->deleteUser(request('user')))
 				  $error = $database->error;
 		  break;
 	  case 'changeuser':

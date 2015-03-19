@@ -32,7 +32,7 @@ class Config {
 							 'password'=>'secret',
 							 'prefix'=>'_ipdb');
 	public $session = array('expire'=>'10m',
-							'auth'=>'ipdb');
+							'auth'=>array('type'=>'ipdb'));
 	public $debug = false;
 	public $skin = 'default';
 	public $pools = array('default_ipv4_prefix'=>30, 'default_ipv6_prefix'=>64);

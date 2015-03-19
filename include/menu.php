@@ -26,7 +26,7 @@ class Menu {
 
 	public static function get() {
 
-		global $config, $session;
+		global $config, $database, $session;
 		if ($session->authenticated) {
 			$tpl = new Template('menu.html');
 			$menu = array('The World'=>'page=main&node=::/0');
@@ -37,7 +37,7 @@ class Menu {
 			}
 			$menu['History'] = 'page=history';
 			$menu['Options'] = array('My account'=>'page=account');
-			if ($session->username=='admin') {
+			if ($database->isAdmin($session->username)) {
 				$menu['Options']['Users'] = 'page=users';
 				$menu['Options']['Custom fields'] = 'page=fields';
 				$menu['Options']['Custom tables'] = 'page=tables';

@@ -37,18 +37,21 @@ $config = array(
 	/* Session */
 	'session' => array(
 		'expire' => '10m',
-	),
-
-	/* Authentication */
-	'auth' => array(
-		// local authentication
-		'type' => 'ipdb',
-		// ldap authentication
-		// 'type' => 'ldap',
-		// 'url' => 'ldap.server.org',
-		// 'basedn' => 'ou=users,dc=server.org',
-		// 'binddn' => 'cn=root,dc=server.org',
-		// 'bindpw' => 'secret',
+		/* Authentication */
+		'auth' => array(
+			// local authentication
+			'type' => 'ipdb',
+			// ldap authentication
+			// 'type' => 'ldap',
+			// 'url' => 'ldap.server.org',
+			// 'basedn' => 'ou=users,dc=server.org',
+			// 'binddn' => 'cn=root,dc=server.org',
+			// 'bindpw' => 'secret',
+			/* Optionally, replace %u in binddn with username, use without bindpw: */
+			// 'binddn' => 'cn=%u,dc=server.org',
+			// 'username' => 'uid',
+			// 'name' => 'gecos',
+		),
 	),
 
 	/* Debugging mode */
