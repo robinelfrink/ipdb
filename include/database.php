@@ -1853,6 +1853,55 @@ class Database {
 	}
 
 
+	public function getFields($field = null) {
+		try {
+			$sql = "SELECT `field`, `type`, `description`, `url`, `inoverview` ".
+				"FROM `".$this->prefix."fields` ".($field ?
+				"WHERE `field`=:field " : "").
+				"ORDER BY `field`";
+			$stmt = $this->db->prepare($sql);
+			if ($field)
+				$stmt->bindParam(':field', $field, PDO::PARAM_STR);
+			$stmt->execute();
+			if ($field)
+				return $stmt->fetch(PDO::FETCH_ASSOC);
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return true;
+	}
+
+
+	public function changeField($oldfield, $field, $type, $description, $inoverview, $url = '') {
+		try {
+			$sql = "UPDATE `".$this->prefix."fields` ".
+				"SET `field`=:field, ".
+					"`type`=:type, ".
+					"`description`=:description, ".
+					"`inoverview`=:inoverview, ".
+					"`url`=:url ".
+				"WHERE `field`=:oldfield";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':oldfield', $oldfield, PDO::PARAM_STR);
+			$stmt->bindParam(':field', $field, PDO::PARAM_STR);
+			$stmt->bindParam(':type', $type, PDO::PARAM_STR);
+			$stmt->bindParam(':description', $description, PDO::PARAM_STR);
+			$inoverviewval = $inoverview ? 1 : 0;
+			$stmt->bindParam(':inoverview', $inoverviewval, PDO::PARAM_INT);
+			$stmt->bindParam(':url', $url, PDO::PARAM_STR);
+			$stmt->execute();
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return true;
+	}
+
+
 	public function addField($field, $type, $description = '', $url = '', $inoverview = true) {
 		if (!in_array($type, array('text', 'integer', 'boolean', 'url'))) {
 			$this->error = 'New field type unknown.';
@@ -1880,6 +1929,7 @@ class Database {
 	public function removeField($field) {
 		try {
 			$sql = "DELETE FROM `".$this->prefix."fields` WHERE `field`=:field";
+			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':field', $field, PDO::PARAM_STR);
 			$stmt->execute();
 			$sql = "DELETE FROM `".$this->prefix."fieldvalues` WHERE `field`=:field";

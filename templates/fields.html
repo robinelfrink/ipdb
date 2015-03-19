@@ -1,0 +1,28 @@
+<h3>Custom fields</h3>
+
+<!-- BEGIN fields -->
+<table>
+	<thead>
+		<tr><th>name</th><th>type</th><th>inoverview</th><th></th><th></tr>
+	</thead>
+	<tbody>
+		<!-- BEGIN field -->
+		<tr{oddeven}>
+			<td>{fieldname}</td>
+			<td>{type}</td>
+			<td>{inoverview}</td>
+			<td><a class="button" href="{editlink}">edit</a></td>
+			<td><a class="button" href="{deletelink}" remote="remote">delete</a></td>
+		</tr>
+		<!-- END field -->
+	</tbody>
+</table>
+<!-- END fields -->
+
+<!-- BEGIN nofields -->
+<p class="message">
+	No custom fields have been defined.
+</p>
+<!-- END nofields -->
+
+<p><a class="button" href="{addlink}" remote="remote">add field</a></p>

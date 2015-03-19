@@ -39,8 +39,8 @@ class Menu {
 			$menu['Options'] = array('My account'=>'page=account');
 			if ($session->username=='admin') {
 				$menu['Options']['Users'] = 'page=users';
-				$menu['Options']['Fields'] = 'page=fields';
-				$menu['Options']['Tables'] = 'page=tables';
+				$menu['Options']['Custom fields'] = 'page=fields';
+				$menu['Options']['Custom tables'] = 'page=tables';
 			}
 			$menu['Logout'] = 'page=login&action=logout&remote=remote';
 			return self::makeHtml($menu);

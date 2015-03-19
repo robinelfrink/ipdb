@@ -1,0 +1,38 @@
+<h2>Custom field {fieldname}</h2>
+
+<form method="post" action="" remote="remote">
+	<table>
+		<tr>
+			<td class="label">field name:</td>
+			<td><input type="text" name="fieldname" value="{fieldname}" /></td>
+		</tr>
+		<tr>
+			<td class="label">type:</td>
+			<td>
+				<select name="type" onchange="$('#urlrow').css('display', $('select').val()=='url' ? '' : 'none');">{typeoptions}
+					<!-- BEGIN typeoption -->
+					<option name="{type}" {typeselected}>{type}</option>
+					<!-- END typeoption -->
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td class="label">description:</td>
+			<td><input type="text" name="description" value="{description}" size="50" /></td>
+		</tr>
+		<tr id="urlrow" {urlinactive}>
+			<td class="label">url</td>
+			<td><input type="text" name="url" value="{url}" size="50" /></td>
+		</tr>
+		<tr>
+			<td class="label">show in overview:</td>
+			<td><input type="checkbox" name="inoverview" {inoverviewchecked} /></td>
+		<tr>
+			<td></td>
+			<td><input type="submit" value="{buttontext}" /></td>
+		</tr>
+	</table>
+	<input type="hidden" name="oldfield" value="{fieldname}" />
+	<input type="hidden" name="action" value="{action}" />
+</form>
+

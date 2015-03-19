@@ -279,6 +279,53 @@ function acton($action) {
 			  exit;
 		  }
 		  break;
+	  case 'changefield':
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  if (!$database->changeField(request('oldfield'), request('fieldname'), request('type'),
+										  request('description'), request('inoverview'), request('url'))) {
+				  $error = $database->error;
+				  break;
+			  }
+		  }
+		  if (request('remote')=='remote')
+			  send(array('commands'=>array('location.href=\''.me().'?page=fields\';')));
+		  else {
+			  request('page', 'fields', true);
+			  header('Location: '.me());
+		  }
+		  exit;
+		  break;
+	  case 'addfield':
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  if (!$database->addField(request('fieldname'), request('type'), request('description'),
+									   request('inoverview'), request('url'))) {
+				  $error = $database->error;
+				  break;
+			  }
+		  }
+		  if (request('remote')=='remote')
+			  send(array('commands'=>array('location.href=\''.me().'?page=fields\';')));
+		  else {
+			  request('page', 'fields', true);
+			  header('Location: '.me());
+		  }
+		  exit;
+		  break;
+	  case 'deletefield':
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  if (!$database->removeField(request('fieldname'))) {
+				  $error = $database->error;
+				  break;
+			  }
+		  }
+		  if (request('remote')=='remote')
+			  send(array('commands'=>array('location.href=\''.me().'?page=fields\';')));
+		  else {
+			  request('page', 'fields', true);
+			  header('Location: '.me());
+		  }
+		  exit;
+		  break;
 	  default:
 		  debug('action: '.request('action'));
 		  $error = 'Unknown action requested';

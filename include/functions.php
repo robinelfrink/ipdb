@@ -140,7 +140,7 @@ function send($data) {
 		if ($session->authenticated &&
 			!$database->hasUpgrade()) {
 			$tpl->setVar('tree', Tree::getHtml('::/0', request('node', NULL)));
-			if (!preg_match('/^(table|tables|fields|history|account|users)$/', request('page')))
+			if (!preg_match('/^(table|tables|field|fields|history|account|users)$/', request('page')))
 				$tpl->parse('treediv');
 		}
 
