@@ -94,12 +94,12 @@ class main {
 			$tpl->setVar('bits', preg_replace('/.*\//', '', $data['node']));
 
 			$access = $database->getAccess($data['node'], $session->username);
-			if (($session->username=='admin') || ($access['access']=='w')) {
+			if ($database->isAdmin($session->username) || ($access['access']=='w')) {
 				$links = '<p>
 	<a href="'.me().'?page=addnode&amp;node='.$data['node'].'" remote="remote">add</a> |
 	<a href="'.me().'?page=deletenode&amp;node='.$data['node'].'" remote="remote">delete</a> |
 	<a href="'.me().'?page=changenode&amp;node='.$data['node'].'" remote="remote">change</a>';
-				if ($session->username=='admin')
+				if ($database->isAdmin($session->username))
 					$links .= ' |
 	<a href="'.me().'?page=nodeaccess&amp;node='.$data['node'].'" remote="remote">access</a>';
 				$links .= '
