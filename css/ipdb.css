@@ -64,6 +64,9 @@ div#content th, div#content td {
 div#content table tr.odd {
 	background-color: #fed;
 }
+div#content table tr.unused {
+	color: #360;
+}
 div#content table tr.odd:hover, div#content table tr.even:hover {
 	background-color: #ec9;
 }

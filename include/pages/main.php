@@ -36,6 +36,7 @@ class main {
 			($node!='::/0') &&
 			($data = $database->getNode($node))) {
 			$tpl = new Template('netinfo.html');
+			$tpl->setvar('node', $data['node']);
 			if (preg_match('/^[\.0-9]+\//', $data['node'])) {
 				$tpl->setvar('netmask', $database->getNetmask($data['node']));
 				$tpl->setvar('broadcast', $database->getBroadcast($data['node']));
@@ -54,15 +55,11 @@ class main {
 			} else {
 				$tpl->setvar('label', 'network '.$data['node']);
 				if (count($children)>0) {
-					if (request('showunused')=='yes') {
-						$tpl->setvar('unusedyesno', 'no');
-						$tpl->setvar('unusedlabel', 'hide unused blocks');
-					} else {
-						$tpl->setvar('unusedyesno', 'yes');
-						$tpl->setvar('unusedlabel', 'show unused blocks');
-					}
 					$tpl->setvar('printtreelabel', 'print tree');
-					$tpl->setvar('node', $data['node']);
+					$tpl->parse('printtreebutton');
+					$tpl->setvar('unusedyesno', request('showunused')=='yes' ? 'no' : 'yes');
+					$tpl->setVar('showunusedchecked', request('showunused')=='yes' ? 'checked="checked"' : '');
+					$tpl->setvar('unusedlabel', 'show unused blocks');
 					$tpl->parse('haschildren');
 				}
 			}
@@ -95,19 +92,11 @@ class main {
 
 			$access = $database->getAccess($data['node'], $session->username);
 			if ($database->isAdmin($session->username) || ($access['access']=='w')) {
-				$links = '<p>
-	<a href="'.me().'?page=addnode&amp;node='.$data['node'].'" remote="remote">add</a> |
-	<a href="'.me().'?page=deletenode&amp;node='.$data['node'].'" remote="remote">delete</a> |
-	<a href="'.me().'?page=changenode&amp;node='.$data['node'].'" remote="remote">change</a>';
+				$tpl->setVar('node', $data['node']);
+				$tpl->parse('editbuttons');
 				if ($database->isAdmin($session->username))
-					$links .= ' |
-	<a href="'.me().'?page=nodeaccess&amp;node='.$data['node'].'" remote="remote">access</a>';
-				$links .= '
-</p>';
-			} else {
-				$links = '';
+					$tpl->parse('adminbuttons');
 			}
-			$tpl->setVar('links', $links);
 			$content = $tpl->get();
 			if (count($children)>0)
 				$content .= $this->listchildren($children);

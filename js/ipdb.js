@@ -171,3 +171,9 @@ notify = function(options) {
 	}, 3000);
 
 };
+
+
+/* Toggle showing unused blocks */
+function toggleunused(node, showunused) {
+	ajaxrequest({ page: 'main', node: node, showunused: showunused });
+}

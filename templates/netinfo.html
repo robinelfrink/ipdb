@@ -20,11 +20,22 @@
 	</tbody>
 </table>
 
-{links}
+<p>
+	<!-- BEGIN editbuttons -->
+	<a class="button" href="?page=addnode&amp;node={node}" remote="remote">add</a>
+    <a class="button" href="?page=deletenode&amp;node={node}" remote="remote">delete</a>
+	<a class="button" href="?page=changenode&amp;node={node}" remote="remote">change</a>
+	<!-- END editbuttons -->
+	<!-- BEGIN adminbuttons -->
+	<a class="button" href="?page=nodeaccess&amp;node={node}" remote="remote">access</a>
+	<!-- END adminbuttons -->
+	<!-- BEGIN printtreebutton -->
+	<a class="button" href="?action=printtree&amp;node={node}">print tree</a>
+	<!-- END printtreebutton -->
+</p>
 
 <!-- BEGIN haschildren -->
 <p>
-	<a class="button" href="?page=main&amp;node={node}&amp;showunused={unusedyesno}" remote="remote">{unusedlabel}</a> |
-	<a class="button" href="?action=printtree&amp;node={node}">{printtreelabel}</a>
+	<input type="checkbox" id="toggleunused" onchange="toggleunused('{node}', '{unusedyesno}');" {showunusedchecked}>&nbsp;<label for="toggleunused">{unusedlabel}</label>
 </p>
 <!-- END haschildren -->
