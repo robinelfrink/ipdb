@@ -52,8 +52,7 @@ class Config {
 				if (false === @include_once($file))
 					$this->error = 'Cannot read config file '.$file;
 				else
-					foreach (array('database', 'debug', 'session', 'skin', 'pools',
-								   'extrafields', 'extratables') as $section)
+					foreach (array('database', 'debug', 'session', 'skin', 'pools') as $section)
 						if (is_array($this->$section))
 							$this->$section = array_merge($this->$section, $config[$section]);
 						else
