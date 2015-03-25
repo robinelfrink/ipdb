@@ -13,8 +13,8 @@
 	</thead>
 	<tbody>
 		<!-- BEGIN child -->
-		<tr{oddeven}>
-			<td><a href="{link}">{label}</a></td>
+		<tr{oddeven} style="cursor: pointer;" onclick="window.location.href = '{link}'">
+			<td>{label}</td>
 			<!-- BEGIN extrafielddata --><td>{extrafield}</td><!-- END extrafielddata -->
 			<!-- BEGIN extratabledata --><td>{extratable}</td><!-- END extratabledata -->
 			<td>{nodename}</td>
