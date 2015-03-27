@@ -447,20 +447,20 @@ class Database {
 								")");
 				if (property_exists($config, 'extrafields'))
 					foreach ($config->extrafields as $field=>$details)
-						if (!$this->addField($field,
-											 $details['type'],
-											 isset($details['description']) ? $details['description'] : '',
-											 isset($details['url']) ? $details['url'] : '',
-											 isset($details['inoverview']) ? $details['inoverview'] : true))
+						if (!$this->addCustomField($field,
+												   $details['type'],
+												   isset($details['description']) ? $details['description'] : '',
+												   isset($details['url']) ? $details['url'] : '',
+												   isset($details['inoverview']) ? $details['inoverview'] : true))
 							return false;
 				if (property_exists($config, 'extratables'))
 					foreach ($config->extratables as $table=>$details)
-						if (!$this->addTable($table,
-											 $details['type'],
-											 isset($details['description']) ? $details['description'] : '',
-											 isset($details['inoverview']) ? $details['inoverview'] : true,
-											 isset($details['linkaddress']) ? $details['linkaddress'] : true,
-											 isset($details['columns']) ? $details['columns'] : array()))
+						if (!$this->addCustomTable($table,
+												   $details['type'],
+												   isset($details['description']) ? $details['description'] : '',
+												   isset($details['inoverview']) ? $details['inoverview'] : true,
+												   isset($details['linkaddress']) ? $details['linkaddress'] : true,
+												   isset($details['columns']) ? $details['columns'] : array()))
 							return false;
 			}
 			if ($version<9) {
@@ -1031,9 +1031,9 @@ class Database {
 
 
 	/*
-	 * Fetch a node's extra field value.
+	 * Fetch a node's custom field value.
 	 */
-	public function getField($field, $node) {
+	public function getNodeCustomField($field, $node) {
 		$block = self::_node2address($node);
 		if (empty($node))
 			return false;
@@ -1145,9 +1145,9 @@ class Database {
 
 
 	/*
-	 * Set a node's extra field value.
+	 * Set a node's custom field value.
 	 */
-	public function setField($field, $node, $value, $recursive = false) {
+	public function setNodeCustomField($field, $node, $value, $recursive = false) {
 		$block = self::_node2address($node);
 		try {
 			if ($recursive)
@@ -1201,9 +1201,9 @@ class Database {
 
 
 	/*
-	 * Get extra table definition.
+	 * Get custom table definition.
 	 */
-	public function getExtraDefinition($table) {
+	public function getCustomTable($table) {
 		try {
 			$sql = "SELECT * FROM `".$this->prefix."tables` WHERE `table`=:table ";
 			$stmt = $this->db->prepare($sql);
@@ -1231,27 +1231,54 @@ class Database {
 
 
 	/*
-	 * Get extra table item.
+	 * Get custom table definitions.
 	 */
-	public function getExtra($table, $item = null) {
-		$details = $this->getExtraDefinition($table);
-		if ($item===null)
-			try {
-				$sql = "SELECT * FROM `".$this->prefix."tableitems` ".
-					"WHERE `table`=:table ";
-				if ($details['type']=='integer')
-					$sql .= "ORDER BY CAST(`item` AS SIGNED)";
-				else
-					$sql .= "ORDER BY `".$this->prefix."tableitems`.`item`";
-				$stmt = $this->db->prepare($sql);
-				$stmt->bindParam(':table', $table, PDO::PARAM_STR);
-				$stmt->execute();
-				return $stmt->fetchAll(PDO::FETCH_ASSOC);
-			} catch (PDOException $e) {
-				$this->error = $e->getMessage();
-				error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
-				return false;
-			}
+	public function getCustomTables() {
+		try {
+			$sql = "SELECT `table` FROM `".$this->prefix."tables`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute();
+			$tables = array();
+			while ($table = $stmt->fetch(PDO::FETCH_ASSOC))
+				$tables[$table['table']] = $this->getCustomTable($table['table']);
+			return $tables;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+	}
+
+
+	/*
+	 * Get custom table items.
+	 */
+	public function getCustomTableItems($table) {
+		$details = $this->getCustomTable($table);
+		try {
+			$sql = "SELECT * FROM `".$this->prefix."tableitems` ".
+				"WHERE `table`=:table ";
+			if ($details['type']=='integer')
+				$sql .= "ORDER BY CAST(`item` AS SIGNED)";
+			else
+				$sql .= "ORDER BY `".$this->prefix."tableitems`.`item`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->execute();
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+	}
+
+
+	/*
+	 * Get custom table item.
+	 */
+	public function getCustomTableItem($table, $item) {
+		$details = $this->getCustomTable($table);
 		try {
 			$sql = "SELECT * FROM `".$this->prefix."tableitems` ".
 				"WHERE `table`=:table AND `item`=:item";
@@ -1281,10 +1308,10 @@ class Database {
 
 
 	/*
-	 * Search through extra table items.
+	 * Search through custom table items.
 	 */
-	public function findExtra($table, $search = null) {
-		$details = $this->getExtraDefinition($table);
+	public function searchCustomTableItem($table, $search = null) {
+		$details = $this->getCustomTable($table);
 		if (empty($search))
 			return $this->getExtra($table);
 		try {
@@ -1329,10 +1356,10 @@ class Database {
 
 
 	/*
-	 * Add extra item to a table.
+	 * Add item to a customtable.
 	 */
-	public function addExtra($table, $item, $description, $comments, $columndata = null) {
-		$details = $this->getExtraDefinition($table);
+	public function addCustomTableItem($table, $item, $description, $comments, $columndata = null) {
+		$details = $this->getCustomTable($table);
 		try {
 			$sql = "INSERT INTO `".$this->prefix."tableitems` (`table`, `item`, `description`, `comments`) ".
 				"VALUES(:table, :item, :description, :comments)";
@@ -1371,10 +1398,10 @@ class Database {
 
 
 	/*
-	 * Change extra table item.
+	 * Change custom table item.
 	 */
-	public function changeExtra($table, $olditem, $item, $description, $comments, $columndata) {
-		$details = $this->getExtraDefinition($table);
+	public function changeCustomTableItem($table, $olditem, $item, $description, $comments, $columndata) {
+		$details = $this->getCustomTable($table);
 		try {
 			$sql = "UPDATE `".$this->prefix."tableitems` ".
 				"SET `item`=:item, `description`=:description, `comments`=:comments ".
@@ -1445,9 +1472,9 @@ class Database {
 
 
 	/*
-	 * Delete extra table item.
+	 * Delete custom table item.
 	 */
-	public function deleteExtra($table, $item) {
+	public function deleteCustomTableItem($table, $item) {
 		try {
 			$sql = "DELETE FROM `".$this->prefix."tableitems` ".
 				"WHERE `item`=:item AND `table`=:table";
@@ -1477,9 +1504,9 @@ class Database {
 
 
 	/*
-	 * Get extra node item.
+	 * Get node custom table item.
 	 */
-	public function getItem($table, $node) {
+	public function getNodeCustomTableItem($table, $node) {
 		$block = self::_node2address($node);
 		try {
 			$sql = "SELECT `".$this->prefix."tablenode`.`item` AS `item`, ".
@@ -1508,9 +1535,9 @@ class Database {
 
 
 	/*
-	 * Get nodes with specific item.
+	 * Get nodes with specific custom table item.
 	 */
-	public function getItemNodes($table, $item) {
+	public function getCustomTableItemNodes($table, $item) {
 		try {
 			$sql = "SELECT `".$this->prefix."ip`.`address`, ".
 					"`".$this->prefix."ip`.`bits`, ".
@@ -1540,11 +1567,11 @@ class Database {
 
 
 	/*
-	 * Set table item for node.
+	 * Set custom table item for node.
 	 */
-	public function setItem($table, $node, $item, $recursive = false) {
+	public function setNodeCustomTableItem($table, $node, $item, $recursive = false) {
 		$block = self::_node2address($node);
-		$olditem = preg_replace('/^-$/', '', $this->getItem($table, $node));
+		$olditem = preg_replace('/^-$/', '', $this->getNodeCustomTableItem($table, $node));
 		$item = preg_replace('/^-$/', '', $item);
 		try {
 			if ($recursive)
@@ -1853,29 +1880,50 @@ class Database {
 	}
 
 
-	public function getFields($field = null) {
+	/*
+	 * Get custom field definitions.
+	 */
+	public function getCustomFields() {
 		try {
 			$sql = "SELECT `field`, `type`, `description`, `url`, `inoverview` ".
-				"FROM `".$this->prefix."fields` ".($field ?
-				"WHERE `field`=:field " : "").
+				"FROM `".$this->prefix."fields` ".
 				"ORDER BY `field`";
 			$stmt = $this->db->prepare($sql);
-			if ($field)
-				$stmt->bindParam(':field', $field, PDO::PARAM_STR);
 			$stmt->execute();
-			if ($field)
-				return $stmt->fetch(PDO::FETCH_ASSOC);
 			return $stmt->fetchAll(PDO::FETCH_ASSOC);
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
 			return false;
 		}
-		return true;
 	}
 
 
-	public function changeField($oldfield, $field, $type, $description, $inoverview, $url = '') {
+	/*
+	 * Get custom field definition.
+	 */
+	public function getCustomField($field) {
+		try {
+			$sql = "SELECT `field`, `type`, `description`, `url`, `inoverview` ".
+				"FROM `".$this->prefix."fields` ".
+				"WHERE `field`=:field ".
+				"ORDER BY `field`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':field', $field, PDO::PARAM_STR);
+			$stmt->execute();
+			return $stmt->fetch(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+	}
+
+
+	/*
+	 * Change custom field definition.
+	 */
+	public function changeCustomField($oldfield, $field, $type, $description, $inoverview, $url = '') {
 		try {
 			$sql = "UPDATE `".$this->prefix."fields` ".
 				"SET `field`=:field, ".
@@ -1902,7 +1950,10 @@ class Database {
 	}
 
 
-	public function addField($field, $type, $description = '', $url = '', $inoverview = true) {
+	/*
+	 * Add custom field definition.
+	 */
+	public function addCustomField($field, $type, $description = '', $url = '', $inoverview = true) {
 		if (!in_array($type, array('text', 'integer', 'boolean', 'url'))) {
 			$this->error = 'New field type unknown.';
 			return false;
@@ -1926,7 +1977,10 @@ class Database {
 	}
 
 
-	public function removeField($field) {
+	/*
+	 * Remove custom field definition.
+	 */
+	public function removeCustomField($field) {
 		try {
 			$sql = "DELETE FROM `".$this->prefix."fields` WHERE `field`=:field";
 			$stmt = $this->db->prepare($sql);

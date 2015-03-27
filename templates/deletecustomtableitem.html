@@ -1,12 +1,13 @@
+<h2>{table}</h2>
+
 <form method="post" action="" remote="remote">
-	<p class="message">You are about to delete the following field:</p>
+	<p class="message">You are about to delete the following item:</p>
 	<table>
 		<tbody>
-			<tr><td class="label">field name:</td><td>{fieldname}</td></tr>
+			<tr><td class="label">item:</td><td>{item}</td></tr>
 			<tr><td class="label">description:</td><td>{description}</td></tr>
 			<tr><td></td><td><input type="submit" value="delete" />&nbsp;<input type="submit" name="cancel" value="cancel" /></td></tr>
 		</tbody>
 	</table>
-	<input type="hidden" name="field" value="{fieldname}" />
-	<input type="hidden" name="action" value="deletefield" />
+	<input type="hidden" name="action" value="deletecustomtableitem" />
 </form>

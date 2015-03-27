@@ -60,29 +60,6 @@ $config = array(
 	/* Skin */
 	'skin' => 'default',
 
-	/* Additional fields, these are shown between 'address' and 'description' */
-	'extrafields' => array(
-		// 'hostname' => array(
-		//		'type' => 'text',
-		//		'description' => 'hostname',
-		// ),
-		// 'customercode' => array(
-		//		'type' => 'url',
-		//		'description' => 'customer code',
-		//		'url' => 'http://customers.domain.com/?customer=%s',
-		// ),
-	),
-
-	/* Additional tables */
-	'extratables' => array(
-		// 'vlan' => array(
-		//		'type' => 'integer',
-		//		'description' => 'VLAN',
-		//		'linkaddress' => true,
-		//		'inoverview' => true,
-		// ),
-	),
-
 	/* IP pools for XML requests */
 	'pools' => array(
 		// 'dialup' => array('192.168.2.0/23'),

@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class addfield {
+class edituser {
 
 
 	public $error;
@@ -29,20 +29,32 @@ class addfield {
 
 	public function get() {
 		global $database, $session, $config;
+		$tpl = new Template('userform.html');
 
-		$field = $database->getFields(request('field'));
+		$user = $database->getUser(request('user'));
 
-		$tpl = new Template('field.html');
-		foreach (array('text', 'integer', 'boolean', 'url') as $type) {
-			$tpl->setVar('type', $type);
-			$tpl->parse('typeoption');
+		$tpl->setVar('user', htmlentities($user['username']));
+		$tpl->setVar('name', htmlentities($user['name']));
+
+		if ($database->isAdmin($session->username)) {
+			if (is_array($user['access']) &&
+				(count($user['access'])>0)) {
+				foreach ($user['access'] as $access) {
+					$tpl->setVar('node', $access['node']);
+					$tpl->setVar('readonly_checked', $access['access']=='r' ? ' checked="checked"' : '');
+					$tpl->setVar('write_checked', $access['access']=='w' ? ' checked="checked"' : '');
+					$tpl->parse('network');
+				}
+				$tpl->parse('access');
+			}
+			$tpl->setVar('prefixes', htmlentities(request('prefixes')));
+			$tpl->parse('addaccess');
 		}
-		$tpl->setVar('urlinactive', 'style="display: none;"');
-		$tpl->setVar('action', 'addfield');
-		$tpl->setVar('buttontext', 'add');
+
+
 		$content = $tpl->get();
 
-		return array('title'=>'IPDB :: Add custom field',
+		return array('title'=>'IPDB :: User '.request('user'),
 					 'content'=>$content);
 	}
 

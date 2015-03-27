@@ -55,16 +55,18 @@ function acton($action) {
 				  $error = $database->error;
 				  break;
 			  }
-			  if (count($config->extrafields)>0)
-				  foreach ($config->extrafields as $field=>$details)
-					  if (!$database->setField($field, $node, request('field-'.$field), (request('field-'.$field.'-recursive')=='on' ? true : false))) {
+			  $customfields = $database->getCustomFields();
+			  if (count($customfields)>0)
+				  foreach ($customfields as $field)
+					  if (!$database->setNodeCustomField($field['field'], $node, request('field-'.$field['field']), (request('field-'.$field['field'].'-recursive')=='on' ? true : false))) {
 						  $error = $database->error;
 						  break;
 					  }
-			  if (count($config->extratables)>0)
-				  foreach ($config->extratables as $table=>$details)
-					  if ($details['linkaddress'] &&
-						  !$database->setItem($table, $node, request('table-'.$table), (request('table-'.$table.'-recursive')=='on' ? true : false))) {
+			  $customtables = $database->getCustomTables();
+			  if (count($customtables)>0)
+				  foreach ($customtables as $table)
+					  if ($table['linkaddress'] &&
+						  !$database->setNodeCustomTableItem($table['table'], $node, request('table-'.$table), (request('table-'.$table.'-recursive')=='on' ? true : false))) {
 						  $error = $database->error;
 						  break;
 					  }
@@ -82,22 +84,24 @@ function acton($action) {
 				  if ($database->error) {
 					  $error = $database->error;
 				  } else {
-					  if (count($config->extrafields)>0)
-						  foreach ($config->extrafields as $field=>$details) {
-							  $value = $database->getField($field, request('node'));
-							  if ((($value!=request('field-'.$field)) ||
-								   (request('field-'.$field.'-recursive')=='on')) &&
-								  $database->setField($field, request('node'), request('field-'.$field), (request('field-'.$field.'-recursive')=='on'))) {
+					  $customfields = $database->getCustomFields();
+					  if (count($customfields)>0)
+						  foreach ($customfields as $field) {
+							  $value = $database->getNodeCustomField($field['field'], request('node'));
+							  if ((($value!=request('field-'.$field['field'])) ||
+								   (request('field-'.$field['field'].'-recursive')=='on')) &&
+								  $database->setNodeCustomField($field['field'], request('node'), request('field-'.$field['field']), (request('field-'.$field['field'].'-recursive')=='on'))) {
 								  $error = $database->error;
 								  break;
 							  }
 						  }
-					  if (count($config->extratables)>0)
-						  foreach ($config->extratables as $table=>$details) {
-						  	  $item = $database->getItem($table, request('node'));
-							  if ($details['linkaddress'] &&
-								  ($item['item']!=request('table-'.$table)) &&
-								  !$database->setItem($table, request('node'), request('table-'.$table), (request('table-'.$table.'-recursive')=='on'))) {
+					  $customtables = $database->getCustomTables();
+					  if (count($customtables)>0)
+						  foreach ($customtables as $table) {
+						  	  $item = $database->getNodeCustomTableItem($table['table'], request('node'));
+							  if ($table['linkaddress'] &&
+								  ($item['item']!=request('table-'.$table['table'])) &&
+								  !$database->setItem($table['table'], request('node'), request('table-'.$table['table']), (request('table-'.$table['table'].'-recursive')=='on'))) {
 								  $error = $database->error;
 								  break;
 							  }
@@ -154,36 +158,38 @@ function acton($action) {
 		  if ($database->error)
 			  $error = $database->error;
 		  break;
-	  case 'addextra':
+	  case 'addcustomtableitem':
 		  if ($session->authenticated) {
 			  $columndata = array();
-			  if (isset($config->extratables[request('table')]['columns']) &&
-				  is_array($config->extratables[request('table')]['columns']) &&
-				  count($config->extratables[request('table')]['columns']))
-				  foreach ($config->extratables[request('table')]['columns'] as $column=>$type)
+			  if (($table = $database->getCustomTable(request('table'))) &&
+				  isset($table['columns']) &&
+				  is_array($table['columns']) &&
+				  count($table['columns']))
+				  foreach ($table['columns'] as $column=>$type)
 					  if (request($column))
 						  $columndata[$column] = request($column);
-			  if ($database->addExtra(request('table'), request('item'), request('description'), request('comments'), $columndata))
-				  request('page', 'extratable', true);
+			  if ($database->addCustomTableItem(request('table'), request('item'), request('description'), request('comments'), $columndata))
+				  request('page', 'customtable', true);
 		  }
 		  break;
-	  case 'changeextra':
+	  case 'changecustomtableitem':
 		  if ($session->authenticated) {
 			  $columndata = array();
-			  if (isset($config->extratables[request('table')]['columns']) &&
-				  is_array($config->extratables[request('table')]['columns']) &&
-				  count($config->extratables[request('table')]['columns']))
-				  foreach ($config->extratables[request('table')]['columns'] as $column=>$type)
+			  if (($table = $database->getCustomTable(request('table'))) &&
+				  isset($table['columns']) &&
+				  is_array($table['columns']) &&
+				  count($table['columns']))
+				  foreach ($table['columns'] as $column=>$type)
 					  if (request($column))
 						  $columndata[$column] = request($column);
-			  $database->changeExtra(request('table'), request('olditem'), request('item'), request('description'), request('comments'), $columndata);
-			  request('page', 'extratable', true);
+			  $database->changeCustomTableItem(request('table'), request('olditem'), request('item'), request('description'), request('comments'), $columndata);
+			  request('page', 'customtable', true);
 		  }
 		  break;
-	  case 'deleteextra':
+	  case 'deletecustomtableitem':
 		  if ($session->authenticated &&
-			  $database->deleteExtra(request('table'), request('item')))
-			  request('page', 'extratable', true);
+			  $database->deleteCustomTableItem(request('table'), request('item')))
+			  request('page', 'customtable', true);
 		  break;
 	  case 'changeaccount':
 		  if ($session->authenticated) {
@@ -279,47 +285,47 @@ function acton($action) {
 			  exit;
 		  }
 		  break;
-	  case 'changefield':
+	  case 'changecustomfield':
 		  if ($session->authenticated && $database->isAdmin($session->username)) {
-			  if (!$database->changeField(request('oldfield'), request('fieldname'), request('type'),
-										  request('description'), request('inoverview'), request('url'))) {
+			  if (!$database->changeCustomField(request('oldfield'), request('fieldname'), request('type'),
+											    request('description'), request('inoverview')=='on', request('url'))) {
 				  $error = $database->error;
 				  break;
 			  }
 		  }
 		  if (request('remote')=='remote')
-			  send(array('commands'=>array('location.href=\''.me().'?page=fields\';')));
+			  send(array('commands'=>array('location.href=\''.me().'?page=customfields\';')));
 		  else {
 			  request('page', 'fields', true);
 			  header('Location: '.me());
 		  }
 		  exit;
 		  break;
-	  case 'addfield':
+	  case 'addcustomfield':
 		  if ($session->authenticated && $database->isAdmin($session->username)) {
-			  if (!$database->addField(request('fieldname'), request('type'), request('description'),
-									   request('inoverview'), request('url'))) {
+			  if (!$database->addCustomField(request('fieldname'), request('type'), request('description'),
+											 request('inoverview'), request('url'))) {
 				  $error = $database->error;
 				  break;
 			  }
 		  }
 		  if (request('remote')=='remote')
-			  send(array('commands'=>array('location.href=\''.me().'?page=fields\';')));
+			  send(array('commands'=>array('location.href=\''.me().'?page=customfields\';')));
 		  else {
 			  request('page', 'fields', true);
 			  header('Location: '.me());
 		  }
 		  exit;
 		  break;
-	  case 'deletefield':
+	  case 'deletecustomfield':
 		  if ($session->authenticated && $database->isAdmin($session->username)) {
-			  if (!$database->removeField(request('fieldname'))) {
+			  if (!$database->removeCustomField(request('fieldname'))) {
 				  $error = $database->error;
 				  break;
 			  }
 		  }
 		  if (request('remote')=='remote')
-			  send(array('commands'=>array('location.href=\''.me().'?page=fields\';')));
+			  send(array('commands'=>array('location.href=\''.me().'?page=customfields\';')));
 		  else {
 			  request('page', 'fields', true);
 			  header('Location: '.me());

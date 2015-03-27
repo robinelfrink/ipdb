@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class user {
+class editcustomfield {
 
 
 	public $error;
@@ -29,32 +29,27 @@ class user {
 
 	public function get() {
 		global $database, $session, $config;
-		$tpl = new Template('user.html');
 
-		$user = $database->getUser(request('user'));
+		$field = $database->getCustomField(request('field'));
 
-		$tpl->setVar('user', htmlentities($user['username']));
-		$tpl->setVar('name', htmlentities($user['name']));
-
-		if ($database->isAdmin($session->username)) {
-			if (is_array($user['access']) &&
-				(count($user['access'])>0)) {
-				foreach ($user['access'] as $access) {
-					$tpl->setVar('node', $access['node']);
-					$tpl->setVar('readonly_checked', $access['access']=='r' ? ' checked="checked"' : '');
-					$tpl->setVar('write_checked', $access['access']=='w' ? ' checked="checked"' : '');
-					$tpl->parse('network');
-				}
-				$tpl->parse('access');
-			}
-			$tpl->setVar('prefixes', htmlentities(request('prefixes')));
-			$tpl->parse('addaccess');
+		$tpl = new Template('customfieldform.html');
+		$tpl->setVar('fieldname', $field['field']);
+		foreach (array('text', 'integer', 'boolean', 'url') as $type) {
+			$tpl->setVar('type', $type);
+			$tpl->setVar('typeselected', $type==$field['type'] ? 'selected="selected"' : '');
+			$tpl->parse('typeoption');
 		}
-
-
+		$tpl->setVar('description', $field['description']);
+		if ($field['type']=='url')
+			$tpl->setVar('url', $field['url']);
+		else
+			$tpl->setVar('urlinactive', 'style="display: none;"');
+		$tpl->setVar('inoverviewchecked', $field['inoverview'] ? 'checked="checked"' : '');
+		$tpl->setVar('action', 'changecustomfield');
+		$tpl->setVar('buttontext', 'change');
 		$content = $tpl->get();
 
-		return array('title'=>'IPDB :: User '.request('user'),
+		return array('title'=>'IPDB :: Custom field '.request('field'),
 					 'content'=>$content);
 	}
 

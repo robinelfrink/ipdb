@@ -37,7 +37,7 @@ class users {
 		foreach ($users as $user) {
 			$tpl->setVar('username', htmlentities($user['username']));
 			$tpl->setVar('name', htmlentities($user['name']));
-			$tpl->setVar('editlink', me().'?page=user&amp;user='.htmlentities($user['username']));
+			$tpl->setVar('editlink', me().'?page=edituser&amp;user='.htmlentities($user['username']));
 			$tpl->setVar('deletelink', me().'?page=deleteuser&amp;user='.htmlentities($user['username']));
 			$tpl->setVar('oddeven', ' class="'.($even ? 'even' : 'odd').'"');
 			$tpl->parse('user');

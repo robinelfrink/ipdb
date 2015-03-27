@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class table {
+class customtable {
 
 
 	public $error = null;
@@ -29,11 +29,12 @@ class table {
 
 	public function get() {
 		global $config, $database;
-		$type = $config->extratables[request('table')]['type'];
-		$items = $database->getExtra(request('table'));
-		$tpl = new Template('extratable.html');
+		$table = $database->getCustomTable(request('table'));
+		$type = $table['type'];
+		$items = $database->getCustomTableItems(request('table'));
+		$tpl = new Template('customtableitems.html');
 
-		$items = $database->findExtra(request('table'), request('extrasearch'));
+		$items = $database->searchCustomTableItem(request('table'), request('customtablesearch'));
 		if (is_array($items) && (count($items)>0)) {
 			$total = count($items);
 			$start = request('pagenr', 1)-1;
@@ -62,7 +63,7 @@ class table {
 				$comments = '';
 				if (strlen(trim($item['comments']))>0)
 					$comments .= 'Comments:<p style="margin-left: 2em;">'.$item['comments'].'</p>';
-				$nodes = $database->getItemNodes(request('table'), $item['item']);
+				$nodes = $database->getCustomTableItemNodes(request('table'), $item['item']);
 				if (count($nodes)>0) {
 					$comments .= 'Nodes:<p style="margin-left: 2em;">';
 					foreach ($nodes as $node)
@@ -86,9 +87,9 @@ class table {
 			$tpl->parse('noitems');
 		}
 
-		$tpl->setVar('extrasearch', request('extrasearch'));
-		$tpl->setVar('table', $config->extratables[request('table')]['description']);
-		return array('title'=>'IPDB :: Table '.$config->extratables[request('table')]['description'],
+		$tpl->setVar('customtablesearch', request('customtablesearch'));
+		$tpl->setVar('table', $table['description']);
+		return array('title'=>'IPDB :: Table '.$table['description'],
 					 'content'=>$tpl->get());
 
 	}

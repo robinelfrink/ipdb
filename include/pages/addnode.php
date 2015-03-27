@@ -34,30 +34,32 @@ class addnode {
 		$tpl->setVar('description', request('description'));
 		if (!($basenode = $database->getNode(request('node'))))
 			$basenode = $database->getParent(request('node'));
-		if (count($config->extrafields)>0)
-			foreach ($config->extrafields as $field=>$details) {
-				$tpl->setVar('name', $field);
-				$tpl->setVar('fullname', isset($details['name']) ? $details['name'] : '');
-				$tpl->setVar('value', $database->getField($field, $basenode['node']));
-				$tpl->parse('extrafield');
+		$customfields = $database->getCustomFields();
+		if (count($customfields)>0)
+			foreach ($customfields as $field) {
+				$tpl->setVar('name', $field['field']);
+				$tpl->setVar('fullname', isset($field['name']) ? $field['name'] : '');
+				$tpl->setVar('value', $database->getNodeCustomField($field['field'], $basenode['node']));
+				$tpl->parse('customfield');
 			}
-		if (count($config->extratables)>0)
-			foreach ($config->extratables as $table=>$details)
-				if ($details['linkaddress']) {
-					$tableitems = $database->getExtra($table);
-					$item = $database->getItem($table, $basenode['node']);
+		$customtables = $database->getCustomTables();
+		if (count($customtables)>0)
+			foreach ($customtables as $table)
+				if ($table['linkaddress']) {
+					$tableitems = $database->getCustomTableItems($table['table']);
+					$item = $database->getNodeCustomTableItem($table['table'], $basenode['node']);
 					$options = '<option value="">-</option>';
 					if (count($tableitems)>0)
 						foreach ($tableitems as $tableitem)
 							$options .= '<option value="'.$tableitem['item'].'"'.
 								($item && $item['item']==$tableitem['item'] ? ' selected="selected"' : '').
 								'>'.$tableitem['item'].' '.
-								($details['type']=='password' ?
+								($table['type']=='password' ?
 								 crypt($tableitem['description'], randstr(2)) :
 								 $tableitem['description']).'</option>';
-					$tpl->setVar('table', $table);
+					$tpl->setVar('table', $table['table']);
 					$tpl->setVar('tableoptions', $options);
-					$tpl->parse('extratable');
+					$tpl->parse('customtable');
 				}
 		$tpl->setVar('address', preg_replace('/\/.*/', '', request('node')));
 		$tpl->setVar('bits', preg_replace('/.*\//', '', request('node')));

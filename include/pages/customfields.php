@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class fields {
+class customfields {
 
 
 	public $error = null;
@@ -30,16 +30,16 @@ class fields {
 	public function get() {
 		global $config, $database;
 
-		$fields = $database->getFields();
+		$fields = $database->getCustomFields();
 
-		$tpl = new Template('fields.html');
+		$tpl = new Template('customfields.html');
 		if (count($fields)>0) {
 			foreach ($fields as $field) {
 				$tpl->setVar('fieldname', $field['field']);
 				$tpl->setVar('type', $field['type']);
 				$tpl->setVar('inoverview', $field['inoverview'] ? 'yes' : 'no');
-				$tpl->setVar('editlink', me().'?page=field&amp;field='.htmlentities($field['field']));
-				$tpl->setVar('deletelink', me().'?page=deletefield&amp;field='.htmlentities($field['field']));
+				$tpl->setVar('editlink', me().'?page=editcustomfield&amp;field='.htmlentities($field['field']));
+				$tpl->setVar('deletelink', me().'?page=deletecustomfield&amp;field='.htmlentities($field['field']));
 				$tpl->parse('field');
 			}
 			$tpl->parse('fields');
@@ -47,8 +47,8 @@ class fields {
 			$tpl->parse('nofields');
 		}
 
-		$tpl->setVar('addlink', me().'?page=addfield');
-		return array('title'=>'IPDB :: Fields',
+		$tpl->setVar('addlink', me().'?page=addcustomfield');
+		return array('title'=>'IPDB :: Custom fields',
 					 'content'=>$tpl->get());
 
 	}

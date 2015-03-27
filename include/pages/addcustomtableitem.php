@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class addextra {
+class addcustomtableitem {
 
 
 	public $error = null;
@@ -29,15 +29,16 @@ class addextra {
 
 	public function get() {
 		global $config, $error, $database;
-		$tpl = new Template('extradetails.html');
+		$tpl = new Template('customtableitemform.html');
 		$tpl->setVar('item', request('item', ''));
 		$tpl->setVar('description', request('description', ''));
 		$tpl->setVar('comments', request('comments', ''));
-		$tpl->setVar('table', $config->extratables[request('table')]['description']);
-		if (isset($config->extratables[request('table')]['columns']) &&
-			is_array($config->extratables[request('table')]['columns']) &&
-			count($config->extratables[request('table')]['columns']))
-			foreach ($config->extratables[request('table')]['columns'] as $column=>$type) {
+		$table = $database-->getCustomTable(request('table'));
+		$tpl->setVar('table', $table['description']);
+		if (isset($table['columns']) &&
+			is_array($table['columns']) &&
+			count($table['columns']))
+			foreach ($table['columns'] as $column=>$type) {
 				$tpl->setVar('name', $column);
 				if ($type=='password')
 					$tpl->setVar('input', '<input type="password" name="'.htmlentities($column).'" />');
@@ -46,7 +47,7 @@ class addextra {
 				$tpl->parse('column');
 			}
 		$tpl->parse('add');
-		return array('title'=>'IPDB :: Add '.$config->extratables[request('table')]['description'],
+		return array('title'=>'IPDB :: Add '.$table['description'],
 					 'content'=>$tpl->get());
 
 	}

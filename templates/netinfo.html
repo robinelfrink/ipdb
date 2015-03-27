@@ -8,12 +8,12 @@
 		<tr><td class="label">netmask:</td><td>{netmask}</td></tr>
 		<tr><td class="label">broadcast:</td><td>{broadcast}</td></tr>
 		<!-- END ipv4 -->
-		<!-- BEGIN extrafield -->
+		<!-- BEGIN customfield -->
 		<tr><td class="label">{field}:</td><td>{value}</td></tr>
-		<!-- END extrafield -->
-		<!-- BEGIN extratable -->
+		<!-- END customfield -->
+		<!-- BEGIN customtable -->
 		<tr><td class="label">{table}:</td><td>{item}</td></tr>
-		<!-- END extratable -->
+		<!-- END customtable -->
 		<!-- BEGIN parent -->
 		<tr><td class="label">parent:</td><td><a href="?page=main&amp;node={parentnode}">{parentnode}</a></td></tr>
 		<!-- END parent -->
@@ -24,7 +24,7 @@
 	<!-- BEGIN editbuttons -->
 	<a class="button" href="?page=addnode&amp;node={node}" remote="remote">add</a>
     <a class="button" href="?page=deletenode&amp;node={node}" remote="remote">delete</a>
-	<a class="button" href="?page=changenode&amp;node={node}" remote="remote">change</a>
+	<a class="button" href="?page=editnode&amp;node={node}" remote="remote">change</a>
 	<!-- END editbuttons -->
 	<!-- BEGIN adminbuttons -->
 	<a class="button" href="?page=nodeaccess&amp;node={node}" remote="remote">access</a>

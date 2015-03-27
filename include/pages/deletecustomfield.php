@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class deleteextra {
+class deletecustomfield {
 
 
 	public $error = null;
@@ -29,17 +29,16 @@ class deleteextra {
 
 	public function get() {
 		global $config, $database;
-		if (!$item = $database->getExtra(request('table'), request('item'))) {
-			request('item', null, true);
-			$error = 'Item does not exist.';
-			require_once dirname(__FILE__).'/extratable.php';
-			return extratable::get();
-		}
-		$tpl = new Template('deleteextra.html');
-		$tpl->setVar('item', $item['item']);
-		$tpl->setVar('description', $item['description']);
-		return array('title'=>'IPDB :: Delete '.$config->extratables[request('table')]['description'],
-					 'content'=>$tpl->get());
+		if ($field = $database->getCustomField(request('field'))) {
+			$tpl = new Template('deletecustomfield.html');
+			$tpl->setVar('fieldname', request('field'));
+			$tpl->setVar('description', $field['description']);
+			$content = $tpl->get();
+			return array('title'=>'IPDB :: Delete field',
+						 'content'=>$content);
+		} else
+			return array('title'=>'Error',
+						 'content'=>'Requested field cannot be found');
 	}
 
 

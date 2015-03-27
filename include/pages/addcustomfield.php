@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class field {
+class addcustomfield {
 
 
 	public $error;
@@ -30,26 +30,19 @@ class field {
 	public function get() {
 		global $database, $session, $config;
 
-		$field = $database->getFields(request('field'));
+		$field = $database->getCustomField(request('field'));
 
-		$tpl = new Template('field.html');
-		$tpl->setVar('fieldname', $field['field']);
+		$tpl = new Template('customfieldform.html');
 		foreach (array('text', 'integer', 'boolean', 'url') as $type) {
 			$tpl->setVar('type', $type);
-			$tpl->setVar('typeselected', $type==$field['type'] ? 'selected="selected"' : '');
 			$tpl->parse('typeoption');
 		}
-		$tpl->setVar('description', $field['description']);
-		if ($field['type']=='url')
-			$tpl->setVar('url', $field['url']);
-		else
-			$tpl->setVar('urlinactive', 'style="display: none;"');
-		$tpl->setVar('inoverviewchecked', $field['inoverview'] ? 'checked="checked"' : '');
-		$tpl->setVar('action', 'changefield');
-		$tpl->setVar('buttontext', 'change');
+		$tpl->setVar('urlinactive', 'style="display: none;"');
+		$tpl->setVar('action', 'addcustomfield');
+		$tpl->setVar('buttontext', 'add');
 		$content = $tpl->get();
 
-		return array('title'=>'IPDB :: Custom field '.request('field'),
+		return array('title'=>'IPDB :: Add custom field',
 					 'content'=>$content);
 	}
 

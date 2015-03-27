@@ -30,17 +30,18 @@ class Menu {
 		if ($session->authenticated) {
 			$tpl = new Template('menu.html');
 			$menu = array('The World'=>'page=main&node=::/0');
-			if (count($config->extratables)>0) {
+			$customtables = $database->getCustomTables();
+			if (count($customtables)>0) {
 				$menu['Tables'] = array();
-				foreach ($config->extratables as $table=>$details)
-					$menu['Tables'][$details['description']] = 'page=table&table='.$table;
+				foreach ($customtables as $table)
+					$menu['Tables'][$table['description']] = 'page=customtable&table='.$table['table'];
 			}
 			$menu['History'] = 'page=history';
 			$menu['Options'] = array('My account'=>'page=account');
 			if ($database->isAdmin($session->username)) {
 				$menu['Options']['Users'] = 'page=users';
-				$menu['Options']['Custom fields'] = 'page=fields';
-				$menu['Options']['Custom tables'] = 'page=tables';
+				$menu['Options']['Custom fields'] = 'page=customfields';
+				$menu['Options']['Custom tables'] = 'page=customtables';
 			}
 			$menu['Logout'] = 'page=login&action=logout&remote=remote';
 			return self::makeHtml($menu);

@@ -3,7 +3,7 @@
 <p>{navigation}</p>
 
 <form method="post" action="" remote="remote">
-    <p><input type="text" class="search" name="extrasearch" value="{extrasearch}" /></p>
+    <p><input type="text" class="search" name="customtablesearch" value="{customtablesearch}" /></p>
 	<!-- BEGIN noitems -->
 	<p class="message">There are no items defined in table {table}.</p>
 	<!-- END noitems -->
@@ -15,16 +15,16 @@
 		<tbody>
 			<!-- BEGIN itemrow -->
 			<tr{oddeven}>
-				<td class="extraitem"><a>{item}{comments}</a></td>
+				<td><a>{item}{comments}</a></td>
 				<td>{description}</td>
-				<td><a class="button" href="?page=changeextra&amp;item={item}" remote="remote">change</a></td>
-				<td><a class="button" href="?page=deleteextra&amp;item={item}" remote="remote">delete</a></td>
+				<td><a class="button" href="?page=editcustomtableitem&amp;item={item}" remote="remote">change</a></td>
+				<td><a class="button" href="?page=deletecustomtableitem&amp;item={item}" remote="remote">delete</a></td>
 			</tr>
 			<!-- END itemrow -->
 		</tbody>
 	</table>
 	<!-- END items -->
-	<p><a class="button" href="?page=addextra" remote="remote">add</a> an item</p>
+	<p><a class="button" href="?page=addcustomtableitem" remote="remote">add</a> an item</p>
 </form>
 
 <p>{navigation}</p>

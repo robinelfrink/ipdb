@@ -65,26 +65,28 @@ class main {
 			}
 			$tpl->setvar('nodename', htmlentities($data['name']));
 			$tpl->setvar('description', htmlentities($data['description']));
-			if (count($config->extrafields)>0)
-				foreach ($config->extrafields as $field=>$details) {
-					$tpl->setvar('field', $field);
-					$value = $database->getField($field, $node);
-					if ($details['url'])
-						$tpl->setvar('value', '<a href="'.sprintf($details['url'], $value).'">'.$value.'</a>');
+			$customfields = $database->getCustomFields();
+			if (count($customfields)>0)
+				foreach ($customfields as $field) {
+					$tpl->setvar('field', $field['field']);
+					$value = $database->getNodeCustomField($field['field'], $node);
+					if ($field['url'])
+						$tpl->setvar('value', '<a href="'.sprintf($field['url'], $value).'">'.$value.'</a>');
 					else
 						$tpl->setvar('value', $value);
-					$tpl->parse('extrafield');
+					$tpl->parse('customfield');
 				}
-			if (count($config->extratables)>0)
-				foreach ($config->extratables as $table=>$details)
-					if ($details['linkaddress'] &&
-						($item = $database->getItem($table, $node))) {
-						$tpl->setvar('table', $table);
-						if ($details['type']!='password')
+			$customtables = $database->getCustomTables();
+			if (count($customtables)>0)
+				foreach ($customtables as $table)
+					if ($table['linkaddress'] &&
+						($item = $database->getNodeCustomTableItem($table['table'], $node))) {
+						$tpl->setvar('table', $table['table']);
+						if ($table['type']!='password')
 							$tpl->setvar('item', $item['item'].' '.$item['description']);
 						else
 							$tpl->setvar('item', $item['item'].' '.crypt($item['description']));
-						$tpl->parse('extratable');
+						$tpl->parse('customtable');
 					}
 
 			$tpl->setVar('address', preg_replace('/\/.*/', '', $data['node']));
@@ -114,30 +116,32 @@ class main {
 
 	private function listchildren($children) {
 		global $config, $database;
+		$customfields = $database->getCustomFields();
+		$customtables = $database->getCustomTables();
 		$tpl = new Template('children.html');
 		$even = true;
 		foreach ($children as $child) {
 			$tpl->setVar('link', '?page='.(isset($child['unused']) ? 'addnode' : 'main').
 								  '&node='.$child['node']);
 			$tpl->setVar('label', preg_match('/(\..+\/32|:.+\/128)$/', $child['node']) ? preg_replace('/\/.*/', '', $child['node']) : $child['node']);
-			if (count($config->extrafields)>0)
-				foreach ($config->extrafields as $field=>$details) {
-					if ($details['inoverview']) {
-						$value = $database->getField($field, $child['node']);
-						if (isset($details['url']))
-							$tpl->setVar('extrafield', '<a href="'.htmlentities(sprintf($details['url'], $value)).'">'.htmlentities($value).'</a>');
+			if (count($customfields)>0)
+				foreach ($customfields as $field) {
+					if ($field['inoverview']) {
+						$value = $database->getNodeCustomField($field['field'], $child['node']);
+						if (isset($field['url']))
+							$tpl->setVar('customfield', '<a href="'.htmlentities(sprintf($field['url'], $value)).'">'.htmlentities($value).'</a>');
 						else
-							$tpl->setVar('extrafield', htmlentities($value));
-						$tpl->parse('extrafielddata');
+							$tpl->setVar('customfield', htmlentities($value));
+						$tpl->parse('customfielddata');
 					}
 				}
-			if (count($config->extratables)>0)
-				foreach ($config->extratables as $table=>$details) 
-					 if (isset($details['inoverview']) && $details['inoverview'] &&
-						 isset($details['linkaddress']) && $details['linkaddress']) {
-						 $item = $database->getItem($table, $child['node']);
-						 $tpl->setVar('extratable', $item['item']);
-						 $tpl->parse('extratabledata');
+			if (count($customtables)>0)
+				foreach ($customtables as $table) 
+					 if (isset($table['inoverview']) && $table['inoverview'] &&
+						 isset($table['linkaddress']) && $table['linkaddress']) {
+						 $item = $database->getNodeCustomTableItem($table['table'], $child['node']);
+						 $tpl->setVar('customtable', $item['item']);
+						 $tpl->parse('customtabledata');
 					 }
 
 			$tpl->setVar('nodename', htmlentities($child['name']));
@@ -148,18 +152,18 @@ class main {
 			$tpl->parse('child');
 			$even = !$even;
 		}
-		if (count($config->extrafields)>0)
-			foreach ($config->extrafields as $field=>$details)
-				if ($details['inoverview']) {
-					$tpl->setVar('extrafield', $field);
-					$tpl->parse('extrafieldheader');
+		if (count($customfields)>0)
+			foreach ($customfields as $field)
+				if ($field['inoverview']) {
+					$tpl->setVar('customfield', $field['field']);
+					$tpl->parse('customfieldheader');
 				}
-		if (count($config->extratables)>0)
-			foreach ($config->extratables as $table=>$details)
-				if (isset($details['inoverview']) && $details['inoverview'] &&
-					isset($details['linkaddress']) && $details['linkaddress']) {
-					$tpl->setVar('extratable', $table);
-					$tpl->parse('extratableheader');
+		if (count($customtables)>0)
+			foreach ($customtables as $table)
+				if (isset($table['inoverview']) && $table['inoverview'] &&
+					isset($table['linkaddress']) && $table['linkaddress']) {
+					$tpl->setVar('customtable', $table['table']);
+					$tpl->parse('customtableheader');
 				}
 		return $tpl->get();
 	}

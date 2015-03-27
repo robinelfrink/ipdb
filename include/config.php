@@ -36,8 +36,6 @@ class Config {
 	public $debug = false;
 	public $skin = 'default';
 	public $pools = array('default_ipv4_prefix'=>30, 'default_ipv6_prefix'=>64);
-	public $extrafields = array();
-	public $extratables = array();
 
 
 	public function __construct() {

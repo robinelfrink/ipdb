@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class changeextra {
+class editcustomtableitem {
 
 
 	public $error = null;
@@ -29,17 +29,18 @@ class changeextra {
 
 	public function get() {
 		global $config, $error, $database;
-		if (!$item = $database->getExtra(request('table'), request('item'))) {
+		if (!$item = $database->getCustomTableItem(request('table'), request('item'))) {
 			request('item', null, true);
 			$error = 'Item does not exist.';
-			require_once dirname(__FILE__).'/extratable.php';
-			return extratable::get();
+			require_once dirname(__FILE__).'/customtable.php';
+			return customtable::get();
 		}
-		$tpl = new Template('extradetails.html');
-		if (isset($config->extratables[request('table')]['columns']) &&
-			is_array($config->extratables[request('table')]['columns']) &&
-			count($config->extratables[request('table')]['columns']))
-			foreach ($config->extratables[request('table')]['columns'] as $column=>$type) {
+		$tpl = new Template('customtableitemform.html');
+		$table = $database->getCustomTable(request('table'));
+		if (isset($table['columns']) &&
+			is_array($table['columns']) &&
+			count($table['columns']))
+			foreach ($table['columns'] as $column=>$type) {
 				$tpl->setVar('name', $column);
 				if ($type=='password')
 					$tpl->setVar('input', '<input type="password" name="'.htmlentities($column).'" />');
@@ -52,9 +53,9 @@ class changeextra {
 		$tpl->setVar('item', htmlentities(request('item')));
 		$tpl->setVar('description', htmlentities($item['description']));
 		$tpl->setVar('comments', htmlentities($item['comments']));
-		$tpl->setVar('table', htmlentities($config->extratables[request('table')]['description']));
+		$tpl->setVar('table', htmlentities($table['description']));
 		$tpl->parse('change');
-		return array('title'=>'IPDB :: Change '.$config->extratables[request('table')]['description'],
+		return array('title'=>'IPDB :: Change '.$table['description'],
 					 'content'=>$tpl->get());
 
 	}

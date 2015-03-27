@@ -2,12 +2,12 @@
 	<thead>
 		<tr>
 			<th>address</th>
-			<!-- BEGIN extrafieldheader -->
-			<th>{extrafield}</th>
-			<!-- END extrafieldheader -->
-			<!-- BEGIN extratableheader -->
-			<th>{extratable}</th>
-			<!-- END extratableheader -->
+			<!-- BEGIN customfieldheader -->
+			<th>{customfield}</th>
+			<!-- END customfieldheader -->
+			<!-- BEGIN customtableheader -->
+			<th>{customtable}</th>
+			<!-- END customtableheader -->
 			<th>name</th>
 		</tr>
 	</thead>
@@ -15,8 +15,8 @@
 		<!-- BEGIN child -->
 		<tr{oddeven} style="cursor: pointer;" onclick="window.location.href = '{link}'">
 			<td>{label}</td>
-			<!-- BEGIN extrafielddata --><td>{extrafield}</td><!-- END extrafielddata -->
-			<!-- BEGIN extratabledata --><td>{extratable}</td><!-- END extratabledata -->
+			<!-- BEGIN customfielddata --><td>{customfield}</td><!-- END customfielddata -->
+			<!-- BEGIN customtabledata --><td>{customtable}</td><!-- END customtabledata -->
 			<td>{nodename}</td>
 		</tr>
 		<!-- END child -->

@@ -37,7 +37,7 @@ class nodeaccess {
 		$userselect = '<select name="user">';
 
 		foreach ($access as $username=>$useraccess) {
-			$tpl->setVar('userlink', me().'?page=user&amp;user='.$username);
+			$tpl->setVar('userlink', me().'?page=edituser&amp;user='.$username);
 			$tpl->setVar('username', $username);
 			$tpl->setVar('readonly_checked', $useraccess['access']=='r' ? ' checked="checked"' : '');
 			$tpl->setVar('write_checked', $useraccess['access']=='w' ? ' checked="checked"' : '');

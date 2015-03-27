@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class deletefield {
+class deletecustomtableitem {
 
 
 	public $error = null;
@@ -29,16 +29,18 @@ class deletefield {
 
 	public function get() {
 		global $config, $database;
-		if ($field = $database->getFields(request('field'))) {
-			$tpl = new Template('deletefield.html');
-			$tpl->setVar('fieldname', request('field'));
-			$tpl->setVar('description', $field['description']);
-			$content = $tpl->get();
-			return array('title'=>'IPDB :: Delete field',
-						 'content'=>$content);
-		} else
-			return array('title'=>'Error',
-						 'content'=>'Requested field cannot be found');
+		if (!$item = $database->getCustomTableItem(request('table'), request('item'))) {
+			request('item', null, true);
+			$error = 'Item does not exist.';
+			require_once dirname(__FILE__).'/customtable.php';
+			return customtable::get();
+		}
+		$tpl = new Template('deletecustomtableitem.html');
+		$tpl->setVar('item', $item['item']);
+		$tpl->setVar('description', $item['description']);
+		$table = $database->getCustomTable(request('table'));
+		return array('title'=>'IPDB :: Delete '.$table['description'],
+					 'content'=>$tpl->get());
 	}
 
 
