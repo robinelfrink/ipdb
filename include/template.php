@@ -59,6 +59,10 @@ class Template {
 
 	public function setVar($var, $value) {
 
+		if (!is_string($value)) {
+			error_log('Warning: assigning '.gettype($value).' to '.$var.' in '.__FILE__.' line '.__LINE__);
+			$value = serialize($value);
+		}
 		$this->vars[$var] = $value;
 
 	}
