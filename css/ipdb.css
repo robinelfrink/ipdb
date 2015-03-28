@@ -303,6 +303,10 @@ nav li:hover {
 	color: #000;
 	background-color: #ec9;
 }
+nav li:hover:last-child {
+	color: #fff;
+	background-color: #000;
+}
 nav li:hover li {
 	color: #fff;
 	background-color: #000;
