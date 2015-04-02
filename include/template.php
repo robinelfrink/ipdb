@@ -59,7 +59,7 @@ class Template {
 
 	public function setVar($var, $value) {
 
-		if (!is_string($value)) {
+		if (!is_string($value) && !is_numeric($value)) {
 			error_log('Warning: assigning '.gettype($value).' to '.$var.' in '.__FILE__.' line '.__LINE__);
 			$value = serialize($value);
 		}
