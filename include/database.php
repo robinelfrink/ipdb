@@ -88,7 +88,7 @@ class Database {
 	private $db = null;
 	public $error = null;
 	private $provider = null;
-	private $dbversion = '9';
+	private $dbversion = '10';
 	private $prefix = '';
 
 	private $broadcastsql;
@@ -313,6 +313,12 @@ class Database {
 								"`access` VARCHAR(1),".
 								"PRIMARY KEY(`address`, `bits`, `username`)".
 							")");
+			/* settings */
+			$this->db->exec("CREATE TABLE `".$this->prefix."settings` (".
+								"`name` varchar(40) NOT NULL,".
+								"`value` varchar(255) NOT NULL,".
+								"PRIMARY KEY(`name`)".
+							")");
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
@@ -467,6 +473,13 @@ class Database {
 				$this->db->exec("ALTER TABLE `".$this->prefix."ip` ADD `name` varchar(50) AFTER `bits`");
 				$this->db->exec("CREATE INDEX `ipname` ON `".$this->prefix."ip`(`name`)");
 				$this->db->exec("UPDATE `".$this->prefix."ip` SET `name`=TRIM(LEFT(`description`, 50))");
+			}
+			if ($version<10) {
+				$this->db->exec("CREATE TABLE `".$this->prefix."settings` (".
+						"`name` varchar(40) NOT NULL,".
+						"`value` varchar(255) NOT NULL,".
+						"PRIMARY KEY(`name`)".
+						")");
 			}
 			$sql = "UPDATE `".$this->prefix."version` SET version=:version";
 			$stmt = $this->db->prepare($sql);
@@ -1718,10 +1731,12 @@ class Database {
 				"SET `admin`=:admin ".
 				"WHERE `username`=:username";
 			$stmt = $this->db->prepare($sql);
-			$stmt->bindParam(':admin', $admin ? 0 : 1, PDO::PARAM_INT);
+			$admin = $admin ? 1 : 0;
+			$stmt->bindParam(':admin', $admin, PDO::PARAM_INT);
 			$stmt->bindParam(':username', $username, PDO::PARAM_STR);
+			$stmt->execute();
 			$this->log('Changed admin setting for '.$username.' to '.
-					   ($user['admin'] ? 'false' : 'true'));
+					   ($admin ? 'true' : 'false'));
 			return true;
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
@@ -1734,12 +1749,11 @@ class Database {
 	/*
 	 * Add a user.
 	 */
-	public function addUser($username, $name, $password) {
+	public function addUser($username, $name, $password, $admin = 0) {
 		try {
 			$sql = "INSERT INTO `".$this->prefix."users` (`username`, `name`, `password`, `admin`) ".
 				"VALUES(:username, :name, :password, :admin)";
 			$md5 = md5($password);
-			$admin = 0;
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':username', $username, PDO::PARAM_STR);
 			$stmt->bindParam(':name', $name, PDO::PARAM_STR);
@@ -2079,6 +2093,25 @@ class Database {
 					$unused[] = $network;
 			}
 		return $unused;
+	}
+
+
+	function getSetting($name, $default = false) {
+		try {
+			$sql = "SELECT `value` ".
+				"FROM `".$this->prefix."settings` ".
+				"WHERE `name`=:name";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':name', $name, PDO::PARAM_STR);
+			$stmt->execute();
+			if ($result = $stmt->fetch(PDO::FETCH_ASSOC))
+				return $result['value'];
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return $default;
 	}
 
 

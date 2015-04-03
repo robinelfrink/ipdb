@@ -35,6 +35,8 @@ class edituser {
 
 		$tpl->setVar('user', htmlentities($user['username']));
 		$tpl->setVar('name', htmlentities($user['name']));
+		$tpl->setVar('admin', $user['admin'] ? 1 : 0);
+		$tpl->setVar('adminchecked', $user['admin'] ? 'checked="checked"' : '');
 
 		if ($database->isAdmin($session->username)) {
 			if (is_array($user['access']) &&

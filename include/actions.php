@@ -227,7 +227,7 @@ function acton($action) {
 				  break;
 			  }
 			  if ((request('name')!=request('oldname')) &&
-				  !$database->changeUsername(request('name'), request('olduser'))) {
+				  !$database->changeUsername(request('name'), request('user'))) {
 				  $error = $database->error;
 				  break;
 			  }
@@ -235,10 +235,15 @@ function acton($action) {
 				  if (request('password1')!=request('password2')) {
 					  $error = 'Passwords do not match';
 					  break;
-				  } else if (!$database->changePassword(request('password1'), request('olduser'))) {
+				  } else if (!$database->changePassword(request('password1'), request('user'))) {
 					  $error = $database->error;
 					  break;
 				  }
+			  }
+			  if ((request('admin')!=request('oldadmin')) &&
+				  !$database->changeAdmin(request('admin')=='on', request('user'))) {
+				  $error = $database->error;
+				  break;
 			  }
 		  }
 		  break;

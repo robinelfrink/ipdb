@@ -17,12 +17,17 @@
 			<td><input type="password" name="password2" /></td>
 		</tr>
 		<tr>
+			<td class="label">administrator:</td>
+			<td><input type="checkbox" name="admin" {adminchecked} /></td>
+		</tr>
+		<tr>
 			<td></td>
 			<td><input type="submit" value="change" /></td>
 		</tr>
 	</table>
 	<input type="hidden" name="olduser" value="{user}" />
 	<input type="hidden" name="oldname" value="{name}" />
+	<input type="hidden" name="oldadmin" value="{admin}" />
 	<input type="hidden" name="action" value="changeuser" />
 </form>
 

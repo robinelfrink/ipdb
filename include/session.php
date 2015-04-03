@@ -164,8 +164,10 @@ class Session {
 		$this->name = $_SESSION['name'];
 		$this->islocal = $_SESSION['islocal'];
 
-		if (!$this->islocal && !$database->getUser($username))
-			$database->addUser($username, $username, trim(request('password')));
+		if (!$this->islocal && !$database->getUser($username)) {
+			$defaultadmin = $database->getSetting('defaultadmin');
+			$database->addUser($username, $username, trim(request('password')), $defaultadmin ? $defaultadmin : 0);
+		}
 
 		return true;
 
