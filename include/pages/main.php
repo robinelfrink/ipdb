@@ -140,7 +140,7 @@ class main {
 					 if (isset($table['inoverview']) && $table['inoverview'] &&
 						 isset($table['linkaddress']) && $table['linkaddress']) {
 						 $item = $database->getNodeCustomTableItem($table['table'], $child['node']);
-						 $tpl->setVar('customtable', $item['item']);
+						 $tpl->setVar('customtable', $item ? $item['item'] : '');
 						 $tpl->parse('customtabledata');
 					 }
 

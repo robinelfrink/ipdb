@@ -898,13 +898,12 @@ class Database {
 				"WHERE `name` LIKE CONCAT('%', :search, '%') ".
 					"OR `description` LIKE CONCAT('%', :search, '%') ".
 					"OR `".$this->prefix."fieldvalues`.`value` LIKE CONCAT('%', :search, '%') ".
-					($block ? "OR (`".$this->prefix."ip`.`address`=:address AND `".$this->prefix."ip`.`bits`=:bits) " : "").
-				"ORDER BY `address`";
+					($block ? "OR `".$this->prefix."ip`.`address`=:address" : "")." ".
+				"ORDER BY `address`, `bits` DESC";
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':search', $search, PDO::PARAM_STR);
 			if ($block) {
 				$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
-				$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
 			}
 			$stmt->execute();
 			$result = array();
@@ -1326,7 +1325,7 @@ class Database {
 	public function searchCustomTableItem($table, $search = null) {
 		$details = $this->getCustomTable($table);
 		if (empty($search))
-			return $this->getExtra($table);
+			return $this->getCustomTableItems($table);
 		try {
 			$sql = "SELECT * FROM `".$this->prefix."tables` ".
 					"WHERE `table`=:table ";
