@@ -666,13 +666,14 @@ class Database {
 			$sql = "SELECT `address`, `bits`, `name`, `description` ".
 				"FROM `".$this->prefix."ip` ".
 				"LEFT JOIN ".
-				"  ( SELECT `address` AS `p_address`, `bits` AS `p_bits` ".
+				"  ( SELECT `address` AS `p_address`, `bits` AS `p_bits`, ".$this->broadcastsql." AS `p_broadcast` ".
 				"      FROM `".$this->prefix."ip` ".
 				"      WHERE `address`>=:address AND ".
 				"            `bits`>:bits AND ".
 				"            `address`<=:broadcast ) `y` ".
 				"  ON `address`>=`p_address` AND ".
-				"     `bits`>`p_bits` ".
+				"     `bits`>`p_bits` AND ".
+				"     ".$this->broadcastsql."<=`p_broadcast` ".
 				"WHERE `p_address` IS NULL AND ".
 				"      `address`>=:address AND ".
 				"      `bits`>:bits AND ".
@@ -695,11 +696,9 @@ class Database {
 		$sql .= " ORDER BY `address`, `bits`";
 		$stmt = $this->db->prepare($sql);
 		if ($block['bits']) {
-			$parentmatch = $block['address']+dechex(256+$block['bits']);
 			$stmt->bindParam(':address', $block['address'], PDO::PARAM_STR);
 			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
 			$stmt->bindParam(':broadcast', $broadcast, PDO::PARAM_STR);
-			$stmt->bindParam(':parent', $parentmatch, PDO::PARAM_STR);
 		}
 		$stmt->execute();
 		$children = array();
