@@ -67,7 +67,7 @@ class history {
 			$even = !$even;
 		}
 
-		$tpl->setVar('historysearch', request('historysearch'));
+		$tpl->setVar('historysearch', request('historysearch', ''));
 		$tpl->setVar('navigation', $navigation);
 		$content = $tpl->get();
 
