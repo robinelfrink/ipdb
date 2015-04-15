@@ -51,7 +51,7 @@ class history {
 			$pages = array_unique(array_merge(
 				range(1, min(3, $pagenr+3)), // first three pages
 				range(max(1, $pagenr-3), min($pagenr+3, $totalpages)), // current page +/- 3
-				range(max($start, $totalpages-3), $totalpages) // last three pages
+				range(max($pagenr, $totalpages-3), $totalpages) // last three pages
 			), SORT_NUMERIC);
 			$previouspage = 1;
 			foreach ($pages as $page) {
