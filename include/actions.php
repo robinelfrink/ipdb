@@ -139,11 +139,18 @@ function acton($action) {
 					  request('page', 'main', true);
 				  } else {
 					  $error = 'Search result is empty.';
-					  if (($node = $database->getNode(request('node'))) ||
-						  ($node = $database->getParent(request('node')))) {
-						  request('node', $node['node'], true);
-						  request('page', 'main', true);
+					  $node = null;
+					  try {
+						  $node = $database->getNode(request('node'));
+					  } catch (Exception $e) {
+						  try {
+							  $node = $database->getParent(request('node'));
+						  } catch (Exception $e) {
+						  }
 					  }
+					  if ($node)
+						  request('node', $node['node'], true);
+					  request('page', 'main', true);
 				  }
 			  }
 		  }
