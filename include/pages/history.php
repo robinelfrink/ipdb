@@ -61,7 +61,7 @@ class history {
 					$navigation .= '<b>'.$page.'</b>&nbsp;';
 				else
 					$navigation .= '<a href="'.me().'?pagenr='.$page.'">'.$page.'</a>&nbsp;';
-				$previouspage++;
+				$previouspage = $page;
 			}
 		}
 
