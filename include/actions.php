@@ -139,17 +139,13 @@ function acton($action) {
 					  request('page', 'main', true);
 				  } else {
 					  $error = 'Search result is empty.';
-					  $node = null;
+					  // If it's an IP address/block, try to find parent
 					  try {
-						  $node = $database->getNode(request('node'));
-					  } catch (Exception $e) {
-						  try {
-							  $node = $database->getParent(request('node'));
-						  } catch (Exception $e) {
-						  }
-					  }
-					  if ($node)
+						  $node = $database->getParent(request('search'));
 						  request('node', $node['node'], true);
+					  } catch (Exception $e) {
+						  // Ignore the error.
+					  }
 					  request('page', 'main', true);
 				  }
 			  }
