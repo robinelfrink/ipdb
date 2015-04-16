@@ -34,17 +34,24 @@ class Tree {
 		if (count($children)) {
 			foreach ($children as $child) {
 				$grandchildren = $database->getChildren($child['node'], false);
+				$hosts = $database->getChildren($child['node'], true);
 				$subtree = '';
 				if (count($grandchildren)) {
 					if ($node && (Database::isSame($node, $child['node']) ||
 								  Database::isChild($node, $child['node']))) {
 						$class = 'class="expanded"';
 						$subtree = Tree::getHtml($child['node'], $node, $grandchildren);
+						$tpl->setVar('count', count($grandchildren));
+						$tpl->parse('children');
 					} else {
 						$class = 'class="collapsed"';
 					}
 				} else {
 					$class = '';
+				}
+				if (count($hosts)) {
+					$tpl->setVar('count', count($hosts));
+					$tpl->parse('hosts');
 				}
 				$tpl->setVar('node', $child['node']);
 				$tpl->setVar('nodename', $child['name']);
