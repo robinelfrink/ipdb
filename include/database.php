@@ -750,6 +750,8 @@ class Database {
 					$network = self::_add($childbroadcast, 1);
 				} else if (strcmp($childbroadcast, $broadcast)==0) {
 					/* Last block within node */
+					if ($network<$childnetwork)
+						$unused = array_merge($unused, self::_splitblocks($network, $childnetwork, $block['bits']));
 					$unused[] = $child;
 					return $unused;
 				} else {
