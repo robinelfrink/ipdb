@@ -288,7 +288,7 @@ function acton($action) {
 			  $node = $database->getNode(request('node'));
 			  header('Content-Type: text/plain');
 			  header('Content-Disposition: attachment; filename="'.$node['node'].'.txt"');
-			  echo $node['node']."\t".$node['nodename']."\t".$node['description']."\n\n";
+			  echo $node['node']."\t".$node['name']."\t".$node['description']."\n\n";
 			  echo Tree::getTxt(request('node'));
 			  exit;
 		  }
