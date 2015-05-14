@@ -30,7 +30,7 @@ function acton($action) {
 		  if ($session->authenticated) {
 			  request('action', false, true);
 			  if (request('remote')=='remote')
-				  send(array('commands'=>array('location.href=\''.me().'\';')));
+				  send(array('commands'=>array('location.reload();')));
 		  	  else {
 				  request('page', 'main', true);
 				  header('Location: '.me());
