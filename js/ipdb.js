@@ -58,9 +58,11 @@ function ajaxify() {
 	$('#tree li[id^="a_"]').off('click').click(clicktree);
 	$('#menu a[remote="remote"]').off('click').click(clicka);
 	$('#menu form[remote="remote"]').off('submit').submit(submitform);
+	$('#menu form[remote="remote"] input[type="submit"]').click(function() { $(this).attr('clicked', 'clicked'); });
 	$('#menu form[remote="remote"] input[name="cancel"]').off('click').click(function() { ajaxrequest(location.href.replace(/.*\?/, '')); return false; });
 	$('#content a[remote="remote"]').off('click').click(clicka);
 	$('#content form[remote="remote"]').off('submit').submit(submitform);
+	$('#content form[remote="remote"] input[type="submit"]').click(function() { $(this).attr('clicked', 'clicked'); });
 	$('#content form[remote="remote"] input[name="cancel"]').off('click').click(function() { ajaxrequest(location.href.replace(/.*\?/, '')); return false; });
 }
 
@@ -73,14 +75,14 @@ function clicka(event) {
 
 
 /* Submit a form */
-function submitform(event) {
+function submitform(event, button) {
 	var vars = { };
 	$(event.target).find('input,select,textarea').each(function() {
 		if ($(this).is('input[type=checkbox]'))
 			vars[$(this).attr('name')] = this.checked ? 'on' : 'off';
 		else if ($(this).is('input[type=radio]'))
 			vars[$(this).attr('name')] = this.checked ? this.value : '';
-		else if ($(this).is('input[type=submit]') && ($(this).attr('name')!='cancel'))
+		else if ($(this).is('input[type=submit]') && ($(this).attr('name')!='cancel') && ($(this).attr('clicked')=='clicked'))
 			vars['submit'] = $(this).attr('name');
 		else
 			vars[$(this).attr('name')] = this.value;
