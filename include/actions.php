@@ -300,14 +300,14 @@ function acton($action) {
 				  $error = $database->error;
 				  break;
 			  }
+			  if (request('remote')=='remote')
+				  send(array('commands'=>array('location.href=\''.me().'?page=customfields\';')));
+			  else {
+				  request('page', 'fields', true);
+				  header('Location: '.me());
+			  }
+			  exit;
 		  }
-		  if (request('remote')=='remote')
-			  send(array('commands'=>array('location.href=\''.me().'?page=customfields\';')));
-		  else {
-			  request('page', 'fields', true);
-			  header('Location: '.me());
-		  }
-		  exit;
 		  break;
 	  case 'addcustomfield':
 		  if ($session->authenticated && $database->isAdmin($session->username)) {
@@ -316,14 +316,14 @@ function acton($action) {
 				  $error = $database->error;
 				  break;
 			  }
+			  if (request('remote')=='remote')
+				  send(array('commands'=>array('location.href=\''.me().'?page=customfields\';')));
+			  else {
+				  request('page', 'customfields', true);
+				  header('Location: '.me());
+			  }
+			  exit;
 		  }
-		  if (request('remote')=='remote')
-			  send(array('commands'=>array('location.href=\''.me().'?page=customfields\';')));
-		  else {
-			  request('page', 'fields', true);
-			  header('Location: '.me());
-		  }
-		  exit;
 		  break;
 	  case 'deletecustomfield':
 		  if ($session->authenticated && $database->isAdmin($session->username)) {
@@ -331,14 +331,97 @@ function acton($action) {
 				  $error = $database->error;
 				  break;
 			  }
+			  if (request('remote')=='remote')
+				  send(array('commands'=>array('location.href=\''.me().'?page=customfields\';')));
+			  else {
+				  request('page', 'customfields', true);
+				  header('Location: '.me());
+			  }
+			  exit;
 		  }
-		  if (request('remote')=='remote')
-			  send(array('commands'=>array('location.href=\''.me().'?page=customfields\';')));
-		  else {
-			  request('page', 'fields', true);
-			  header('Location: '.me());
+		  break;
+	  case 'addcustomtable':
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  if (!$database->addCustomTable(request('tablename'), request('type'), request('description'),
+											 request('inoverview'), request('linkaddress'))) {
+				  $error = $database->error;
+				  break;
+			  }
+			  if (request('remote')=='remote')
+				  send(array('commands'=>array('location.href=\''.me().'?page=editcustomtable&table='.request('tablename').'\';')));
+			  else {
+				  request('page', 'editcustomtable', true);
+				  request('table', request('tablename'), true);
+				  header('Location: '.me());
+			  }
+			  exit;
 		  }
-		  exit;
+		  break;
+	  case 'deletecustomtable':
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  if (!$database->deleteCustomTable(request('table'))) {
+				  $error = $database->error;
+				  break;
+			  }
+			  if (request('remote')=='remote')
+				  send(array('commands'=>array('location.href=\''.me().'?page=customtables\';')));
+			  else {
+				  request('page', 'customtables', true);
+				  header('Location: '.me());
+			  }
+			  exit;
+		  }
+		  break;
+	  case 'changecustomtable':
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  if (!$database->changeCustomTable(request('oldtable'), request('tablename'), request('type'),
+												request('description'), request('inoverview'), request('linkaddress'))) {
+				  $error = $database->error;
+				  break;
+			  }
+			  if (request('remote')=='remote')
+				  send(array('commands'=>array('location.href=\''.me().'?page=editcustomtable&table='.request('tablename').'\';')));
+			  else {
+				  request('page', 'editcustomtable', true);
+				  request('table', request('tablename'), true);
+				  header('Location: '.me());
+			  }
+			  exit;
+		  }
+		  break;
+	  case 'changecustomtablecolumns':
+		  if ($session->authenticated && $database->isAdmin($session->username) &&
+			  ($table = $database->getCustomTable(request('table')))) {
+			  if (request('submit')=='_add') {
+				  if (!$database->addCustomTableColumn(request('table'), request('_name'), request('_type'))) {
+					  $error = $database->error;
+					  break;
+				  }
+			  } elseif (preg_match('/(.*)_delete$/', request('submit'), $matches)) {
+				  if (!$database->deleteCustomTableColumn(request('table'), $matches[1])) {
+					  $error = $database->error;
+					  break;
+				  }
+			  } else {
+				  foreach ($table['columns'] as $column=>$type) {
+					  if (!empty($column) &&
+						  (($column!=request($column.'_name')) ||
+						   ($type!=request($column.'_type'))) &&
+						  !$database->changeCustomTableColumn(request('table'), $column, request($column.'_name'), request($column.'_type'))) {
+						  $error = $database->error;
+						  break;
+					  }
+				  }
+			  }
+			  if (request('remote')=='remote')
+				  send(array('commands'=>array('location.href=\''.me().'?page=editcustomtable&table='.request('table').'\';')));
+			  else {
+				  request('page', 'editcustomtable', true);
+				  request('table', request('table'), true);
+				  header('Location: '.me());
+			  }
+			  exit;
+		  }
 		  break;
 	  default:
 		  debug('action: '.request('action'));

@@ -1,0 +1,12 @@
+<form method="post" action="" remote="remote">
+	<p class="message">You are about to delete the following custom table:</p>
+	<table>
+		<tbody>
+			<tr><td class="label">table name:</td><td>{tablename}</td></tr>
+			<tr><td class="label">description:</td><td>{description}</td></tr>
+			<tr><td></td><td><input type="submit" value="delete" />&nbsp;<input type="submit" name="cancel" value="cancel" /></td></tr>
+		</tbody>
+	</table>
+	<input type="hidden" name="table" value="{tablename}" />
+	<input type="hidden" name="action" value="deletecustomtable" />
+</form>

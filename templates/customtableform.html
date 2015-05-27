@@ -1,0 +1,71 @@
+<h2>Custom table {tablename}</h2>
+
+<form method="post" action="" remote="remote">
+	<table>
+		<tr>
+			<td class="label">table name:</td>
+			<td><input type="text" name="tablename" value="{tablename}" /></td>
+		</tr>
+		<tr>
+			<td class="label">description:</td>
+			<td><input type="text" name="description" value="{description}" size="50" /></td>
+		</tr>
+		<tr>
+			<td class="label">primary key type:</td>
+			<td>
+				<select name="type">{typeoptions}
+					<!-- BEGIN typeoption -->
+					<option name="{type}" {typeselected}>{type}</option>
+					<!-- END typeoption -->
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td class="label">link to node address</td>
+			<td><input type="checkbox" name="linkaddress" {linkaddresschecked} /></td>
+		</tr>
+		<tr>
+			<td class="label">show in overview:</td>
+			<td><input type="checkbox" name="inoverview" {inoverviewchecked} /></td>
+		<tr>
+			<td></td>
+			<td><input type="submit" name="{buttonname}" value="{buttontext}" /></td>
+		</tr>
+	</table>
+	<input type="hidden" name="oldtable" value="{tablename}" />
+	<input type="hidden" name="action" value="{action}" />
+</form>
+
+<!-- BEGIN columns -->
+<br />
+<h3>Custom table {tablename} columns</h3>
+<form method="post" action="" remote="remote">
+	<table>
+		<thead>
+			<tr>
+				<th>name</th>
+				<th>type</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<!-- BEGIN column -->
+			<tr>
+				<td><input type="text" name="{columnname}_name" value="{columnname}" size="20" /></td>
+				<td>
+					<select name="{columnname}_type">{typeoptions}
+						<!-- BEGIN columntypeoption -->
+						<option name="{type}" {typeselected}>{type}</option>
+						<!-- END columntypeoption -->
+					</select>
+				</td>
+				<td><input type="submit" name="{columnname}_{columnbuttontype}" value="{columnbuttontext}" /></td>
+			</tr>
+			<!-- END column -->
+			<tr><td><input type="submit" name="change" value="{buttontext}" /></td><td></td><td></td></tr>
+		</tbody>
+	</table>
+	<input type="hidden" name="table" value="{tablename}" />
+	<input type="hidden" name="action" value="changecustomtablecolumns" />
+</form>
+<!-- END columns -->

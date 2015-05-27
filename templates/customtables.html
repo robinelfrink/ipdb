@@ -1,0 +1,27 @@
+<h3>Custom tables</h3>
+
+<!-- BEGIN tables -->
+<table>
+	<thead>
+		<tr><th>name</th><th>inoverview</th><th></th><th></tr>
+	</thead>
+	<tbody>
+		<!-- BEGIN table -->
+		<tr{oddeven}>
+			<td>{tablename}</td>
+			<td>{inoverview}</td>
+			<td><a class="button" href="{editlink}">edit</a></td>
+			<td><a class="button" href="{deletelink}" remote="remote">delete</a></td>
+		</tr>
+		<!-- END table -->
+	</tbody>
+</table>
+<!-- END tables -->
+
+<!-- BEGIN notables -->
+<p class="message">
+	No custom tables have been defined.
+</p>
+<!-- END notables -->
+
+<p><a class="button" href="{addlink}" remote="remote">add custom table</a></p>

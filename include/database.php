@@ -2012,14 +2012,17 @@ class Database {
 	}
 
 
-	public function addTable($table, $type, $description, $inoverview = true, $linkaddress = true, $columns = array()) {
+	public function addCustomTable($table, $type, $description, $inoverview = true, $linkaddress = true, $columns = array()) {
 		if (!in_array($type, array('text', 'integer'))) {
 			$this->error = 'New table key type unknown.';
 			return false;
 		}
+		$inoverview = $inoverview && ($inoverview!='off');
+		$linkaddress = $linkaddress && ($linkaddress!='off');
 		try {
 			$sql = "INSERT INTO `".$this->prefix."tables` (`table`, `description`, `inoverview`, `linkaddress`) ".
 				"VALUES(:table, :description, :inoverview, :linkaddress)";
+			debug($sql);
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
 			$stmt->bindParam(':description', $description, PDO::PARAM_STR);
@@ -2028,21 +2031,51 @@ class Database {
 			$stmt->execute();
 			$sql = "INSERT INTO `".$this->prefix."tablecolumns` (`table`, `column`, `type`) ".
 				"VALUES(:table, '__pkey', :type)";
+			debug($sql);
 			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
 			$stmt->bindParam(':type', $type, PDO::PARAM_STR);
 			$stmt->execute();
-			foreach ($columns as $column=>$columntype) {
-				if (!in_array($columntype, array('text', 'integer', 'password'))) {
-					$this->error = 'New table column type unknown.';
-					return false;
-				}
-				$sql = "INSERT INTO `".$this->prefix."tablecolumns` (`table`, `column`, `type`) ".
-					"VALUES(:table, :column, :type)";
+			foreach ($columns as $column=>$columntype) 
+				$this->addCustomTableColumn($table, $column, $columntype);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return true;
+	}
+
+
+	public function addCustomTableColumn($table, $column, $type) {
+		if (!in_array($type, array('text', 'integer', 'password', 'boolean', 'url'))) {
+			$this->error = 'New table column type unknown.';
+			return false;
+		}
+		try {
+			$sql = "INSERT INTO `".$this->prefix."tablecolumns` (`table`, `column`, `type`) ".
+				"VALUES(:table, :column, :type)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->bindParam(':column', $column, PDO::PARAM_STR);
+			$stmt->bindParam(':type', $type, PDO::PARAM_STR);
+			$stmt->execute();
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+	    return true;
+	}
+
+
+	public function deleteCustomTableColumn($table, $column) {
+		try {
+			foreach (array('tablecolumns', 'tablecolumn') as $mtable) {
+				$sql = "DELETE FROM `".$this->prefix.$mtable."` WHERE `table`=:table AND `column`=:column";
 				$stmt = $this->db->prepare($sql);
 				$stmt->bindParam(':table', $table, PDO::PARAM_STR);
 				$stmt->bindParam(':column', $column, PDO::PARAM_STR);
-				$stmt->bindParam(':type', $columntype, PDO::PARAM_STR);
 				$stmt->execute();
 			}
 		} catch (PDOException $e) {
@@ -2054,17 +2087,69 @@ class Database {
 	}
 
 
-	function removeTable($table) {
+	public function changeCustomTableColumn($table, $column, $name, $type) {
+		if (!in_array($type, array('text', 'integer', 'password', 'boolean', 'url'))) {
+			$this->error = 'New table column type unknown.';
+			return false;
+		}
 		try {
-			$sql = "DELETE FROM `".$this->prefix."tables` WHERE `table`=:table";
+			if ($column!=$name)
+				foreach (array('tablecolumns', 'tablecolumn') as $mtable) {
+					$sql = "UPDATE `".$this->prefix.$mtable."` SET `column`=:name WHERE `table`=:table AND `column`=:column";
+					$stmt = $this->db->prepare($sql);
+					$stmt->bindParam(':name', $name, PDO::PARAM_STR);
+					$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+					$stmt->bindParam(':column', $column, PDO::PARAM_STR);
+					$stmt->execute();
+				}
+			$sql = "UPDATE `".$this->prefix."tablecolumns` SET `type`=:type WHERE `table`=:table AND `column`=:column";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':type', $type, PDO::PARAM_STR);
 			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->bindParam(':column', $column, PDO::PARAM_STR);
 			$stmt->execute();
-			$sql = "DELETE FROM `".$this->prefix."tableitems` WHERE `table`=:table";
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return true;
+	}
+
+
+	public function changeCustomTable($table, $name, $type, $description, $inoverview = true, $linkaddress = true) {
+		if (!in_array($type, array('text', 'integer'))) {
+			$this->error = 'New table key type unknown.';
+			return false;
+		}
+		$inoverview = $inoverview && ($inoverview!='off');
+		$linkaddress = $linkaddress && ($linkaddress!='off');
+		try {
+			$sql = "UPDATE `".$this->prefix."tables` SET `table`=:name, `description`=:description, `inoverview`=:overview, `linkaddress`=:linkaddress WHERE `table`=:table";
+			$stmt = $this->db->prepare($sql);
 			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+			$stmt->bindParam(':name', $name, PDO::PARAM_STR);
+			$stmt->bindParam(':description', $description, PDO::PARAM_STR);
+			$stmt->bindParam(':inoverview', $inoverview, PDO::PARAM_BOOL);
+			$stmt->bindParam(':linkaddress', $linkaddress, PDO::PARAM_BOOL);
 			$stmt->execute();
-			$sql = "DELETE FROM `".$this->prefix."tablecolumns` WHERE `table`=:table";
-			$stmt->bindParam(':table', $table, PDO::PARAM_STR);
-			$stmt->execute();
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return true;
+	}
+
+
+	public function deleteCustomTable($table) {
+		try {
+			foreach (array('tables', 'tablecolumn', 'tablecolumns', 'tableitems', 'tablenode') as $mtable) {
+				$sql = "DELETE FROM `".$this->prefix.$mtable."` WHERE `table`=:table";
+				$stmt = $this->db->prepare($sql);
+				$stmt->bindParam(':table', $table, PDO::PARAM_STR);
+				$stmt->execute();
+			}
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
