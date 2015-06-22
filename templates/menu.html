@@ -2,6 +2,15 @@
 	<!-- BEGIN menuitem -->
 	<li>{item}</li>
 	<!-- END menuitem -->
+	<!-- BEGIN zoneselect -->
+	<li>
+		<select name="zone" onchange="setrequestvar('zone', $(this).val()); location.reload();">
+			<option value="">Global zone</option>
+			<!-- BEGIN zoneoption -->
+			<option value="{zonename}" {selected}>{zonename}</option>
+		</select>
+	</li>
+	<!-- END zoneselect -->
 	<!-- BEGIN searchform -->
 	<li>
 		<form method="post" action="" remote="remote">

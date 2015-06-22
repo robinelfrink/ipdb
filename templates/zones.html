@@ -1,0 +1,27 @@
+<h3>Zones</h3>
+
+<!-- BEGIN zones -->
+<table>
+	<thead>
+		<tr><th>name</th><th>description</th><th></th><th></tr>
+	</thead>
+	<tbody>
+		<!-- BEGIN zone -->
+		<tr{oddeven}>
+			<td>{zonename}</td>
+			<td>{description}</td>
+			<td><a class="button" href="{editlink}">edit</a></td>
+			<td><a class="button" href="{deletelink}" remote="remote">delete</a></td>
+		</tr>
+		<!-- END zone -->
+	</tbody>
+</table>
+<!-- END zones -->
+
+<!-- BEGIN nozones -->
+<p class="message">
+	No zones have been defined.
+</p>
+<!-- END nozones -->
+
+<p><a class="button" href="{addlink}" remote="remote">add zone</a></p>

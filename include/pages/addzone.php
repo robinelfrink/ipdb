@@ -1,8 +1,7 @@
 <?php
 
 /*
-Copyright 2011 Previder bv (http://www.previder.nl)
-Author: Robin Elfrink <robin@15augustus.nl>
+Copyright: Robin Elfrink <robin@15augustus.nl>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,28 +20,26 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class deletenode {
+class addzone {
 
 
-	public $error = null;
+	public $error;
 
 
 	public function get() {
-		global $config, $database;
-		if ($node = $database->getNode(request('node'))) {
-			$tpl = new Template('deletenode.html');
-			$children = $database->getChildren($node['node'], request('zone'));
-			if (count($children))
-				$tpl->parse('children');
-			$tpl->setVar('nodename', $node['name']);
-			$tpl->setVar('description', $node['description']);
-			$tpl->setVar('node', $node['node']);
-			$content = $tpl->get();
-			return array('title'=>'IPDB :: Delete node',
-						 'content'=>$content);
-		} else
-			return array('title'=>'Error',
-						 'content'=>'Requested node cannot be found');
+		global $database, $session, $config;
+
+		$zone = $database->getZone(request('zone'));
+
+		$tpl = new Template('zoneform.html');
+		$tpl->setVar('zonename', $zone['name']);
+		$tpl->setVar('description', $zone['description']);
+		$tpl->setVar('action', 'addzone');
+		$tpl->setVar('buttontext', 'add');
+		$content = $tpl->get();
+
+		return array('title'=>'IPDB :: Add zone',
+					 'content'=>$content);
 	}
 
 

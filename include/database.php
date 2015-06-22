@@ -330,7 +330,7 @@ class Database {
 								"`description` varchar(255)".
 								"PRIMARY KEY(`id`)".
 							")");
-			$this->db->exec("CREATE INDEX `zonename` ON `".$this->prefix."zones`(`name`)");
+			$this->db->exec("CREATE UNIQUE INDEX `zonename` ON `".$this->prefix."zones`(`name`)");
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
@@ -692,7 +692,7 @@ class Database {
 	/*
 	 * Fetch node children from the database.
 	 */
-	public function getChildren($node, $hosts = true, $unused = false) {
+	public function getChildren($node, $hosts = true, $unused = false, $zone = null) {
 		$block = self::_node2address($node);
 		$broadcast = self::_broadcast($block['address'], $block['bits']);
 		if ($block['bits']) {
@@ -726,6 +726,8 @@ class Database {
 		}
 		if (!$hosts)
 			$sql .= " AND `bits`<128";
+		if (!empty($zone) && ($thezone = $this->getZone($zone)))
+			$sql .= " AND (`zones` & :zoneid)";
 		$sql .= " ORDER BY `address`, `bits`";
 		$stmt = $this->db->prepare($sql);
 		if ($block['bits']) {
@@ -733,6 +735,8 @@ class Database {
 			$stmt->bindParam(':bits', $block['bits'], PDO::PARAM_INT);
 			$stmt->bindParam(':broadcast', $broadcast, PDO::PARAM_STR);
 		}
+		if (!empty($zone) && ($thezone = $this->getZone($zone)))
+			$stmt->bindParam(':zoneid', $thezone['id'], PDO::PARAM_INT);
 		$stmt->execute();
 		$children = array();
 		while ($result = $stmt->fetch(PDO::FETCH_ASSOC))
@@ -2192,7 +2196,7 @@ class Database {
 	}
 
 
-	function _findunused($base, $next) {
+	private function _findunused($base, $next) {
 		$unused = array();
 		if ((strcmp($base, $next)<0) &&
 			preg_match('/^([0]*)([1-9a-f]|$)/', self::_subtract($next, $base), $matches)) {
@@ -2214,7 +2218,7 @@ class Database {
 	}
 
 
-	function getSetting($name, $default = false) {
+	public function getSetting($name, $default = false) {
 		try {
 			$sql = "SELECT `value` ".
 				"FROM `".$this->prefix."settings` ".
@@ -2230,6 +2234,106 @@ class Database {
 			return false;
 		}
 		return $default;
+	}
+
+
+	/*
+	 * Get zones.
+	 */
+	public function getZones() {
+		try {
+			$sql = "SELECT `id`, `name`, `description` ".
+				"FROM `".$this->prefix."zones` ".
+				"ORDER BY `name`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute();
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+	}
+
+
+	/*
+	 * Get zone.
+	 */
+	public function getZone($zone) {
+		try {
+			$sql = "SELECT `id`, `name`, `description` ".
+				"FROM `".$this->prefix."zones` ".
+				"WHERE `name`=:name";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':name', $zone, PDO::PARAM_STR);
+			$stmt->execute();
+			return $stmt->fetch(PDO::FETCH_ASSOC);
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+	}
+
+
+	/*
+	 * Add zone.
+	 */
+	public function addZone($name, $description) {
+		try {
+			$sql = "SELECT MIN(`id`) AS `id` ".
+				"FROM `".$this->prefix."zones`";
+			$stmt = $this->db->prepare($sql);
+			$stmt->execute();
+			$id = 1;
+			$result = $stmt->fetch(PDO::FETCH_ASSOC);
+			if (($result['id'] != null) && ($result['id']<2)) {
+				$sql = "SELECT z1.id+1 AS id ".
+					"FROM ipdb_zones AS z1 ".
+					"LEFT JOIN ipdb_zones AS z2 ".
+					"ON z1.id+1=z2.id ".
+					"WHERE z2.id IS NULL ".
+					"ORDER BY z1.id ".
+					"LIMIT 1";
+				$stmt = $this->db->prepare($sql);
+				$stmt->execute();
+				$result = $stmt->fetch(PDO::FETCH_ASSOC);
+				$id = $result['id'];
+			}
+			$sql = "INSERT INTO `".$this->prefix."zones` (`id`, `name`, `description`) ".
+				"VALUES(:id, :name, :description)";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':id', $id, PDO::PARAM_INT);
+			$stmt->bindParam(':name', $name, PDO::PARAM_STR);
+			$stmt->bindParam(':description', $description, PDO::PARAM_STR);
+			$stmt->execute();
+			return true;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return false;
+	}
+
+
+	/*
+	 * Remove zone
+	 */
+	public function removeZone($name) {
+		try {
+			$sql = "DELETE FROM `".$this->prefix."zones` ".
+				"WHERE `name`=:name";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(':name', $name, PDO::PARAM_STR);
+			$stmt->execute();
+			return true;
+		} catch (PDOException $e) {
+			$this->error = $e->getMessage();
+			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
+			return false;
+		}
+		return false;
 	}
 
 

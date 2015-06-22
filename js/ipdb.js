@@ -179,3 +179,9 @@ notify = function(options) {
 function toggleunused(node, showunused) {
 	ajaxrequest({ page: 'main', node: node, showunused: showunused });
 }
+
+
+/* Set statefull request variable */
+function setrequestvar(name, value) {
+	ajaxrequest({ action: 'setrequestvar', name: name, value: value});
+}

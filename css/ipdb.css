@@ -337,6 +337,11 @@ nav li form input {
 nav .menubutton {
 	display: none;
 }
+nav select {
+	margin: 0.5rem;
+	margin-top: 0.7rem;
+	color: #000;
+}
 @media only screen and (max-width: 799px) {
 	nav .menubutton {
 		font-size: 2.2rem;

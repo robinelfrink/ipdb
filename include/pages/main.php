@@ -34,7 +34,7 @@ class main {
 			$content = $this->listchildren($searchresult);
 		} else if (($node = request('node')) &&
 			($node!='::/0') &&
-			($data = $database->getNode($node))) {
+			($data = $database->getNode($node, request('zone')))) {
 			$tpl = new Template('netinfo.html');
 			$tpl->setvar('node', $data['node']);
 			if (preg_match('/^[\.0-9]+\//', $data['node'])) {
@@ -42,13 +42,13 @@ class main {
 				$tpl->setvar('broadcast', $database->getBroadcast($data['node']));
 				$tpl->parse('ipv4');
 			}
-			if ($parent = $database->getParent($data['node'])) {
+			if ($parent = $database->getParent($data['node'], request('zone'))) {
 				$tpl->setvar('parentnode', $parent['node']);
 				$tpl->parse('parent');
 			}
 			$tpl->setvar('address', preg_replace('/\/.*/', '', $data['node']));
 			$tpl->setvar('bits', preg_replace('/.*\//', '', $data['node']));
-			$children = $database->getChildren($data['node'], true, request('showunused')=='yes');
+			$children = $database->getChildren($data['node'], true, request('showunused')=='yes', request('zone'));
 			if (preg_match('/^[\.0-9]+\/32$/', $data['node']) ||
 				preg_match('/^[:0-9a-f]+\/128$/', $data['node'])) {
 				$tpl->setvar('label', 'host '.preg_replace('/\/.*/', '', $data['node']));
@@ -69,7 +69,7 @@ class main {
 			if (count($customfields)>0)
 				foreach ($customfields as $field) {
 					$tpl->setvar('field', $field['field']);
-					$value = $database->getNodeCustomField($field['field'], $node);
+					$value = $database->getNodeCustomField($field['field'], $node, request('zone'));
 					if ($field['url'])
 						$tpl->setvar('value', '<a href="'.sprintf($field['url'], $value).'">'.$value.'</a>');
 					else
@@ -80,7 +80,7 @@ class main {
 			if (count($customtables)>0)
 				foreach ($customtables as $table)
 					if ($table['linkaddress'] &&
-						($item = $database->getNodeCustomTableItem($table['table'], $node))) {
+						($item = $database->getNodeCustomTableItem($table['table'], $node, request('zone')))) {
 						$tpl->setvar('table', $table['table']);
 						if ($table['type']!='password')
 							$tpl->setvar('item', $item['item'].' '.$item['description']);
@@ -92,7 +92,7 @@ class main {
 			$tpl->setVar('address', preg_replace('/\/.*/', '', $data['node']));
 			$tpl->setVar('bits', preg_replace('/.*\//', '', $data['node']));
 
-			$access = $database->getAccess($data['node'], $session->username);
+			$access = $database->getAccess($data['node'], $session->username, request('zone'));
 			if ($database->isAdmin($session->username) || ($access['access']=='w')) {
 				$tpl->setVar('node', $data['node']);
 				$tpl->parse('editbuttons');
@@ -104,7 +104,7 @@ class main {
 				$content .= $this->listchildren($children);
 		} else {
 			$node = 'The World';
-			$children = $database->getChildren('::/0', false);
+			$children = $database->getChildren('::/0', false, request('zone'));
 			$tpl = new Template('world.html');
 			$tpl->setVar('count', count($children));
 			$content = $tpl->get().$this->listchildren($children);
@@ -127,7 +127,7 @@ class main {
 			if (count($customfields)>0)
 				foreach ($customfields as $field) {
 					if ($field['inoverview']) {
-						$value = $database->getNodeCustomField($field['field'], $child['node']);
+						$value = $database->getNodeCustomField($field['field'], $child['node']. request('zone'));
 						if (isset($field['url']))
 							$tpl->setVar('customfield', '<a href="'.htmlentities(sprintf($field['url'], $value)).'">'.htmlentities($value).'</a>');
 						else
@@ -139,7 +139,7 @@ class main {
 				foreach ($customtables as $table) 
 					 if (isset($table['inoverview']) && $table['inoverview'] &&
 						 isset($table['linkaddress']) && $table['linkaddress']) {
-						 $item = $database->getNodeCustomTableItem($table['table'], $child['node']);
+						 $item = $database->getNodeCustomTableItem($table['table'], $child['node'], request('zone'));
 						 $tpl->setVar('customtable', $item ? $item['item'] : '');
 						 $tpl->parse('customtabledata');
 					 }

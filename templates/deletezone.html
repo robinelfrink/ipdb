@@ -1,0 +1,12 @@
+<form method="post" action="" remote="remote">
+	<p class="message">You are about to delete the following zone:</p>
+	<table>
+		<tbody>
+			<tr><td class="label">zone name:</td><td>{zonename}</td></tr>
+			<tr><td class="label">description:</td><td>{description}</td></tr>
+			<tr><td></td><td><input type="submit" value="delete" />&nbsp;<input type="submit" name="cancel" value="cancel" /></td></tr>
+		</tbody>
+	</table>
+	<input type="hidden" name="zonename" value="{zonename}" />
+	<input type="hidden" name="action" value="deletezone" />
+</form>

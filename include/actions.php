@@ -423,6 +423,39 @@ function acton($action) {
 			  exit;
 		  }
 		  break;
+	  case 'addzone':
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  if (!$database->addZone(request('zonename'), request('description'))) {
+				  $error = $database->error;
+				  break;
+			  }
+			  if (request('remote')=='remote')
+				  send(array('commands'=>array('location.href=\''.me().'?page=zones\';')));
+			  else {
+				  request('page', 'zones', true);
+				  header('Location: '.me());
+			  }
+			  exit;
+		  }
+		  break;
+	  case 'deletezone':
+		  if ($session->authenticated && $database->isAdmin($session->username)) {
+			  if (!$database->removeZone(request('zonename'))) {
+				  $error = $database->error;
+				  break;
+			  }
+			  if (request('remote')=='remote')
+				  send(array('commands'=>array('location.href=\''.me().'?page=zones\';')));
+			  else {
+				  request('page', 'zones', true);
+				  header('Location: '.me());
+			  }
+			  exit;
+		  }
+		  break;
+	  case 'setrequestvar':
+		  request(request('name'), request('value')=='' ? null : request('value'), true);
+		  exit;
 	  default:
 		  debug('action: '.request('action'));
 		  $error = 'Unknown action requested';

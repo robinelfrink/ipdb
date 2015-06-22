@@ -40,6 +40,7 @@ class Menu {
 			$menu['Options'] = array('My account'=>'page=account');
 			if ($database->isAdmin($session->username)) {
 				$menu['Options']['Users'] = 'page=users';
+				$menu['Options']['Zones'] = 'page=zones';
 				$menu['Options']['Custom fields'] = 'page=customfields';
 				$menu['Options']['Custom tables'] = 'page=customtables';
 			}
@@ -50,6 +51,7 @@ class Menu {
 	}
 
 	private static function makeHtml($menu, $level=1) {
+		global $database;
 		$tpl = new Template('menu.html');
 		foreach ($menu as $title=>$details) {
 			if (is_array($details))
@@ -67,8 +69,18 @@ class Menu {
 			}
 			$tpl->parse('menuitem');
 		}
-		if ($level==1)
+		if ($level==1) {
+			$zones = $database->getZones();
+			if (count($zones)) {
+				foreach ($zones as $zone) {
+					$tpl->setVar('zonename', $zone['name']);
+					$tpl->setVar('selected', $zone['name']==request('zone') ? 'selected="selected"' : '');
+					$tpl->parse('zoneoption');
+				}
+				$tpl->parse('zoneselect');
+			}
 			$tpl->parse('searchform');
+		}
 		return $tpl->get();
 	}
 			
