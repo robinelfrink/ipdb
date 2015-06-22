@@ -88,7 +88,7 @@ class Database {
 	private $db = null;
 	public $error = null;
 	private $provider = null;
-	private $dbversion = '10';
+	private $dbversion = '11';
 	private $prefix = '';
 
 	private $broadcastsql;
@@ -208,9 +208,10 @@ class Database {
 			$this->db->exec("CREATE TABLE `".$this->prefix."ip` (".
 								"`address` varchar(32) NOT NULL,".
 								"`bits` INT UNSIGNED NOT NULL,".
+								"`zones` BINARY(8) NOT NULL DEFAULT '',".
 								"`name` varchar(50),".
 								"`description` varchar(255),".
-								"PRIMARY KEY (`address`, `bits`)".
+								"PRIMARY KEY (`address`, `bits`, `zones`)".
 							")");
 			$this->db->exec("CREATE UNIQUE INDEX `addressbits` ON `".$this->prefix."ip` (`address`, `bits`)");
 			$this->db->exec("INSERT INTO `".$this->prefix."ip` (`address`, `bits`, `description`) ".
@@ -250,9 +251,10 @@ class Database {
 			$this->db->exec("CREATE TABLE `".$this->prefix."fieldvalues` (".
 								"`address` varchar(32) NOT NULL,".
 								"`bits` INT UNSIGNED NOT NULL,".
+								"`zones` BINARY(8) NOT NULL DEFAULT '',".
 								"`field` varchar(15) NOT NULL,".
 								"`value` varchar(255) NOT NULL,".
-								"PRIMARY KEY(`address`, `bits`, `field`)".
+								"PRIMARY KEY(`address`, `bits`, `zones`, `field`)".
 							")");
 
 			/* tables */
@@ -286,7 +288,8 @@ class Database {
 								"`item` varchar(50) NOT NULL,".
 								"`address` varchar(32) NOT NULL,".
 								"`bits` INT UNSIGNED NOT NULL,".
-								"PRIMARY KEY(`table`, `item`, `address`, `bits`)".
+								"`zones` BINARY(8) NOT NULL DEFAULT '',".
+								"PRIMARY KEY(`table`, `item`, `address`, `bits`, `zones`)".
 							")");
 
 			/* tablecolumn */
@@ -309,9 +312,10 @@ class Database {
 			$this->db->exec("CREATE TABLE `".$this->prefix."access` (".
 								"`address` varchar(32) NOT NULL,".
 								"`bits` INT UNSIGNED NOT NULL,".
+								"`zones` BINARY(8) NOT NULL DEFAULT '',".
 								"`username` varchar(15) NOT NULL,".
 								"`access` VARCHAR(1),".
-								"PRIMARY KEY(`address`, `bits`, `username`)".
+								"PRIMARY KEY(`address`, `bits`, `zones`, `username`)".
 							")");
 			/* settings */
 			$this->db->exec("CREATE TABLE `".$this->prefix."settings` (".
@@ -319,6 +323,14 @@ class Database {
 								"`value` varchar(255) NOT NULL,".
 								"PRIMARY KEY(`name`)".
 							")");
+			/* zones */
+			$this->db->exec("CREATE TABLE `".$this->prefix."zones` (".
+								"`id` int(8) UNSIGNED,".
+								"`name` varchar(40) NOT NULL,".
+								"`description` varchar(255)".
+								"PRIMARY KEY(`id`)".
+							")");
+			$this->db->exec("CREATE INDEX `zonename` ON `".$this->prefix."zones`(`name`)");
 		} catch (PDOException $e) {
 			$this->error = $e->getMessage();
 			error_log($e->getMessage().' in '.$e->getFile().' line '.$e->getLine().'.');
@@ -480,6 +492,27 @@ class Database {
 						"`value` varchar(255) NOT NULL,".
 						"PRIMARY KEY(`name`)".
 						")");
+			}
+			if ($version<11) {
+				$this->db->exec("CREATE TABLE `".$this->prefix."zones` (".
+						"`id` int UNSIGNED NOT NULL,".
+						"`name` varchar(40) NOT NULL,".
+						"`description` varchar(255),".
+						"PRIMARY KEY(`name`)".
+						")");
+				$this->db->exec("CREATE INDEX `zonename` ON `".$this->prefix."zones`(`name`)");
+				$this->db->exec("ALTER TABLE `".$this->prefix."ip` ADD `zones` BINARY(8) NOT NULL DEFAULT '' AFTER `bits`");
+				$this->db->exec("ALTER TABLE `".$this->prefix."ip` DROP PRIMARY KEY");
+				$this->db->exec("ALTER TABLE `".$this->prefix."ip` ADD PRIMARY KEY(`address`, `bits`, `zones`)");
+				$this->db->exec("ALTER TABLE `".$this->prefix."fieldvalues` ADD `zones` BINARY(8) NOT NULL DEFAULT '' AFTER `bits`");
+				$this->db->exec("ALTER TABLE `".$this->prefix."fieldvalues` DROP PRIMARY KEY");
+				$this->db->exec("ALTER TABLE `".$this->prefix."fieldvalues` ADD PRIMARY KEY(`address`, `bits`, `zones`, `field`)");
+				$this->db->exec("ALTER TABLE `".$this->prefix."tablenode` ADD `zones` BINARY(8) NOT NULL DEFAULT '' AFTER `bits`");
+				$this->db->exec("ALTER TABLE `".$this->prefix."tablenode` DROP PRIMARY KEY");
+				$this->db->exec("ALTER TABLE `".$this->prefix."tablenode` ADD PRIMARY KEY(`table`, `item`, `address`, `bits`, `zones`)");
+				$this->db->exec("ALTER TABLE `".$this->prefix."access` ADD `zones` BINARY(8) NOT NULL DEFAULT '' AFTER `bits`");
+				$this->db->exec("ALTER TABLE `".$this->prefix."access` DROP PRIMARY KEY");
+				$this->db->exec("ALTER TABLE `".$this->prefix."access` ADD PRIMARY KEY(`address`, `bits`, `zones`, `username`)");
 			}
 			$sql = "UPDATE `".$this->prefix."version` SET version=:version";
 			$stmt = $this->db->prepare($sql);
