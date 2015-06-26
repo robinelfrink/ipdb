@@ -31,7 +31,7 @@ class deletenode {
 		global $config, $database;
 		if ($node = $database->getNode(request('node'))) {
 			$tpl = new Template('deletenode.html');
-			$children = $database->getChildren($node['node'], request('zone'));
+			$children = $database->getChildren($node['node'], false, false, request('zone'));
 			if (count($children))
 				$tpl->parse('children');
 			$tpl->setVar('nodename', $node['name']);

@@ -102,10 +102,16 @@ class main {
 			$content = $tpl->get().(count($children) ? $this->listchildren($children) : '');
 		} else {
 			$node = 'The World';
-			$children = $database->getChildren('::/0', false, request('zone'));
+			$children = $database->getChildren('::/0', false, false, request('zone'));
 			$tpl = new Template('world.html');
-			$tpl->setVar('count', count($children));
-			$content = $tpl->get().(count($children) ? $this->listchildren($children) : '');
+			if (count($children)) {
+				$tpl->setVar('count', count($children));
+				$tpl->setVar('children', $this->listchildren($children));
+				$tpl->parse('world');
+			} else {
+				$tpl->parse('emptyworld');
+			}
+			$content = $tpl->get();
 		}
 		return array('title'=>'IPDB :: '.$node,
 					 'content'=>$content);

@@ -29,12 +29,12 @@ class Tree {
 	public static function getHtml($parent, $node = null, $children = null) {
 		global $config, $database;
 		if (!$children)
-			$children = $database->getChildren($parent, false, request('zone'));
+			$children = $database->getChildren($parent, false, false, request('zone'));
 		$tpl = new Template('tree.html');
 		if (count($children)) {
 			foreach ($children as $child) {
-				$grandchildren = $database->getChildren($child['node'], false, request('zone'));
-				$hosts = $database->getChildren($child['node'], true, request('zone'));
+				$grandchildren = $database->getChildren($child['node'], false, false, request('zone'));
+				$hosts = $database->getChildren($child['node'], true, false, request('zone'));
 				$subtree = '';
 				if (count($grandchildren)) {
 					if ($node && (Database::isSame($node, $child['node']) ||
@@ -69,7 +69,7 @@ class Tree {
 	public static function getTxt($node, $level = 0) {
 		global $config, $database;
 		$txt = '';
-		$children = $database->getChildren($node, request('zone'));
+		$children = $database->getChildren($node, true, false, request('zone'));
 		if (count($children))
 			foreach ($children as $child) {
 				$txt .= str_pad('', ($level+1)*2, ' ').$child['node'].
