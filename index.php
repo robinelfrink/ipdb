@@ -55,8 +55,15 @@ $version = 0.1;
 
 
 /* Check for incoming RESTful request */
-$rest = preg_match('/^(get|post|put|delete)\/+(.*)/i', $_SERVER["QUERY_STRING"], $matches) ?
+$rest = preg_match('/^(get|post|put|delete)\/(.*)/i', $_SERVER["QUERY_STRING"], $matches) ?
 	array('type'=>strtolower($matches[1]), 'request'=>explode('/', $matches[2])) : false;
+/* Alternative RESTful request; e.g. http://127.0.0.1/?get=/node/::0/0 */
+if (!$rest) {
+	$request = array_change_key_case($_REQUEST, CASE_LOWER);
+	if (($method = array_intersect(array('get', 'post', 'put', 'delete'), array_keys($request))) &&
+		preg_match('/^\//', $request[$method[0]]))
+		$rest = array('type'=>$method[0], 'request'=>explode('/', $request[$method[0]]));
+}
 
 
 /* Read configuration file */
